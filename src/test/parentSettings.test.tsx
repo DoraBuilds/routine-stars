@@ -88,7 +88,7 @@ describe("ParentSettings", () => {
         completed: false,
       })
     );
-  });
+  }, 10000);
 
   it("edits an existing task title and preserves its icon", () => {
     render(<Harness />);

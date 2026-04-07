@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Settings } from 'lucide-react';
 import type { Child, HomeScene, RoutineType } from '@/lib/types';
@@ -138,6 +139,51 @@ export const ChildSelector = ({
   onSelectChild,
   onOpenSettings,
 }: ChildSelectorProps) => {
+  const holdTimerRef = useRef<number | null>(null);
+  const progressTimerRef = useRef<number | null>(null);
+  const [isHoldingParentGate, setIsHoldingParentGate] = useState(false);
+  const [parentGateProgress, setParentGateProgress] = useState(0);
+
+  const clearParentGateTimers = () => {
+    if (holdTimerRef.current) {
+      window.clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+
+    if (progressTimerRef.current) {
+      window.clearInterval(progressTimerRef.current);
+      progressTimerRef.current = null;
+    }
+  };
+
+  const startParentGateHold = () => {
+    clearParentGateTimers();
+    setIsHoldingParentGate(true);
+    setParentGateProgress(0);
+
+    const start = performance.now();
+    progressTimerRef.current = window.setInterval(() => {
+      const elapsed = performance.now() - start;
+      setParentGateProgress(Math.min(100, (elapsed / 1200) * 100));
+    }, 16);
+
+    holdTimerRef.current = window.setTimeout(() => {
+      clearParentGateTimers();
+      setIsHoldingParentGate(false);
+      setParentGateProgress(100);
+      onOpenSettings();
+      window.setTimeout(() => setParentGateProgress(0), 150);
+    }, 1200);
+  };
+
+  const cancelParentGateHold = () => {
+    clearParentGateTimers();
+    setIsHoldingParentGate(false);
+    setParentGateProgress(0);
+  };
+
+  useEffect(() => () => clearParentGateTimers(), []);
+
   const title =
     globalTheme === 'morning'
       ? 'Morning routine time'
@@ -219,11 +265,41 @@ export const ChildSelector = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        onClick={onOpenSettings}
-        className="mt-10 md:mt-12 flex items-center mx-auto text-muted-foreground hover:text-foreground transition-colors gap-2 text-lg"
+        type="button"
+        onPointerDown={startParentGateHold}
+        onPointerUp={cancelParentGateHold}
+        onPointerLeave={cancelParentGateHold}
+        onPointerCancel={cancelParentGateHold}
+        onKeyDown={(event) => {
+          if ((event.key === 'Enter' || event.key === ' ') && !isHoldingParentGate) {
+            event.preventDefault();
+            startParentGateHold();
+          }
+        }}
+        onKeyUp={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            cancelParentGateHold();
+          }
+        }}
+        className="mt-10 md:mt-12 flex flex-col items-center mx-auto text-muted-foreground hover:text-foreground transition-colors gap-3 text-lg"
+        aria-label="Press and hold to open Parent Settings"
       >
-        <Settings size={20} />
-        Parent Settings
+        <div className="flex items-center gap-2">
+          <Settings size={20} />
+          Parent Settings
+        </div>
+        <div className="w-56 max-w-full">
+          <div className="h-2 overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-75"
+              style={{ width: `${parentGateProgress}%` }}
+            />
+          </div>
+          <p className="mt-2 text-xs font-bold uppercase tracking-[0.24em] text-muted-foreground">
+            {isHoldingParentGate ? 'Keep holding...' : 'Press and hold to open'}
+          </p>
+        </div>
       </motion.button>
     </div>
   );
