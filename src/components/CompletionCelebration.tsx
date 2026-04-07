@@ -1,95 +1,97 @@
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
+import { useEffect } from 'react';
+import confetti from 'canvas-confetti';
+import { balloons } from 'balloons-js';
+import { PartyPopper } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-const CONFETTI_COLORS = [
-  'hsl(199, 89%, 48%)',  // primary
-  'hsl(35, 92%, 50%)',   // accent
-  'hsl(142, 70%, 45%)',  // success
-  'hsl(330, 80%, 60%)',  // pink
-  'hsl(270, 70%, 60%)',  // purple
-  'hsl(50, 95%, 55%)',   // yellow
-];
-
-interface ConfettiPiece {
-  id: number;
-  left: string;
-  color: string;
-  delay: string;
-  size: number;
-  borderRadius: string;
-}
-
-const generateConfetti = (count: number): ConfettiPiece[] =>
-  Array.from({ length: count }, (_, i) => ({
-    id: i,
-    left: `${Math.random() * 100}%`,
-    color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
-    delay: `${Math.random() * 1.5}s`,
-    size: 8 + Math.random() * 10,
-    borderRadius: Math.random() > 0.5 ? '50%' : '3px',
-  }));
+type CelebrationVariant = 'task' | 'routine';
 
 interface CompletionCelebrationProps {
+  variant: CelebrationVariant;
   childName: string;
   onFinish: () => void;
 }
 
-export const CompletionCelebration = ({ childName, onFinish }: CompletionCelebrationProps) => {
-  const [confetti, setConfetti] = useState<ConfettiPiece[]>([]);
+const fireRealisticConfetti = () => {
+  const count = 200;
+  const defaults = {
+    origin: { y: 0.7 },
+    zIndex: 1000,
+    disableForReducedMotion: true,
+  };
 
+  const fire = (particleRatio: number, options: confetti.Options) => {
+    confetti({
+      ...defaults,
+      ...options,
+      particleCount: Math.floor(count * particleRatio),
+    });
+  };
+
+  fire(0.25, {
+    spread: 26,
+    startVelocity: 55,
+  });
+  fire(0.2, {
+    spread: 60,
+  });
+  fire(0.35, {
+    spread: 100,
+    decay: 0.91,
+    scalar: 0.8,
+  });
+  fire(0.1, {
+    spread: 120,
+    startVelocity: 25,
+    decay: 0.92,
+    scalar: 1.2,
+  });
+  fire(0.1, {
+    spread: 120,
+    startVelocity: 45,
+  });
+};
+
+export const CompletionCelebration = ({ variant, childName, onFinish }: CompletionCelebrationProps) => {
   useEffect(() => {
-    setConfetti(generateConfetti(40));
-  }, []);
+    if (variant === 'task') {
+      fireRealisticConfetti();
+
+      const timer = window.setTimeout(onFinish, 1400);
+      return () => window.clearTimeout(timer);
+    }
+
+    fireRealisticConfetti();
+    void balloons();
+
+    const timer = window.setTimeout(onFinish, 4500);
+    return () => window.clearTimeout(timer);
+  }, [onFinish, variant]);
+
+  if (variant === 'task') {
+    return null;
+  }
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-primary/90 backdrop-blur-sm"
-      >
-        {confetti.map((piece) => (
-          <div
-            key={piece.id}
-            className="confetti-piece"
-            style={{
-              left: piece.left,
-              backgroundColor: piece.color,
-              animationDelay: piece.delay,
-              width: piece.size,
-              height: piece.size,
-              borderRadius: piece.borderRadius,
-            }}
-          />
-        ))}
-
-        <motion.div
-          initial={{ y: 60, scale: 0.9 }}
-          animate={{ y: 0, scale: 1 }}
-          transition={{ type: 'spring', damping: 15, stiffness: 200 }}
-          className="bg-card p-10 md:p-12 rounded-[48px] text-center shadow-2xl max-w-sm w-full relative z-10"
-        >
-          <motion.div
-            animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
-            transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
-            className="w-24 h-24 bg-accent/15 text-accent rounded-full flex items-center justify-center mx-auto mb-6"
-          >
-            <Sparkles size={48} />
-          </motion.div>
-          <h3 className="text-4xl font-bold text-foreground mb-2">All Done!</h3>
-          <p className="text-muted-foreground text-xl mb-8">
-            Amazing job, {childName}! ⭐
-          </p>
-          <button
-            onClick={onFinish}
-            className="w-full py-4 bg-primary text-primary-foreground rounded-2xl text-xl font-bold shadow-button active:translate-y-0.5 transition-transform"
-          >
-            Finish
-          </button>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -12 }}
+      className="pointer-events-none fixed inset-x-0 top-10 z-[1001] flex justify-center px-6"
+      aria-live="polite"
+      role="status"
+    >
+      <div className="rounded-full bg-white/92 px-6 py-4 shadow-[0_20px_60px_rgba(15,23,42,0.18)] backdrop-blur-md">
+        <div className="flex items-center gap-3 text-slate-800">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <PartyPopper size={24} />
+          </div>
+          <div>
+            <p className="text-sm font-black uppercase tracking-[0.22em] text-primary">Routine complete</p>
+            <p className="text-xl font-bold">Well done, {childName}!</p>
+          </div>
+        </div>
+      </div>
+    </motion.div>
   );
 };

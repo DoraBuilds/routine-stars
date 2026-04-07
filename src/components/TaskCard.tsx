@@ -5,7 +5,7 @@ import type { Task } from '@/lib/types';
 
 interface TaskCardProps {
   task: Task;
-  onToggle: () => void;
+  onToggle: (task: Task) => void;
 }
 
 export const TaskCard = ({ task, onToggle }: TaskCardProps) => {
@@ -13,7 +13,7 @@ export const TaskCard = ({ task, onToggle }: TaskCardProps) => {
     <motion.button
       layout
       whileTap={{ scale: 0.96 }}
-      onClick={onToggle}
+      onClick={() => onToggle(task)}
       className={`relative w-full flex items-center p-5 md:p-6 rounded-[24px] transition-all duration-300 text-left ${
         task.completed
           ? 'bg-muted opacity-60 grayscale-[0.5]'

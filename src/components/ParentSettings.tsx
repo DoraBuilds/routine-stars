@@ -1,43 +1,79 @@
 import { useState } from 'react';
 import { Reorder } from 'framer-motion';
 import {
-  Sun, Moon, Trash2, Plus, GripVertical, UserPlus, ArrowLeft, X, Check,
+  Sun, Moon, Trash2, Plus, GripVertical, UserPlus, ArrowLeft, X, Check, Shuffle, Clock3, Palette,
 } from 'lucide-react';
 import { TaskIcon } from './TaskIcon';
-import type { Child, RoutineType } from '@/lib/types';
-import { ICON_OPTIONS } from '@/lib/types';
+import { TaskSuggestionPicker } from './TaskSuggestionPicker';
+import { ChildProfileAvatar } from './ChildProfileAvatar';
+import { ANIMAL_AVATARS } from './animal-avatars';
+import type { Child, HomeScene, RoutineType } from '@/lib/types';
+import { AGE_BUCKETS, groupTasksByAge, ICON_OPTIONS, TASK_CATALOG } from '@/lib/types';
+import type { TaskCatalogItem } from '@/lib/task-catalog';
 
 interface ParentSettingsProps {
   children: Child[];
+  homeScene: HomeScene;
   onChange: (children: Child[]) => void;
+  onHomeSceneChange: (scene: HomeScene) => void;
   onBack: () => void;
 }
+
+const DEFAULT_SCHEDULE = {
+  morning: { start: '07:00', end: '09:00' },
+  evening: { start: '17:00', end: '20:00' },
+} as const;
 
 /* ---- Add / Edit Task Modal ---- */
 interface TaskModalProps {
   initial?: { title: string; icon: string };
+  routine: RoutineType;
+  mode: 'add' | 'edit';
+  suggestions: readonly TaskCatalogItem[];
   onSave: (title: string, icon: string) => void;
   onClose: () => void;
 }
 
-const TaskModal = ({ initial, onSave, onClose }: TaskModalProps) => {
+const TaskModal = ({ initial, routine, mode, suggestions, onSave, onClose }: TaskModalProps) => {
   const [title, setTitle] = useState(initial?.title ?? '');
   const [icon, setIcon] = useState(initial?.icon ?? 'smile');
+  const [selectedSuggestionId, setSelectedSuggestionId] = useState<string | null>(null);
+
+  const handleSelectSuggestion = (suggestion: TaskCatalogItem) => {
+    setTitle(suggestion.title);
+    setIcon(suggestion.icon);
+    setSelectedSuggestionId(suggestion.id);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="bg-card rounded-[32px] p-8 max-w-md w-full shadow-2xl"
+        className="bg-card rounded-[32px] p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-2xl font-bold text-foreground">
-            {initial ? 'Edit Task' : 'New Task'}
-          </h3>
+          <div>
+            <h3 className="text-2xl font-bold text-foreground">
+              {mode === 'edit' ? 'Edit Task' : 'New Task'}
+            </h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {mode === 'edit'
+                ? 'Tweak the task for this child.'
+                : `Start with a ${routine === 'morning' ? 'morning' : 'bedtime'} suggestion or build your own.`}
+            </p>
+          </div>
           <button onClick={onClose} className="p-2 text-muted-foreground hover:text-foreground">
             <X size={22} />
           </button>
         </div>
+
+        {mode === 'add' && (
+          <TaskSuggestionPicker
+            suggestions={suggestions}
+            selectedSuggestionId={selectedSuggestionId}
+            onSelectSuggestion={handleSelectSuggestion}
+          />
+        )}
 
         <label className="block mb-2 text-sm font-semibold text-muted-foreground">Task Name</label>
         <input
@@ -87,12 +123,16 @@ interface RoutineColumnProps {
   childId: string;
   onReorder: (tasks: Child['morning']) => void;
   onDelete: (taskId: string) => void;
+  onQuickAdd: (task: TaskCatalogItem) => void;
   onAdd: () => void;
   onEdit: (taskId: string) => void;
 }
 
-const RoutineColumn = ({ type, tasks, onReorder, onDelete, onAdd, onEdit }: RoutineColumnProps) => {
+const RoutineColumn = ({ type, tasks, onReorder, onDelete, onQuickAdd, onAdd, onEdit }: RoutineColumnProps) => {
   const isMorning = type === 'morning';
+  const otherTasks = TASK_CATALOG[type].filter(
+    (suggestion) => !tasks.some((task) => task.title === suggestion.title)
+  );
 
   return (
     <div>
@@ -126,6 +166,47 @@ const RoutineColumn = ({ type, tasks, onReorder, onDelete, onAdd, onEdit }: Rout
         ))}
       </Reorder.Group>
 
+      {otherTasks.length > 0 && (
+        <div className="mt-4 rounded-2xl border border-dashed border-border bg-background/70 p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <h5 className="text-sm font-black uppercase tracking-[0.24em] text-muted-foreground">
+                Other Tasks
+              </h5>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Available from the catalog but not active for this child yet.
+              </p>
+            </div>
+            <span className="rounded-full bg-muted px-3 py-1 text-xs font-bold text-muted-foreground">
+              {otherTasks.length} available
+            </span>
+          </div>
+          <div className="space-y-4">
+            {groupTasksByAge(otherTasks).map((group) => (
+              <section key={`${type}-${group.key}`}>
+                <h6 className="mb-2 text-xs font-black uppercase tracking-[0.22em] text-muted-foreground">
+                  {group.label}
+                </h6>
+                <div className="flex flex-wrap gap-2">
+                  {group.tasks.map((task) => (
+                    <button
+                      key={`${type}-${task.id}`}
+                      type="button"
+                      onClick={() => onQuickAdd(task)}
+                      className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                    >
+                      <TaskIcon iconKey={task.icon} size={16} strokeWidth={2.5} />
+                      {task.title}
+                      <Plus size={14} />
+                    </button>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        </div>
+      )}
+
       <button
         onClick={onAdd}
         className={`mt-3 w-full py-3 border-2 border-dashed rounded-xl flex items-center justify-center gap-2 transition-all font-medium ${
@@ -140,8 +221,21 @@ const RoutineColumn = ({ type, tasks, onReorder, onDelete, onAdd, onEdit }: Rout
   );
 };
 
+const HOME_SCENE_OPTIONS: { key: HomeScene; label: string; preview: string; description: string }[] = [
+  { key: 'bike', label: 'Bike ride', preview: '🚲', description: 'Sunny grass and a playful bicycle sketch.' },
+  { key: 'school', label: 'School time', preview: '📚', description: 'Books, stars, and notebook doodles.' },
+  { key: 'kite', label: 'Fly a kite', preview: '🪁', description: 'A breezy sky with a colorful kite.' },
+  { key: 'sandcastle', label: 'Sandcastle', preview: '🏖️', description: 'Beach colors, towers, and a happy umbrella.' },
+];
+
 /* ---- Main Component ---- */
-export const ParentSettings = ({ children, onChange, onBack }: ParentSettingsProps) => {
+export const ParentSettings = ({
+  children,
+  homeScene,
+  onChange,
+  onHomeSceneChange,
+  onBack,
+}: ParentSettingsProps) => {
   const [modal, setModal] = useState<{
     childId: string;
     routine: RoutineType;
@@ -173,6 +267,7 @@ export const ParentSettings = ({ children, onChange, onBack }: ParentSettingsPro
         .find((c) => c.id === modal.childId)
         ?.[modal.routine]?.find((t) => t.id === modal.taskId)
     : undefined;
+  const selectedSuggestions = modal ? TASK_CATALOG[modal.routine] : [];
 
   return (
     <div className="max-w-4xl mx-auto px-5 md:px-6 py-8 md:py-12 min-h-svh">
@@ -198,24 +293,210 @@ export const ParentSettings = ({ children, onChange, onBack }: ParentSettingsPro
       </header>
 
       <div className="grid gap-10 md:gap-12">
+        <section className="rounded-[32px] border border-border bg-card p-6 shadow-sm md:p-8">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <Palette size={22} />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-foreground">Home Screen Background</h3>
+              <p className="text-sm text-muted-foreground">
+                Pick the child-like doodle scene that appears when no routine is due.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {HOME_SCENE_OPTIONS.map((option) => (
+              <button
+                key={option.key}
+                type="button"
+                onClick={() => onHomeSceneChange(option.key)}
+                className={`rounded-[28px] border p-4 text-left transition-all ${
+                  homeScene === option.key
+                    ? 'border-primary bg-primary/10 ring-2 ring-primary'
+                    : 'border-border bg-background hover:border-primary/40'
+                }`}
+              >
+                <div className="text-4xl">{option.preview}</div>
+                <p className="mt-3 text-lg font-black text-foreground">{option.label}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{option.description}</p>
+              </button>
+            ))}
+          </div>
+        </section>
+
         {children.map((child) => (
           <section key={child.id} className="bg-card p-6 md:p-8 rounded-[32px] shadow-sm border border-border">
-            <div className="flex items-center justify-between mb-6 md:mb-8">
-              <input
-                className="text-xl md:text-2xl font-bold text-foreground bg-transparent border-b-2 border-transparent focus:border-primary outline-none w-full max-w-xs"
-                value={child.name}
-                onChange={(e) =>
-                  updateChild(child.id, (c) => ({ ...c, name: e.target.value }))
-                }
-              />
-              {children.length > 1 && (
-                <button
-                  onClick={() => onChange(children.filter((c) => c.id !== child.id))}
-                  className="text-destructive/50 hover:text-destructive p-2 transition-colors"
-                >
-                  <Trash2 size={20} />
-                </button>
-              )}
+            <div className="mb-6 grid gap-6 md:mb-8 lg:grid-cols-[220px_minmax(0,1fr)]">
+              <div className="rounded-[28px] bg-muted/55 p-5 text-center">
+                <ChildProfileAvatar
+                  name={child.name}
+                  seed={child.avatarSeed ?? child.id}
+                  animalKey={child.avatarAnimal}
+                  size="md"
+                  className="mx-auto"
+                />
+                <div className="mt-5 flex justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateChild(child.id, (c) => ({
+                        ...c,
+                        avatarSeed: crypto.randomUUID(),
+                        avatarAnimal: undefined,
+                      }))
+                    }
+                    className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                  >
+                    <Shuffle size={16} /> Shuffle avatar
+                  </button>
+                </div>
+                <div className="mt-4">
+                  <p className="text-sm font-medium text-muted-foreground">Choose animal avatar</p>
+                  <div className="mt-3 grid grid-cols-5 gap-2">
+                    {ANIMAL_AVATARS.map((avatar) => {
+                      const isSelected = (child.avatarAnimal ?? '') === avatar.key;
+
+                      return (
+                        <button
+                          key={`${child.id}-${avatar.key}`}
+                          type="button"
+                          onClick={() =>
+                            updateChild(child.id, (c) => ({
+                              ...c,
+                              avatarAnimal: avatar.key,
+                            }))
+                          }
+                          className={`rounded-2xl border p-2 text-center transition-all ${
+                            isSelected
+                              ? 'border-primary bg-primary/10 ring-2 ring-primary'
+                              : 'border-border bg-background hover:border-primary/40'
+                          }`}
+                          aria-label={`Choose ${avatar.label} avatar`}
+                        >
+                          <div className="text-2xl">{avatar.emoji}</div>
+                          <div className="mt-1 text-[10px] font-black uppercase tracking-[0.14em] text-foreground">
+                            {avatar.label}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between gap-4">
+                  <input
+                    className="text-xl md:text-2xl font-bold text-foreground bg-transparent border-b-2 border-transparent focus:border-primary outline-none w-full max-w-xs"
+                    value={child.name}
+                    onChange={(e) =>
+                      updateChild(child.id, (c) => ({ ...c, name: e.target.value }))
+                    }
+                  />
+                  {children.length > 1 && (
+                    <button
+                      onClick={() => onChange(children.filter((c) => c.id !== child.id))}
+                      className="text-destructive/50 hover:text-destructive p-2 transition-colors"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  )}
+                </div>
+
+                <div className="mt-5 grid gap-4 md:grid-cols-2">
+                  <label className="text-sm font-semibold text-muted-foreground">
+                    Age
+                    <input
+                      type="number"
+                      min={2}
+                      max={12}
+                      value={child.age ?? 5}
+                      onChange={(event) =>
+                        updateChild(child.id, (c) => ({
+                          ...c,
+                          age: Number(event.target.value),
+                        }))
+                      }
+                      className="mt-2 w-full rounded-xl bg-muted px-4 py-3 text-base font-medium text-foreground outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </label>
+                  <label className="text-sm font-semibold text-muted-foreground">
+                    Suggested age bucket
+                    <select
+                      value={child.ageBucket ?? '4-6'}
+                      onChange={(event) =>
+                        updateChild(child.id, (c) => ({
+                          ...c,
+                          ageBucket: event.target.value as Child['ageBucket'],
+                        }))
+                      }
+                      className="mt-2 w-full rounded-xl bg-muted px-4 py-3 text-base font-medium text-foreground outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      {AGE_BUCKETS.map((bucket) => (
+                        <option key={bucket.key} value={bucket.key}>
+                          {bucket.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <div className="mt-5 rounded-[24px] bg-background p-4">
+                  <div className="flex items-center gap-2 text-foreground">
+                    <Clock3 size={18} />
+                    <p className="text-sm font-black uppercase tracking-[0.18em]">Routine schedule</p>
+                  </div>
+                  <div className="mt-4 grid gap-4 md:grid-cols-2">
+                    {(['morning', 'evening'] as const).map((routine) => (
+                      <div key={`${child.id}-${routine}`} className="rounded-2xl bg-muted/55 p-4">
+                        <p className="text-xs font-black uppercase tracking-[0.22em] text-muted-foreground">
+                          {routine}
+                        </p>
+                        <div className="mt-3 grid grid-cols-2 gap-3">
+                          <input
+                                    type="time"
+                            value={child.schedule?.[routine].start ?? (routine === 'morning' ? '07:00' : '17:00')}
+                            onChange={(event) =>
+                              updateChild(child.id, (c) => ({
+                                ...c,
+                                schedule: {
+                                  morning: c.schedule?.morning ?? DEFAULT_SCHEDULE.morning,
+                                  evening: c.schedule?.evening ?? DEFAULT_SCHEDULE.evening,
+                                  [routine]: {
+                                    start: event.target.value,
+                                    end: c.schedule?.[routine].end ?? (routine === 'morning' ? '09:00' : '20:00'),
+                                  },
+                                },
+                              }))
+                            }
+                            className="rounded-xl bg-card px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
+                          />
+                          <input
+                            type="time"
+                            value={child.schedule?.[routine].end ?? (routine === 'morning' ? '09:00' : '20:00')}
+                            onChange={(event) =>
+                              updateChild(child.id, (c) => ({
+                                ...c,
+                                schedule: {
+                                  morning: c.schedule?.morning ?? DEFAULT_SCHEDULE.morning,
+                                  evening: c.schedule?.evening ?? DEFAULT_SCHEDULE.evening,
+                                  [routine]: {
+                                    start: c.schedule?.[routine].start ?? (routine === 'morning' ? '07:00' : '17:00'),
+                                    end: event.target.value,
+                                  },
+                                },
+                              }))
+                            }
+                            className="rounded-xl bg-card px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6 md:gap-8">
@@ -230,6 +511,15 @@ export const ParentSettings = ({ children, onChange, onBack }: ParentSettingsPro
                     morning: c.morning.filter((t) => t.id !== taskId),
                   }))
                 }
+                onQuickAdd={(task) =>
+                  updateChild(child.id, (c) => ({
+                    ...c,
+                    morning: [
+                      ...c.morning,
+                      { id: crypto.randomUUID(), title: task.title, icon: task.icon, completed: false },
+                    ],
+                  }))
+                }
                 onAdd={() => setModal({ childId: child.id, routine: 'morning' })}
                 onEdit={(taskId) => setModal({ childId: child.id, routine: 'morning', taskId })}
               />
@@ -242,6 +532,15 @@ export const ParentSettings = ({ children, onChange, onBack }: ParentSettingsPro
                   updateChild(child.id, (c) => ({
                     ...c,
                     evening: c.evening.filter((t) => t.id !== taskId),
+                  }))
+                }
+                onQuickAdd={(task) =>
+                  updateChild(child.id, (c) => ({
+                    ...c,
+                    evening: [
+                      ...c.evening,
+                      { id: crypto.randomUUID(), title: task.title, icon: task.icon, completed: false },
+                    ],
                   }))
                 }
                 onAdd={() => setModal({ childId: child.id, routine: 'evening' })}
@@ -259,6 +558,14 @@ export const ParentSettings = ({ children, onChange, onBack }: ParentSettingsPro
                 {
                   id: crypto.randomUUID(),
                   name: 'New Child',
+                  age: 5,
+                  ageBucket: '4-6',
+                  avatarSeed: crypto.randomUUID(),
+                  avatarAnimal: undefined,
+                  schedule: {
+                    morning: DEFAULT_SCHEDULE.morning,
+                    evening: DEFAULT_SCHEDULE.evening,
+                  },
                   morning: [],
                   evening: [],
                 },
@@ -275,6 +582,9 @@ export const ParentSettings = ({ children, onChange, onBack }: ParentSettingsPro
       {modal && (
         <TaskModal
           initial={editingTask ? { title: editingTask.title, icon: editingTask.icon } : undefined}
+          routine={modal.routine}
+          mode={modal.taskId ? 'edit' : 'add'}
+          suggestions={selectedSuggestions}
           onSave={handleSaveTask}
           onClose={() => setModal(null)}
         />

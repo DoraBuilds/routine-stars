@@ -64,30 +64,53 @@
   }
 }
 
-/* Confetti keyframes */
-@keyframes confetti-fall {
-  0% {
-    transform: translateY(-10vh) rotate(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(110vh) rotate(720deg);
-    opacity: 0;
-  }
+.celebration-card {
+  background: hsl(var(--card));
+  border-radius: 3rem;
+  padding: 2.5rem;
+  width: min(100%, 24rem);
+  text-align: center;
+  box-shadow: var(--shadow-card-active);
 }
 
-@keyframes confetti-shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(15px); }
-  75% { transform: translateX(-15px); }
+.balloon-piece {
+  position: absolute;
+  bottom: -8rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  pointer-events: none;
+  z-index: 5;
+  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.15));
 }
 
-.confetti-piece {
-  position: fixed;
-  top: -10px;
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-  animation: confetti-fall 3s ease-in forwards, confetti-shake 0.5s ease-in-out infinite;
-  z-index: 100;
+.balloon-body {
+  position: relative;
+  border-radius: 50% 50% 46% 46%;
+  box-shadow: inset -6px -10px 0 rgba(0, 0, 0, 0.08);
+}
+
+.balloon-highlight {
+  position: absolute;
+  top: 18%;
+  left: 18%;
+  width: 18%;
+  height: 32%;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.balloon-string {
+  width: 2px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.72);
+  border-radius: 999px;
+  transform: rotate(3deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .balloon-piece {
+    animation: none !important;
+  }
 }

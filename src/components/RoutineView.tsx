@@ -1,5 +1,6 @@
+import { useEffect, useState } from 'react';
 import { Sun, Moon, ArrowLeft } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { TaskCard } from './TaskCard';
 import { CompletionCelebration } from './CompletionCelebration';
 import type { Child, RoutineType } from '@/lib/types';
@@ -12,12 +13,66 @@ interface RoutineViewProps {
   onBack: () => void;
 }
 
+const celebratedRoutineKeys = new Set<string>();
+
 export const RoutineView = ({ child, routine, onSetRoutine, onToggleTask, onBack }: RoutineViewProps) => {
+  const [celebration, setCelebration] = useState<
+    | { variant: 'task'; taskId: string; childName: string }
+    | { variant: 'routine'; childName: string }
+    | null
+  >(null);
   const tasks = child[routine];
   const isComplete = tasks.length > 0 && tasks.every((t) => t.completed);
+  const routineTaskKey = `${child.id}:${routine}:${
+    tasks
+      .map((task) => task.id)
+      .sort()
+      .join('|')
+  }`;
+  const currentRoutineSignature = isComplete
+    ? tasks
+        .map((task) => task.id)
+        .sort()
+        .join('|')
+    : null;
+  const routineCelebrationKey = currentRoutineSignature
+    ? `${child.id}:${routine}:${currentRoutineSignature}`
+    : null;
+
+  useEffect(() => {
+    setCelebration(null);
+  }, [child.id, routine]);
+
+  useEffect(() => {
+    if (!routineCelebrationKey) {
+      celebratedRoutineKeys.delete(routineTaskKey);
+      return;
+    }
+
+    if (celebratedRoutineKeys.has(routineCelebrationKey)) {
+      return;
+    }
+
+    celebratedRoutineKeys.add(routineCelebrationKey);
+    setCelebration({ variant: 'routine', childName: child.name });
+  }, [child.name, routineCelebrationKey, routineTaskKey]);
 
   return (
-    <div className="max-w-3xl mx-auto px-5 md:px-6 pt-8 md:pt-12 pb-24 min-h-svh">
+    <div className="relative max-w-3xl mx-auto px-5 md:px-6 pt-8 md:pt-12 pb-24 min-h-svh overflow-hidden">
+      {routine === 'morning' ? (
+        <>
+          <div className="absolute right-8 top-8 -z-10 h-24 w-24 rounded-full bg-yellow-300/80 shadow-[0_0_80px_rgba(253,224,71,0.65)]" />
+          <div className="absolute left-2 top-20 -z-10 text-3xl opacity-70" aria-hidden="true">🐦</div>
+          <div className="absolute right-2 bottom-10 -z-10 text-7xl opacity-20" aria-hidden="true">🌳</div>
+        </>
+      ) : (
+        <>
+          <div className="absolute right-6 top-6 -z-10 text-7xl opacity-75" aria-hidden="true">🌙</div>
+          <div className="absolute left-6 top-20 -z-10 text-3xl opacity-65" aria-hidden="true">⭐</div>
+          <div className="absolute right-16 top-28 -z-10 text-2xl opacity-60" aria-hidden="true">💤</div>
+        </>
+      )}
+
       {/* Nav */}
       <nav className="flex items-center justify-between mb-8 md:mb-10">
         <button
@@ -77,7 +132,15 @@ export const RoutineView = ({ child, routine, onSetRoutine, onToggleTask, onBack
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
           >
-            <TaskCard task={task} onToggle={() => onToggleTask(task.id)} />
+            <TaskCard
+              task={task}
+              onToggle={(currentTask) => {
+                onToggleTask(currentTask.id);
+                if (!currentTask.completed) {
+                  setCelebration({ variant: 'task', taskId: currentTask.id, childName: child.name });
+                }
+              }}
+            />
           </motion.div>
         ))}
         {tasks.length === 0 && (
@@ -89,9 +152,27 @@ export const RoutineView = ({ child, routine, onSetRoutine, onToggleTask, onBack
       </div>
 
       {/* Celebration Overlay */}
-      {isComplete && (
-        <CompletionCelebration childName={child.name} onFinish={onBack} />
-      )}
+      <AnimatePresence>
+        {celebration?.variant === 'task' && (
+          <CompletionCelebration
+            key={`task-${celebration.taskId}`}
+            variant="task"
+            childName={celebration.childName}
+            onFinish={() => setCelebration(null)}
+          />
+        )}
+        {celebration?.variant === 'routine' && isComplete && (
+          <CompletionCelebration
+            key={`routine-${currentRoutineSignature}`}
+            variant="routine"
+            childName={celebration.childName}
+            onFinish={() => {
+              setCelebration(null);
+              onBack();
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

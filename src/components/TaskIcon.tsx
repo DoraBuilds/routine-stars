@@ -1,7 +1,7 @@
 import {
   Bed, Utensils, Shirt, Bath, Footprints, MoonStar,
   Smile, Sparkles, Brush, Scissors, Apple, BookOpen,
-  Music, Heart, Backpack, Hand, type LucideProps,
+  Music, Heart, Backpack, Hand, PackageOpen, ChefHat, type LucideProps,
 } from 'lucide-react';
 import type { FC } from 'react';
 
@@ -22,6 +22,8 @@ const iconMap: Record<string, FC<LucideProps>> = {
   heart: Heart,
   backpack: Backpack,
   hand: Hand,
+  'package-open': PackageOpen,
+  'chef-hat': ChefHat,
 };
 
 interface TaskIconProps extends LucideProps {
