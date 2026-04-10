@@ -17,21 +17,21 @@ const celebratedRoutineKeys = new Set<string>();
 const MorningBackdrop = () => (
   <>
     <div className="absolute inset-0 bg-[linear-gradient(180deg,#fffdf0_0%,#fef3c7_18%,#e0f2fe_56%,#f0fdf4_100%)]" />
-    <div className="absolute right-8 top-8 h-28 w-28 rounded-full bg-yellow-300 shadow-[0_0_110px_rgba(253,224,71,0.85)]" />
+    <div className="absolute right-4 top-6 h-20 w-20 rounded-full bg-yellow-300 shadow-[0_0_80px_rgba(253,224,71,0.8)] sm:right-8 sm:top-8 sm:h-28 sm:w-28 sm:shadow-[0_0_110px_rgba(253,224,71,0.85)]" />
     <div className="absolute left-0 right-0 top-24 h-40 bg-[radial-gradient(circle_at_50%_0%,rgba(125,211,252,0.48),transparent_62%)]" />
-    <div className="absolute left-8 top-20 text-4xl opacity-75" aria-hidden="true">
-      <Bird size={30} />
+    <div className="absolute left-4 top-16 opacity-65 sm:left-8 sm:top-20 sm:opacity-75" aria-hidden="true">
+      <Bird size={22} className="sm:h-[30px] sm:w-[30px]" />
     </div>
-    <div className="absolute left-28 top-28 text-3xl opacity-70" aria-hidden="true">
-      <Bird size={24} />
+    <div className="absolute left-20 top-24 opacity-60 sm:left-28 sm:top-28 sm:opacity-70" aria-hidden="true">
+      <Bird size={18} className="sm:h-6 sm:w-6" />
     </div>
-    <div className="absolute right-28 top-32 text-2xl opacity-60" aria-hidden="true">
-      <Bird size={20} />
+    <div className="absolute right-20 top-24 opacity-55 sm:right-28 sm:top-32 sm:opacity-60" aria-hidden="true">
+      <Bird size={16} className="sm:h-5 sm:w-5" />
     </div>
-    <div className="absolute right-28 top-18 text-2xl opacity-60" aria-hidden="true">☁️</div>
+    <div className="absolute right-20 top-10 text-xl opacity-60 sm:right-28 sm:top-5 sm:text-2xl" aria-hidden="true">☁️</div>
     <div className="absolute bottom-0 left-0 h-44 w-full bg-[linear-gradient(to_top,rgba(74,222,128,0.35),transparent)]" />
-    <div className="absolute bottom-6 left-4 text-[8rem] opacity-25" aria-hidden="true">🌳</div>
-    <div className="absolute bottom-8 right-0 text-[9rem] opacity-20" aria-hidden="true">🌳</div>
+    <div className="absolute bottom-4 left-2 text-[5rem] opacity-20 sm:bottom-6 sm:left-4 sm:text-[8rem] sm:opacity-25" aria-hidden="true">🌳</div>
+    <div className="absolute bottom-6 right-0 text-[5.5rem] opacity-15 sm:bottom-8 sm:text-[9rem] sm:opacity-20" aria-hidden="true">🌳</div>
     <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.12)_1px,transparent_1px)] bg-[size:3.2rem_3.2rem] opacity-30" />
   </>
 );
@@ -39,19 +39,19 @@ const MorningBackdrop = () => (
 const EveningBackdrop = () => (
   <>
     <div className="absolute inset-0 bg-[linear-gradient(180deg,#0f172a_0%,#172554_28%,#1e3a8a_55%,#312e81_100%)]" />
-    <div className="absolute right-12 top-10 drop-shadow-[0_0_24px_rgba(253,230,138,0.55)]">
-      <MoonStar size={82} className="text-amber-200" />
-      <div className="absolute left-1/2 top-2 -translate-x-1/2 rotate-[-10deg] rounded-full bg-rose-100 px-3 py-1 text-[11px] font-black tracking-[0.2em] text-slate-600 shadow-sm">
+    <div className="absolute right-4 top-6 drop-shadow-[0_0_20px_rgba(253,230,138,0.45)] sm:right-12 sm:top-10 sm:drop-shadow-[0_0_24px_rgba(253,230,138,0.55)]">
+      <MoonStar size={58} className="text-amber-200 sm:h-[82px] sm:w-[82px]" />
+      <div className="absolute left-1/2 top-1 -translate-x-1/2 rotate-[-10deg] rounded-full bg-rose-100 px-2 py-0.5 text-[9px] font-black tracking-[0.2em] text-slate-600 shadow-sm sm:top-2 sm:px-3 sm:py-1 sm:text-[11px]">
         zZz
       </div>
     </div>
-    <div className="absolute left-10 top-16 text-3xl text-yellow-200/90" aria-hidden="true">✦</div>
-    <div className="absolute left-32 top-28 text-3xl text-yellow-200/80" aria-hidden="true">✧</div>
-    <div className="absolute right-36 top-28 text-2xl text-yellow-200/85" aria-hidden="true">✦</div>
-    <div className="absolute right-20 top-40 text-4xl text-yellow-100/80" aria-hidden="true">⋆</div>
-    <div className="absolute left-2 bottom-0 text-[11rem] opacity-35" aria-hidden="true">🌳</div>
-    <div className="absolute left-24 bottom-28 text-4xl opacity-85" aria-hidden="true">🦉</div>
-    <div className="absolute left-32 bottom-24 text-2xl text-slate-200/80" aria-hidden="true">💤</div>
+    <div className="absolute left-6 top-12 text-2xl text-yellow-200/90 sm:left-10 sm:top-16 sm:text-3xl" aria-hidden="true">✦</div>
+    <div className="absolute left-24 top-20 text-2xl text-yellow-200/80 sm:left-32 sm:top-28 sm:text-3xl" aria-hidden="true">✧</div>
+    <div className="absolute right-20 top-20 text-xl text-yellow-200/85 sm:right-36 sm:top-28 sm:text-2xl" aria-hidden="true">✦</div>
+    <div className="absolute right-8 top-28 text-3xl text-yellow-100/80 sm:right-20 sm:top-40 sm:text-4xl" aria-hidden="true">⋆</div>
+    <div className="absolute bottom-0 left-0 text-[6.5rem] opacity-25 sm:left-2 sm:text-[11rem] sm:opacity-35" aria-hidden="true">🌳</div>
+    <div className="absolute bottom-20 left-16 text-3xl opacity-75 sm:left-24 sm:bottom-28 sm:text-4xl sm:opacity-85" aria-hidden="true">🦉</div>
+    <div className="absolute bottom-20 left-24 text-xl text-slate-200/80 sm:left-32 sm:bottom-24 sm:text-2xl" aria-hidden="true">💤</div>
     <div className="absolute bottom-0 left-0 h-44 w-full bg-[linear-gradient(to_top,rgba(15,23,42,0.62),transparent)]" />
     <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_40%)]" />
     <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:3.2rem_3.2rem] opacity-20" />
@@ -94,7 +94,7 @@ export const RoutineView = ({ child, routine, onToggleTask, onBack }: RoutineVie
     <div className="relative isolate min-h-svh overflow-hidden">
       {routine === 'morning' ? <MorningBackdrop /> : <EveningBackdrop />}
 
-      <div className="relative z-10 mx-auto max-w-3xl px-5 pb-24 pt-8 md:px-6 md:pt-12">
+      <div className="relative z-10 mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-5 md:px-6 md:pt-12">
         <nav className="mb-8 flex items-center justify-start md:mb-10">
           <button
             onClick={onBack}
@@ -137,7 +137,7 @@ export const RoutineView = ({ child, routine, onToggleTask, onBack }: RoutineVie
             )}
           </div>
           <h2
-            className={`text-3xl font-bold md:text-4xl ${
+            className={`text-2xl font-bold sm:text-3xl md:text-4xl ${
               routine === 'morning' ? 'text-foreground' : 'text-white'
             }`}
           >

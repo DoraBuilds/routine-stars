@@ -94,7 +94,7 @@ export const ChildSelector = ({
         : `${dueChildren.length} children have a routine ready right now.`;
 
   return (
-    <div className="relative isolate max-w-5xl mx-auto px-5 md:px-6 py-10 md:py-14 min-h-svh">
+    <div className="relative isolate mx-auto min-h-svh max-w-5xl px-4 py-8 sm:px-5 md:px-6 md:py-14">
       <HomeSceneBackdrop scene={homeScene} theme={globalTheme} />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.45),transparent_40%)]" />
 
@@ -102,7 +102,7 @@ export const ChildSelector = ({
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-5xl md:text-6xl font-bold text-primary mb-3"
+          className="mb-3 text-4xl font-bold text-primary sm:text-5xl md:text-6xl"
         >
           {title}
         </motion.h1>
@@ -195,7 +195,7 @@ export const ChildSelector = ({
         </div>
       </motion.section>
 
-      <div className="relative z-10 grid gap-5 md:grid-cols-3">
+      <div className="relative z-10 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {children.map((child, i) => {
           const dueRoutine = dueRoutineByChild[child.id];
           const isDueNow = Boolean(dueRoutine);
@@ -210,7 +210,7 @@ export const ChildSelector = ({
               whileTap={{ scale: 0.97 }}
               onClick={() => onSelectChild(child.id)}
               aria-label={`Select ${child.name}`}
-              className={`group relative overflow-hidden rounded-[36px] border p-5 md:p-6 shadow-card backdrop-blur-md transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+              className={`group relative overflow-hidden rounded-[32px] border p-5 md:rounded-[36px] md:p-6 shadow-card backdrop-blur-md transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                 isDueNow
                   ? globalTheme === 'evening'
                     ? 'border-yellow-100/60 bg-slate-950/45 ring-2 ring-yellow-100/35'

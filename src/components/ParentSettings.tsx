@@ -295,12 +295,12 @@ export const ParentSettings = ({
   const editorChild = children.find((child) => child.id === editorChildId) ?? children[0];
 
   return (
-    <div className="max-w-4xl mx-auto px-5 md:px-6 py-8 md:py-12 min-h-svh">
-      <header className="flex items-center justify-between mb-10 md:mb-12">
-        <div className="flex items-center gap-4">
+    <div className="mx-auto min-h-svh max-w-4xl px-4 py-8 sm:px-5 md:px-6 md:py-12">
+      <header className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between md:mb-12">
+        <div className="flex items-start gap-4">
           <button
             onClick={onBack}
-            className="p-3 rounded-2xl bg-card shadow-sm text-muted-foreground active:scale-95 transition-transform"
+            className="rounded-2xl bg-card p-3 text-muted-foreground shadow-sm transition-transform active:scale-95"
           >
             <ArrowLeft size={24} />
           </button>
@@ -311,7 +311,7 @@ export const ParentSettings = ({
         </div>
         <button
           onClick={onBack}
-          className="px-5 py-2.5 bg-foreground text-background rounded-xl font-bold text-base shadow-button active:translate-y-0.5 transition-transform"
+          className="w-full rounded-xl bg-foreground px-5 py-2.5 text-base font-bold text-background shadow-button transition-transform active:translate-y-0.5 sm:w-auto"
         >
           Done
         </button>
@@ -379,7 +379,7 @@ export const ParentSettings = ({
                 </div>
                 <div className="mt-4">
                   <p className="text-sm font-medium text-muted-foreground">Choose animal avatar</p>
-                  <div className="mt-3 grid grid-cols-5 gap-2">
+                  <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-5">
                     {ANIMAL_AVATARS.map((avatar) => {
                       const isSelected = (child.avatarAnimal ?? '') === avatar.key;
 
@@ -393,7 +393,7 @@ export const ParentSettings = ({
                               avatarAnimal: avatar.key,
                             }))
                           }
-                          className={`rounded-2xl border p-2 text-center transition-all ${
+                          className={`rounded-2xl border p-3 text-center transition-all ${
                             isSelected
                               ? 'border-primary bg-primary/10 ring-2 ring-primary'
                               : 'border-border bg-background hover:border-primary/40'
@@ -401,7 +401,7 @@ export const ParentSettings = ({
                           aria-label={`Choose ${avatar.label} avatar`}
                         >
                           <div className="text-2xl">{avatar.emoji}</div>
-                          <div className="mt-1 text-[10px] font-black uppercase tracking-[0.14em] text-foreground">
+                          <div className="mt-1 text-[9px] font-black uppercase tracking-[0.12em] text-foreground sm:text-[10px] sm:tracking-[0.14em]">
                             {avatar.label}
                           </div>
                         </button>
@@ -412,9 +412,9 @@ export const ParentSettings = ({
               </div>
 
               <div>
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <input
-                    className="text-xl md:text-2xl font-bold text-foreground bg-transparent border-b-2 border-transparent focus:border-primary outline-none w-full max-w-xs"
+                    className="w-full border-b-2 border-transparent bg-transparent text-xl font-bold text-foreground outline-none focus:border-primary sm:max-w-xs md:text-2xl"
                     value={child.name}
                     onChange={(e) =>
                       updateChild(child.id, (c) => ({ ...c, name: e.target.value }))
@@ -423,7 +423,7 @@ export const ParentSettings = ({
                   {children.length > 1 && (
                     <button
                       onClick={() => onChange(children.filter((c) => c.id !== child.id))}
-                      className="text-destructive/50 hover:text-destructive p-2 transition-colors"
+                      className="self-start p-2 text-destructive/50 transition-colors hover:text-destructive sm:self-auto"
                     >
                       <Trash2 size={20} />
                     </button>
@@ -541,7 +541,7 @@ export const ParentSettings = ({
 
           {editorChild && (
             <div className="mt-6 space-y-6">
-              <div className="flex flex-wrap gap-3">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {children.map((child) => (
                   <button
                     key={`editor-child-${child.id}`}

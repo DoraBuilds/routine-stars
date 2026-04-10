@@ -261,7 +261,7 @@ export const InitialSetup = ({ children, onComplete }: InitialSetupProps) => {
             )}
           </aside>
 
-          <section className="rounded-[36px] border border-border bg-card p-6 shadow-card md:p-8">
+          <section className="rounded-[36px] border border-border bg-card p-5 shadow-card md:p-8">
             {!activeChild ? (
               <div className="flex min-h-[420px] flex-col items-center justify-center text-center">
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -290,13 +290,13 @@ export const InitialSetup = ({ children, onComplete }: InitialSetupProps) => {
                     </p>
                   </div>
 
-                  <div className="inline-flex rounded-full bg-muted p-1">
+                  <div className="inline-flex w-full rounded-full bg-muted p-1 sm:w-auto">
                     {(['profile', 'routines'] as const).map((tab) => (
                       <button
                         key={tab}
                         type="button"
                         onClick={() => setActiveTab(tab)}
-                        className={`rounded-full px-5 py-3 text-sm font-bold transition-colors ${
+                        className={`flex-1 rounded-full px-5 py-3 text-sm font-bold transition-colors sm:flex-none ${
                           activeTab === tab ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
                         }`}
                       >
@@ -319,7 +319,7 @@ export const InitialSetup = ({ children, onComplete }: InitialSetupProps) => {
                       <p className="mt-4 text-sm font-black uppercase tracking-[0.2em] text-muted-foreground">
                         Pick an avatar
                       </p>
-                      <div className="mt-4 grid grid-cols-5 gap-2">
+                      <div className="mt-4 grid grid-cols-4 gap-2 sm:grid-cols-5">
                         {ANIMAL_AVATARS.map((avatar) => {
                           const selected = activeChild.avatarAnimal === avatar.key;
 
@@ -333,7 +333,7 @@ export const InitialSetup = ({ children, onComplete }: InitialSetupProps) => {
                                   avatarAnimal: avatar.key,
                                 }))
                               }
-                              className={`rounded-2xl border p-2 transition-all ${
+                              className={`rounded-2xl border p-3 transition-all ${
                                 selected
                                   ? 'border-primary bg-primary/10 ring-2 ring-primary'
                                   : 'border-border bg-background hover:border-primary/40'
@@ -461,7 +461,7 @@ export const InitialSetup = ({ children, onComplete }: InitialSetupProps) => {
                       </div>
                     </div>
 
-                    <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
+                    <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
                       <div className="rounded-[28px] bg-muted/55 p-5">
                         <div className="mb-4 flex flex-wrap items-center gap-3">
                           <div
