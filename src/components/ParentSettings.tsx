@@ -6,6 +6,7 @@ import {
 import { TaskIcon } from './TaskIcon';
 import { TaskSuggestionPicker } from './TaskSuggestionPicker';
 import { ChildProfileAvatar } from './ChildProfileAvatar';
+import { AccountSettingsCard } from './AccountSettingsCard';
 import { ANIMAL_AVATARS } from './animal-avatars';
 import type { Child, HomeScene, RoutineType } from '@/lib/types';
 import { AGE_BUCKETS, groupTasksByAge, ICON_OPTIONS, TASK_CATALOG } from '@/lib/types';
@@ -318,6 +319,8 @@ export const ParentSettings = ({
       </header>
 
       <div className="grid gap-10 md:gap-12">
+        <AccountSettingsCard />
+
         <section className="rounded-[32px] border border-border bg-card p-6 shadow-sm md:p-8">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
