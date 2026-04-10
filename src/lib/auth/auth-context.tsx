@@ -1,6 +1,7 @@
 import { createContext, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
-import { ensureProvisionedHousehold, type HouseholdBootstrapState } from './household-bootstrap';
+import type { HouseholdRecord } from '@/lib/data/models';
+import { ensureHousehold } from './household-bootstrap';
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase/client';
 
 type AuthStatus = 'unavailable' | 'loading' | 'signed_out' | 'signed_in';
@@ -11,7 +12,7 @@ export interface AuthContextValue {
   session: Session | null;
   user: User | null;
   householdStatus: HouseholdStatus;
-  household: HouseholdBootstrapState | null;
+  household: HouseholdRecord | null;
   error: string | null;
   signIn: (email: string, password: string) => Promise<boolean>;
   signUp: (email: string, password: string) => Promise<boolean>;
@@ -28,7 +29,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [householdStatus, setHouseholdStatus] = useState<HouseholdStatus>('idle');
-  const [household, setHousehold] = useState<HouseholdBootstrapState | null>(null);
+  const [household, setHousehold] = useState<HouseholdRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -57,7 +58,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       setHouseholdStatus('loading');
 
       try {
-        const provisioned = await ensureProvisionedHousehold(nextSession.user);
+        const provisioned = await ensureHousehold(nextSession.user);
         if (!isMounted) return;
         setHousehold(provisioned);
         setHouseholdStatus('ready');
@@ -68,7 +69,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         setError(
           bootstrapError instanceof Error
             ? bootstrapError.message
-            : 'Could not prepare the family household.'
+            : 'Could not prepare the family household in Supabase.'
         );
       }
     };

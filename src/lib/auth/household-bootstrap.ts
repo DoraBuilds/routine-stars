@@ -1,15 +1,7 @@
 import type { User } from '@supabase/supabase-js';
-
-const HOUSEHOLD_BOOTSTRAP_PREFIX = 'routine_stars_household_bootstrap:';
-
-export type HouseholdBootstrapState = {
-  householdId: string;
-  householdName: string;
-  createdAt: string;
-  status: 'provisional';
-};
-
-const getBootstrapKey = (userId: string) => `${HOUSEHOLD_BOOTSTRAP_PREFIX}${userId}`;
+import { SupabaseHouseholdRepository } from '@/lib/data/supabase-household-repository';
+import type { HouseholdRecord } from '@/lib/data/models';
+import { getSupabaseClient } from '@/lib/supabase/client';
 
 const getSuggestedHouseholdName = (user: User) => {
   const emailName = user.email?.split('@')[0]?.trim();
@@ -21,28 +13,21 @@ const getSuggestedHouseholdName = (user: User) => {
   return `${normalized}'s Family`;
 };
 
-export const readProvisionedHousehold = (userId: string): HouseholdBootstrapState | null => {
-  const raw = localStorage.getItem(getBootstrapKey(userId));
-  if (!raw) return null;
-
-  try {
-    return JSON.parse(raw) as HouseholdBootstrapState;
-  } catch {
-    return null;
+export const ensureHousehold = async (user: User): Promise<HouseholdRecord> => {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    throw new Error('Supabase is not configured yet.');
   }
-};
 
-export const ensureProvisionedHousehold = async (user: User) => {
-  const existing = readProvisionedHousehold(user.id);
-  if (existing) return existing;
+  const repository = new SupabaseHouseholdRepository(supabase);
+  const currentHousehold = await repository.getCurrentHousehold();
+  if (currentHousehold) {
+    return currentHousehold;
+  }
 
-  const provisioned: HouseholdBootstrapState = {
-    householdId: crypto.randomUUID(),
+  return repository.createInitialHousehold({
+    userId: user.id,
     householdName: getSuggestedHouseholdName(user),
-    createdAt: new Date().toISOString(),
-    status: 'provisional',
-  };
-
-  localStorage.setItem(getBootstrapKey(user.id), JSON.stringify(provisioned));
-  return provisioned;
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+  });
 };

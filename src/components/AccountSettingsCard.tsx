@@ -97,13 +97,13 @@ export const AccountSettingsCard = () => {
               <p className="text-sm font-black uppercase tracking-[0.18em]">Household bootstrap</p>
             </div>
             <p className="mt-4 text-lg font-bold text-foreground">
-              {household?.householdName ?? 'Preparing family household'}
+              {household?.name ?? 'Preparing family household'}
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
               {householdStatus === 'ready'
-                ? 'A provisional household record is ready. The database-backed household tables come next.'
+                ? 'The parent account is connected to a household record in Supabase.'
                 : householdStatus === 'error'
-                  ? 'We could not prepare the household yet.'
+                  ? 'We could not prepare the household in Supabase yet.'
                   : 'We are preparing the first synced family space for this parent account.'}
             </p>
           </div>

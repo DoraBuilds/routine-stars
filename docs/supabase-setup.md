@@ -16,15 +16,11 @@ You can start from [.env.example](/Users/doraangelov/CodexProjects/daily-star-ch
 - parent sign in
 - parent sign up
 - persisted Supabase session in the browser
-- provisional household bootstrap marker after first login
+- real household bootstrap in the app once the Supabase schema exists
 
 ## What Still Comes Next
 
-This scaffolding is intentionally ahead of the database work.
-
 Still required:
-- real `households` and membership tables
-- row-level security
-- true household bootstrap in the database
+- applying the migration in `supabase/migrations/20260410194500_create_household_schema.sql` to the remote project
 - cloud-backed child/routine sync
 - local-to-cloud import flow
