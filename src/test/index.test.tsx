@@ -62,10 +62,24 @@ vi.mock("@/components/RoutineView", () => ({
 }));
 
 vi.mock("@/components/ParentSettings", () => ({
-  ParentSettings: ({ onBack }: { onBack: () => void }) => (
+  ParentSettings: ({
+    onBack,
+    onRestartSetup,
+    onResetAppData,
+  }: {
+    onBack: () => void;
+    onRestartSetup: () => void;
+    onResetAppData: () => void;
+  }) => (
     <div>
       <button type="button" onClick={onBack}>
         back-home
+      </button>
+      <button type="button" onClick={onRestartSetup}>
+        restart-setup
+      </button>
+      <button type="button" onClick={onResetAppData}>
+        reset-app-data
       </button>
     </div>
   ),
@@ -191,6 +205,20 @@ describe("Index", () => {
     expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("0");
   });
 
+  it("re-opens setup when saved data is marked incomplete", async () => {
+    localStorage.setItem(
+      "routine_stars_data",
+      JSON.stringify({
+        ...createStoredState(false, today()),
+        setupComplete: false,
+      })
+    );
+
+    render(<Index />);
+
+    expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("1");
+  });
+
   it("completes first-run setup and persists the configured routines", async () => {
     render(<Index />);
 
@@ -202,5 +230,50 @@ describe("Index", () => {
     expect(stored.setupComplete).toBe(true);
     expect(stored.children).toHaveLength(1);
     expect(stored.children[0].morning[0].title).toBe("Make bed");
+  });
+
+  it("lets a parent clear app data from Parent Settings", async () => {
+    localStorage.setItem(
+      "routine_stars_data",
+      JSON.stringify({
+        ...createStoredState(false, today()),
+        setupComplete: true,
+        homeScene: "kite",
+      })
+    );
+
+    render(<Index />);
+
+    fireEvent.click(screen.getByRole("button", { name: "open-settings" }));
+    fireEvent.click(screen.getByRole("button", { name: "reset-app-data" }));
+
+    expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("0");
+
+    const stored = JSON.parse(localStorage.getItem("routine_stars_data") ?? "{}");
+    expect(stored.setupComplete).toBe(false);
+    expect(stored.children).toEqual([]);
+    expect(stored.homeScene).toBe("bike");
+  });
+
+  it("lets a parent restart setup without manual localStorage edits", async () => {
+    localStorage.setItem(
+      "routine_stars_data",
+      JSON.stringify({
+        ...createStoredState(false, today()),
+        setupComplete: true,
+      })
+    );
+
+    render(<Index />);
+
+    fireEvent.click(screen.getByRole("button", { name: "open-settings" }));
+    fireEvent.click(screen.getByRole("button", { name: "restart-setup" }));
+
+    expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("1");
+
+    const stored = JSON.parse(localStorage.getItem("routine_stars_data") ?? "{}");
+    expect(stored.setupComplete).toBe(false);
+    expect(stored.children).toHaveLength(1);
+    expect(stored.children[0].name).toBe("Lily");
   });
 });

@@ -46,15 +46,21 @@ const readState = () => JSON.parse(screen.getByTestId("state").textContent ?? "{
 const Harness = ({ seedChildren = initialChildren }: { seedChildren?: Child[] }) => {
   const [children, setChildren] = useState(seedChildren);
   const [homeScene, setHomeScene] = useState<HomeScene>("bike");
+  const [restartCount, setRestartCount] = useState(0);
+  const [resetCount, setResetCount] = useState(0);
 
   return (
     <div>
       <pre data-testid="state">{JSON.stringify(children)}</pre>
+      <div data-testid="restart-count">{restartCount}</div>
+      <div data-testid="reset-count">{resetCount}</div>
       <ParentSettings
         children={children}
         homeScene={homeScene}
         onChange={setChildren}
         onHomeSceneChange={setHomeScene}
+        onRestartSetup={() => setRestartCount((count) => count + 1)}
+        onResetAppData={() => setResetCount((count) => count + 1)}
         onBack={() => {}}
       />
     </div>
@@ -161,5 +167,34 @@ describe("ParentSettings", () => {
     const firstBucket = container.querySelector("details");
     expect(firstBucket).not.toBeNull();
     expect(firstBucket).not.toHaveAttribute("open");
+  });
+
+  it("shows restart and reset controls for the parent", () => {
+    render(<Harness />);
+
+    expect(screen.getByRole("button", { name: /restart setup/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^reset everything$/i })).toBeInTheDocument();
+  });
+
+  it("requires confirmation before resetting all app data", () => {
+    render(<Harness />);
+
+    fireEvent.click(screen.getByRole("button", { name: /^reset everything$/i }));
+
+    expect(screen.getByText(/this clears everything saved in this browser/i)).toBeInTheDocument();
+    expect(screen.getByTestId("reset-count")).toHaveTextContent("0");
+
+    fireEvent.click(screen.getByRole("button", { name: /yes, reset everything/i }));
+
+    expect(screen.getByTestId("reset-count")).toHaveTextContent("1");
+  });
+
+  it("fires restart setup without clearing the current children immediately", () => {
+    render(<Harness />);
+
+    fireEvent.click(screen.getByRole("button", { name: /restart setup/i }));
+
+    expect(screen.getByTestId("restart-count")).toHaveTextContent("1");
+    expect(readState()).toHaveLength(2);
   });
 });

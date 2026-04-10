@@ -66,6 +66,23 @@ const Index = () => {
   const [now, setNow] = useState(() => new Date());
   const [homeScene, setHomeScene] = useState<HomeScene>('bike');
 
+  const resetToFreshSetup = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY);
+    setChildren(createSetupChildren());
+    setActiveChildId(null);
+    setSetupComplete(false);
+    setHomeScene('bike');
+    setView('setup');
+    setNow(new Date());
+  }, []);
+
+  const restartSetup = useCallback(() => {
+    setActiveChildId(null);
+    setSetupComplete(false);
+    setView('setup');
+    setNow(new Date());
+  }, []);
+
   // Load from localStorage with daily reset
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -200,6 +217,8 @@ const Index = () => {
         homeScene={homeScene}
         onChange={setChildren}
         onHomeSceneChange={setHomeScene}
+        onRestartSetup={restartSetup}
+        onResetAppData={resetToFreshSetup}
         onBack={() => setView('home')}
       />
     );

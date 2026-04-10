@@ -16,6 +16,8 @@ interface ParentSettingsProps {
   homeScene: HomeScene;
   onChange: (children: Child[]) => void;
   onHomeSceneChange: (scene: HomeScene) => void;
+  onRestartSetup: () => void;
+  onResetAppData: () => void;
   onBack: () => void;
 }
 
@@ -251,8 +253,11 @@ export const ParentSettings = ({
   homeScene,
   onChange,
   onHomeSceneChange,
+  onRestartSetup,
+  onResetAppData,
   onBack,
 }: ParentSettingsProps) => {
+  const [confirmReset, setConfirmReset] = useState(false);
   const [modal, setModal] = useState<{
     childId: string;
     routine: RoutineType;
@@ -635,6 +640,74 @@ export const ParentSettings = ({
             <UserPlus size={24} /> Add Another Child
           </button>
         )}
+
+        <section className="rounded-[32px] border border-destructive/20 bg-card p-6 shadow-sm md:p-8">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-destructive/10 text-destructive">
+              <Trash2 size={22} />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-foreground">Reset and Restart</h3>
+              <p className="text-sm text-muted-foreground">
+                Restart setup if you want to walk through profiles and routines again, or clear everything and start over.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <div className="rounded-[28px] border border-border bg-background p-5">
+              <h4 className="text-lg font-bold text-foreground">Restart setup</h4>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Keep the current children and open the setup flow again so you can review profiles and routines from the start.
+              </p>
+              <button
+                type="button"
+                onClick={onRestartSetup}
+                className="mt-5 rounded-full border border-border px-4 py-2 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+              >
+                Restart setup
+              </button>
+            </div>
+
+            <div className="rounded-[28px] border border-destructive/20 bg-destructive/5 p-5">
+              <h4 className="text-lg font-bold text-foreground">Reset app data</h4>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Remove all saved children, routines, schedules, and progress from this browser and return to a fresh start.
+              </p>
+              {confirmReset ? (
+                <div className="mt-5 space-y-3">
+                  <p className="text-sm font-medium text-destructive">
+                    This clears everything saved in this browser. Are you sure?
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={onResetAppData}
+                      className="rounded-full bg-destructive px-4 py-2 text-sm font-bold text-destructive-foreground transition-transform active:translate-y-0.5"
+                    >
+                      Yes, reset everything
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmReset(false)}
+                      className="rounded-full border border-border px-4 py-2 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmReset(true)}
+                  className="mt-5 rounded-full bg-destructive px-4 py-2 text-sm font-bold text-destructive-foreground transition-transform active:translate-y-0.5"
+                >
+                  Reset everything
+                </button>
+              )}
+            </div>
+          </div>
+        </section>
       </div>
 
       {/* Task Modal */}
