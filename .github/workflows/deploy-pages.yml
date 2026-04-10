@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - codex/mvp-family-pilot
   workflow_dispatch:
 
 permissions:
