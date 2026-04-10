@@ -4,7 +4,6 @@ import { InitialSetup } from '@/components/InitialSetup';
 import { RoutineView } from '@/components/RoutineView';
 import { ParentSettings } from '@/components/ParentSettings';
 import type { AppView, Child, HomeScene, RoutineType } from '@/lib/types';
-import { DEFAULT_CHILDREN } from '@/lib/types';
 
 const STORAGE_KEY = 'routine_stars_data';
 
@@ -56,18 +55,7 @@ const getDisplayRoutine = (child: Child, now: Date): RoutineType => {
   return 'morning';
 };
 
-const createSetupChildren = (): Child[] =>
-  DEFAULT_CHILDREN.map((child) => ({
-    id: child.id,
-    name: child.name,
-    age: child.age,
-    ageBucket: child.ageBucket,
-    avatarSeed: child.avatarSeed,
-    avatarAnimal: child.avatarAnimal,
-    schedule: child.schedule,
-    morning: [],
-    evening: [],
-  }));
+const createSetupChildren = (): Child[] => [];
 
 const Index = () => {
   const [view, setView] = useState<AppView>('setup');

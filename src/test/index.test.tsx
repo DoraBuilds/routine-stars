@@ -188,7 +188,7 @@ describe("Index", () => {
   it("shows the initial setup flow when there is no saved data", async () => {
     render(<Index />);
 
-    expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("3");
+    expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("0");
   });
 
   it("completes first-run setup and persists the configured routines", async () => {
