@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import Index from "@/pages/Index";
+import { CURRENT_LOCAL_APP_STATE_VERSION } from "@/lib/storage/local-app-state";
 import type { Child } from "@/lib/types";
 
 const today = () => new Date().toDateString();
@@ -164,6 +165,7 @@ describe("Index", () => {
     });
 
     const stored = JSON.parse(localStorage.getItem("routine_stars_data") ?? "{}");
+    expect(stored.version).toBe(CURRENT_LOCAL_APP_STATE_VERSION);
     expect(stored.lastReset).toBe(today());
     expect(stored.children[0].morning[0].completed).toBe(true);
   });
@@ -217,6 +219,19 @@ describe("Index", () => {
     render(<Index />);
 
     expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("1");
+  });
+
+  it("hydrates legacy unversioned local data", async () => {
+    localStorage.setItem(
+      "routine_stars_data",
+      JSON.stringify(createStoredState(false, today()))
+    );
+
+    render(<Index />);
+
+    fireEvent.click(screen.getByRole("button", { name: "select-first-child" }));
+
+    expect(await screen.findByTestId("active-child")).toHaveTextContent("Lily");
   });
 
   it("completes first-run setup and persists the configured routines", async () => {

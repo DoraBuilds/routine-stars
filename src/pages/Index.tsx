@@ -4,8 +4,11 @@ import { InitialSetup } from '@/components/InitialSetup';
 import { RoutineView } from '@/components/RoutineView';
 import { ParentSettings } from '@/components/ParentSettings';
 import type { AppView, Child, HomeScene, RoutineType } from '@/lib/types';
-
-const STORAGE_KEY = 'routine_stars_data';
+import {
+  clearLocalAppState,
+  loadLocalAppState,
+  saveLocalAppState,
+} from '@/lib/storage/local-app-state';
 
 const parseTime = (value: string) => {
   const [hours, minutes] = value.split(':').map(Number);
@@ -67,7 +70,7 @@ const Index = () => {
   const [homeScene, setHomeScene] = useState<HomeScene>('bike');
 
   const resetToFreshSetup = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
+    clearLocalAppState();
     setChildren(createSetupChildren());
     setActiveChildId(null);
     setSetupComplete(false);
@@ -85,31 +88,22 @@ const Index = () => {
 
   // Load from localStorage with daily reset
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        const today = new Date().toDateString();
-        const resolvedSetupComplete = parsed.setupComplete ?? true;
-        if (parsed.lastReset !== today) {
-          const reset = parsed.children.map((c: Child) => ({
-            ...c,
-            morning: c.morning.map((t: Child['morning'][0]) => ({ ...t, completed: false })),
-            evening: c.evening.map((t: Child['evening'][0]) => ({ ...t, completed: false })),
-          }));
-          setChildren(reset);
-        } else {
-          setChildren(parsed.children);
-        }
-        setSetupComplete(resolvedSetupComplete);
-        setHomeScene(parsed.homeScene ?? 'bike');
-        setView(resolvedSetupComplete ? 'home' : 'setup');
-      } catch {
-        setChildren(createSetupChildren());
-        setSetupComplete(false);
-        setHomeScene('bike');
-        setView('setup');
+    const storedState = loadLocalAppState();
+    if (storedState) {
+      const today = new Date().toDateString();
+      if (storedState.lastReset !== today) {
+        const reset = storedState.children.map((c: Child) => ({
+          ...c,
+          morning: c.morning.map((t: Child['morning'][0]) => ({ ...t, completed: false })),
+          evening: c.evening.map((t: Child['evening'][0]) => ({ ...t, completed: false })),
+        }));
+        setChildren(reset);
+      } else {
+        setChildren(storedState.children);
       }
+      setSetupComplete(storedState.setupComplete);
+      setHomeScene(storedState.homeScene);
+      setView(storedState.setupComplete ? 'home' : 'setup');
     } else {
       setChildren(createSetupChildren());
       setSetupComplete(false);
@@ -144,10 +138,13 @@ const Index = () => {
   useEffect(() => {
     if (!isReady) return;
 
-    const payload = { children, homeScene, lastReset: new Date().toDateString(), setupComplete };
-
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      saveLocalAppState({
+        children,
+        homeScene,
+        lastReset: new Date().toDateString(),
+        setupComplete,
+      });
     } catch (error) {
       console.warn('Could not save app state to local storage.', error);
     }
