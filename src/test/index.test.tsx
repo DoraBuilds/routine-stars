@@ -37,13 +37,11 @@ vi.mock("@/components/RoutineView", () => ({
   RoutineView: ({
     child,
     routine,
-    onSetRoutine,
     onToggleTask,
     onBack,
   }: {
     child: { name: string; morning: Array<{ id: string; completed: boolean }> };
     routine: "morning" | "evening";
-    onSetRoutine: (routine: "morning" | "evening") => void;
     onToggleTask: (taskId: string) => void;
     onBack: () => void;
   }) => (
@@ -55,9 +53,6 @@ vi.mock("@/components/RoutineView", () => ({
       </div>
       <button type="button" onClick={() => onToggleTask(child[routine][0].id)}>
         toggle-first-task
-      </button>
-      <button type="button" onClick={() => onSetRoutine("evening")}>
-        switch-evening
       </button>
       <button type="button" onClick={onBack}>
         back-home
@@ -159,16 +154,33 @@ describe("Index", () => {
     expect(stored.children[0].morning[0].completed).toBe(true);
   });
 
-  it("allows switching between routines in the active child view", () => {
+  it("opens the due routine for the active child view", () => {
     localStorage.setItem(
       "routine_stars_data",
-      JSON.stringify(createStoredState(false, today()))
+      JSON.stringify({
+        ...createStoredState(false, today()),
+        children: [
+          {
+            id: "1",
+            name: "Lily",
+            morning: [
+              { id: "m1", title: "Make bed", icon: "bed", completed: false },
+            ],
+            evening: [
+              { id: "e1", title: "Go to bed", icon: "moon-star", completed: false },
+            ],
+            schedule: {
+              morning: { start: "00:00", end: "00:01" },
+              evening: { start: "00:02", end: "23:59" },
+            },
+          },
+        ],
+      })
     );
 
     render(<Index />);
 
     fireEvent.click(screen.getByRole("button", { name: "select-first-child" }));
-    fireEvent.click(screen.getByRole("button", { name: "switch-evening" }));
 
     expect(screen.getByTestId("active-routine")).toHaveTextContent("evening");
   });

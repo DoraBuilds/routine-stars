@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Reorder } from 'framer-motion';
 import {
-  Sun, Moon, Trash2, Plus, GripVertical, UserPlus, ArrowLeft, X, Check, Shuffle, Clock3, Palette,
+  Sun, Moon, Trash2, Plus, GripVertical, UserPlus, ArrowLeft, X, Check, Shuffle, Clock3, Palette, ChevronDown,
 } from 'lucide-react';
 import { TaskIcon } from './TaskIcon';
 import { TaskSuggestionPicker } from './TaskSuggestionPicker';
@@ -32,6 +32,11 @@ interface TaskModalProps {
   suggestions: readonly TaskCatalogItem[];
   onSave: (title: string, icon: string) => void;
   onClose: () => void;
+}
+
+interface TaskAgeGroupProps {
+  group: ReturnType<typeof groupTasksByAge>[number];
+  onQuickAdd: (task: TaskCatalogItem) => void;
 }
 
 const TaskModal = ({ initial, routine, mode, suggestions, onSave, onClose }: TaskModalProps) => {
@@ -120,7 +125,6 @@ const TaskModal = ({ initial, routine, mode, suggestions, onSave, onClose }: Tas
 interface RoutineColumnProps {
   type: RoutineType;
   tasks: Child['morning'];
-  childId: string;
   onReorder: (tasks: Child['morning']) => void;
   onDelete: (taskId: string) => void;
   onQuickAdd: (task: TaskCatalogItem) => void;
@@ -132,6 +136,36 @@ const RoutineColumn = ({ type, tasks, onReorder, onDelete, onQuickAdd, onAdd, on
   const isMorning = type === 'morning';
   const otherTasks = TASK_CATALOG[type].filter(
     (suggestion) => !tasks.some((task) => task.title === suggestion.title)
+  );
+
+  const TaskAgeGroup = ({ group, onQuickAdd }: TaskAgeGroupProps) => (
+    <details className="rounded-2xl border border-border bg-background/80">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-left">
+        <div>
+          <h6 className="text-xs font-black uppercase tracking-[0.22em] text-muted-foreground">
+            {group.label}
+          </h6>
+          <p className="mt-1 text-xs text-muted-foreground">{group.description}</p>
+        </div>
+        <ChevronDown size={16} className="text-muted-foreground transition-transform duration-200" />
+      </summary>
+      <div className="border-t border-border px-4 py-4">
+        <div className="flex flex-wrap gap-2">
+          {group.tasks.map((task) => (
+            <button
+              key={`${type}-${task.id}`}
+              type="button"
+              onClick={() => onQuickAdd(task)}
+              className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+            >
+              <TaskIcon iconKey={task.icon} size={16} strokeWidth={2.5} />
+              {task.title}
+              <Plus size={14} />
+            </button>
+          ))}
+        </div>
+      </div>
+    </details>
   );
 
   return (
@@ -171,37 +205,20 @@ const RoutineColumn = ({ type, tasks, onReorder, onDelete, onQuickAdd, onAdd, on
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
               <h5 className="text-sm font-black uppercase tracking-[0.24em] text-muted-foreground">
-                Other Tasks
+                Age Buckets
               </h5>
               <p className="mt-1 text-xs text-muted-foreground">
-                Available from the catalog but not active for this child yet.
+                Expand a bucket to add tasks to this routine.
               </p>
             </div>
-            <span className="rounded-full bg-muted px-3 py-1 text-xs font-bold text-muted-foreground">
-              {otherTasks.length} available
-            </span>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {groupTasksByAge(otherTasks).map((group) => (
-              <section key={`${type}-${group.key}`}>
-                <h6 className="mb-2 text-xs font-black uppercase tracking-[0.22em] text-muted-foreground">
-                  {group.label}
-                </h6>
-                <div className="flex flex-wrap gap-2">
-                  {group.tasks.map((task) => (
-                    <button
-                      key={`${type}-${task.id}`}
-                      type="button"
-                      onClick={() => onQuickAdd(task)}
-                      className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:text-primary"
-                    >
-                      <TaskIcon iconKey={task.icon} size={16} strokeWidth={2.5} />
-                      {task.title}
-                      <Plus size={14} />
-                    </button>
-                  ))}
-                </div>
-              </section>
+              <TaskAgeGroup
+                key={`${type}-${group.key}`}
+                group={group}
+                onQuickAdd={onQuickAdd}
+              />
             ))}
           </div>
         </div>
@@ -241,6 +258,8 @@ export const ParentSettings = ({
     routine: RoutineType;
     taskId?: string;
   } | null>(null);
+  const [editorChildId, setEditorChildId] = useState<string>(children[0]?.id ?? '');
+  const [editorRoutine, setEditorRoutine] = useState<RoutineType>('morning');
 
   const updateChild = (id: string, updater: (c: Child) => Child) => {
     onChange(children.map((c) => (c.id === id ? updater(c) : c)));
@@ -268,6 +287,7 @@ export const ParentSettings = ({
         ?.[modal.routine]?.find((t) => t.id === modal.taskId)
     : undefined;
   const selectedSuggestions = modal ? TASK_CATALOG[modal.routine] : [];
+  const editorChild = children.find((child) => child.id === editorChildId) ?? children[0];
 
   return (
     <div className="max-w-4xl mx-auto px-5 md:px-6 py-8 md:py-12 min-h-svh">
@@ -328,7 +348,7 @@ export const ParentSettings = ({
 
         {children.map((child) => (
           <section key={child.id} className="bg-card p-6 md:p-8 rounded-[32px] shadow-sm border border-border">
-            <div className="mb-6 grid gap-6 md:mb-8 lg:grid-cols-[220px_minmax(0,1fr)]">
+            <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)] md:items-start">
               <div className="rounded-[28px] bg-muted/55 p-5 text-center">
                 <ChildProfileAvatar
                   name={child.name}
@@ -456,7 +476,7 @@ export const ParentSettings = ({
                         </p>
                         <div className="mt-3 grid grid-cols-2 gap-3">
                           <input
-                                    type="time"
+                            type="time"
                             value={child.schedule?.[routine].start ?? (routine === 'morning' ? '07:00' : '17:00')}
                             onChange={(event) =>
                               updateChild(child.id, (c) => ({
@@ -498,57 +518,96 @@ export const ParentSettings = ({
                 </div>
               </div>
             </div>
-
-            <div className="grid md:grid-cols-2 gap-6 md:gap-8">
-              <RoutineColumn
-                type="morning"
-                tasks={child.morning}
-                childId={child.id}
-                onReorder={(newOrder) => updateChild(child.id, (c) => ({ ...c, morning: newOrder }))}
-                onDelete={(taskId) =>
-                  updateChild(child.id, (c) => ({
-                    ...c,
-                    morning: c.morning.filter((t) => t.id !== taskId),
-                  }))
-                }
-                onQuickAdd={(task) =>
-                  updateChild(child.id, (c) => ({
-                    ...c,
-                    morning: [
-                      ...c.morning,
-                      { id: crypto.randomUUID(), title: task.title, icon: task.icon, completed: false },
-                    ],
-                  }))
-                }
-                onAdd={() => setModal({ childId: child.id, routine: 'morning' })}
-                onEdit={(taskId) => setModal({ childId: child.id, routine: 'morning', taskId })}
-              />
-              <RoutineColumn
-                type="evening"
-                tasks={child.evening}
-                childId={child.id}
-                onReorder={(newOrder) => updateChild(child.id, (c) => ({ ...c, evening: newOrder }))}
-                onDelete={(taskId) =>
-                  updateChild(child.id, (c) => ({
-                    ...c,
-                    evening: c.evening.filter((t) => t.id !== taskId),
-                  }))
-                }
-                onQuickAdd={(task) =>
-                  updateChild(child.id, (c) => ({
-                    ...c,
-                    evening: [
-                      ...c.evening,
-                      { id: crypto.randomUUID(), title: task.title, icon: task.icon, completed: false },
-                    ],
-                  }))
-                }
-                onAdd={() => setModal({ childId: child.id, routine: 'evening' })}
-                onEdit={(taskId) => setModal({ childId: child.id, routine: 'evening', taskId })}
-              />
-            </div>
           </section>
         ))}
+
+        <section className="rounded-[32px] border border-border bg-card p-6 shadow-sm md:p-8">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <Clock3 size={22} />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-foreground">Routine Editor</h3>
+              <p className="text-sm text-muted-foreground">
+                Choose a child and one routine, then open an age bucket only when you want to add tasks.
+              </p>
+            </div>
+          </div>
+
+          {editorChild && (
+            <div className="mt-6 space-y-6">
+              <div className="flex flex-wrap gap-3">
+                {children.map((child) => (
+                  <button
+                    key={`editor-child-${child.id}`}
+                    type="button"
+                    onClick={() => setEditorChildId(child.id)}
+                    className={`flex items-center gap-3 rounded-[24px] border px-4 py-3 text-left transition-all ${
+                      editorChild.id === child.id
+                        ? 'border-primary bg-primary/10 ring-2 ring-primary'
+                        : 'border-border bg-background hover:border-primary/40'
+                    }`}
+                  >
+                    <ChildProfileAvatar
+                      name={child.name}
+                      seed={child.avatarSeed ?? child.id}
+                      animalKey={child.avatarAnimal}
+                      size="sm"
+                    />
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-[0.22em] text-muted-foreground">Editing</p>
+                      <p className="text-xl font-bold text-foreground">{child.name}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                {(['morning', 'evening'] as const).map((routine) => (
+                  <button
+                    key={`editor-routine-${routine}`}
+                    type="button"
+                    onClick={() => setEditorRoutine(routine)}
+                    className={`rounded-full px-5 py-3 text-sm font-black uppercase tracking-[0.24em] transition-all ${
+                      editorRoutine === routine
+                        ? routine === 'morning'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-indigo-500 text-white'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {routine}
+                  </button>
+                ))}
+              </div>
+
+              <div className="rounded-[28px] bg-muted/40 p-4 md:p-5">
+                <RoutineColumn
+                  type={editorRoutine}
+                  tasks={editorChild[editorRoutine]}
+                  onReorder={(newOrder) => updateChild(editorChild.id, (c) => ({ ...c, [editorRoutine]: newOrder }))}
+                  onDelete={(taskId) =>
+                    updateChild(editorChild.id, (c) => ({
+                      ...c,
+                      [editorRoutine]: c[editorRoutine].filter((t) => t.id !== taskId),
+                    }))
+                  }
+                  onQuickAdd={(task) =>
+                    updateChild(editorChild.id, (c) => ({
+                      ...c,
+                      [editorRoutine]: [
+                        ...c[editorRoutine],
+                        { id: crypto.randomUUID(), title: task.title, icon: task.icon, completed: false },
+                      ],
+                    }))
+                  }
+                  onAdd={() => setModal({ childId: editorChild.id, routine: editorRoutine })}
+                  onEdit={(taskId) => setModal({ childId: editorChild.id, routine: editorRoutine, taskId })}
+                />
+              </div>
+            </div>
+          )}
+        </section>
 
         {children.length < 3 && (
           <button

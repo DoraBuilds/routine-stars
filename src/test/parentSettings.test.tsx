@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { ParentSettings } from "@/components/ParentSettings";
-import type { Child } from "@/lib/types";
+import type { Child, HomeScene } from "@/lib/types";
 
 vi.mock("framer-motion", () => ({
   motion: new Proxy(
@@ -45,11 +45,18 @@ const readState = () => JSON.parse(screen.getByTestId("state").textContent ?? "{
 
 const Harness = ({ seedChildren = initialChildren }: { seedChildren?: Child[] }) => {
   const [children, setChildren] = useState(seedChildren);
+  const [homeScene, setHomeScene] = useState<HomeScene>("bike");
 
   return (
     <div>
       <pre data-testid="state">{JSON.stringify(children)}</pre>
-      <ParentSettings children={children} onChange={setChildren} onBack={() => {}} />
+      <ParentSettings
+        children={children}
+        homeScene={homeScene}
+        onChange={setChildren}
+        onHomeSceneChange={setHomeScene}
+        onBack={() => {}}
+      />
     </div>
   );
 };
@@ -146,5 +153,13 @@ describe("ParentSettings", () => {
     render(<Harness />);
 
     expect(screen.getByRole("button", { name: /add another child/i })).toBeInTheDocument();
+  });
+
+  it("keeps age buckets collapsed by default in the routine editor", () => {
+    const { container } = render(<Harness />);
+
+    const firstBucket = container.querySelector("details");
+    expect(firstBucket).not.toBeNull();
+    expect(firstBucket).not.toHaveAttribute("open");
   });
 });

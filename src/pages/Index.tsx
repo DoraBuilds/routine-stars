@@ -13,20 +13,47 @@ const parseTime = (value: string) => {
   return hours * 60 + minutes;
 };
 
-const getDueRoutine = (child: Child, now: Date): RoutineType | null => {
+const isWithinSchedule = (start: string, end: string, minutes: number) => {
+  const startMinutes = parseTime(start);
+  const endMinutes = parseTime(end);
+
+  if (startMinutes <= endMinutes) {
+    return minutes >= startMinutes && minutes <= endMinutes;
+  }
+
+  return minutes >= startMinutes || minutes <= endMinutes;
+};
+
+export const getDueRoutine = (child: Child, now: Date): RoutineType | null => {
   const minutes = now.getHours() * 60 + now.getMinutes();
   const morning = child.schedule?.morning;
   const evening = child.schedule?.evening;
 
-  if (morning && minutes >= parseTime(morning.start) && minutes <= parseTime(morning.end)) {
+  if (morning && isWithinSchedule(morning.start, morning.end, minutes)) {
     return 'morning';
   }
 
-  if (evening && minutes >= parseTime(evening.start) && minutes <= parseTime(evening.end)) {
+  if (evening && isWithinSchedule(evening.start, evening.end, minutes)) {
     return 'evening';
   }
 
   return null;
+};
+
+const getDisplayRoutine = (child: Child, now: Date): RoutineType => {
+  const dueRoutine = getDueRoutine(child, now);
+  if (dueRoutine) return dueRoutine;
+
+  const minutes = now.getHours() * 60 + now.getMinutes();
+  const morningStart = child.schedule?.morning ? parseTime(child.schedule.morning.start) : null;
+  const eveningStart = child.schedule?.evening ? parseTime(child.schedule.evening.start) : null;
+
+  if (eveningStart !== null && minutes >= eveningStart) return 'evening';
+  if (morningStart !== null && minutes >= morningStart) return 'morning';
+  if (morningStart !== null) return 'morning';
+  if (eveningStart !== null) return 'evening';
+
+  return 'morning';
 };
 
 const createSetupChildren = (): Child[] =>
@@ -46,7 +73,6 @@ const Index = () => {
   const [view, setView] = useState<AppView>('setup');
   const [children, setChildren] = useState<Child[]>(createSetupChildren);
   const [activeChildId, setActiveChildId] = useState<string | null>(null);
-  const [activeRoutine, setActiveRoutine] = useState<RoutineType>('morning');
   const [setupComplete, setSetupComplete] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [now, setNow] = useState(() => new Date());
@@ -97,6 +123,18 @@ const Index = () => {
     return () => window.clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    const syncNow = () => setNow(new Date());
+
+    window.addEventListener('focus', syncNow);
+    document.addEventListener('visibilitychange', syncNow);
+
+    return () => {
+      window.removeEventListener('focus', syncNow);
+      document.removeEventListener('visibilitychange', syncNow);
+    };
+  }, []);
+
   // Persist
   useEffect(() => {
     if (!isReady) return;
@@ -115,19 +153,21 @@ const Index = () => {
       setChildren((prev) =>
         prev.map((c) => {
           if (c.id !== activeChildId) return c;
+          const resolvedRoutine = getDisplayRoutine(c, new Date());
           return {
             ...c,
-            [activeRoutine]: c[activeRoutine].map((t) =>
+            [resolvedRoutine]: c[resolvedRoutine].map((t) =>
               t.id === taskId ? { ...t, completed: !t.completed } : t
             ),
           };
         })
       );
     },
-    [activeChildId, activeRoutine]
+    [activeChildId]
   );
 
   const activeChild = children.find((c) => c.id === activeChildId);
+  const activeRoutine = activeChild ? getDisplayRoutine(activeChild, now) : 'morning';
   const dueRoutineByChild = Object.fromEntries(
     children.map((child) => [child.id, getDueRoutine(child, now)])
   ) as Record<string, RoutineType | null>;
@@ -159,7 +199,6 @@ const Index = () => {
       <RoutineView
         child={activeChild}
         routine={activeRoutine}
-        onSetRoutine={setActiveRoutine}
         onToggleTask={toggleTask}
         onBack={() => setView('home')}
       />
@@ -185,8 +224,8 @@ const Index = () => {
       homeScene={homeScene}
       dueRoutineByChild={dueRoutineByChild}
       onSelectChild={(id) => {
+        setNow(new Date());
         setActiveChildId(id);
-        setActiveRoutine(dueRoutineByChild[id] ?? 'morning');
         setView('routine');
       }}
       onOpenSettings={() => setView('parent')}
