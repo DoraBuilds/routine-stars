@@ -28,9 +28,7 @@ describe("ChildSelector parent gate", () => {
     vi.useRealTimers();
   });
 
-  it("does not open settings on a quick press", () => {
-    const onOpenSettings = vi.fn();
-
+  const renderSelector = (props?: Partial<Parameters<typeof ChildSelector>[0]>) =>
     render(
       <ChildSelector
         children={children}
@@ -38,9 +36,15 @@ describe("ChildSelector parent gate", () => {
         homeScene="bike"
         dueRoutineByChild={{ "child-1": null }}
         onSelectChild={() => {}}
-        onOpenSettings={onOpenSettings}
+        onOpenSettings={() => {}}
+        {...props}
       />
     );
+
+  it("does not open settings on a quick press", () => {
+    const onOpenSettings = vi.fn();
+
+    renderSelector({ onOpenSettings });
 
     const button = screen.getByRole("button", {
       name: "Press and hold to open Parent Settings",
@@ -58,16 +62,7 @@ describe("ChildSelector parent gate", () => {
   it("opens settings after a full hold", () => {
     const onOpenSettings = vi.fn();
 
-    render(
-      <ChildSelector
-        children={children}
-        globalTheme="free"
-        homeScene="bike"
-        dueRoutineByChild={{ "child-1": null }}
-        onSelectChild={() => {}}
-        onOpenSettings={onOpenSettings}
-      />
-    );
+    renderSelector({ onOpenSettings });
 
     const button = screen.getByRole("button", {
       name: "Press and hold to open Parent Settings",
@@ -79,5 +74,44 @@ describe("ChildSelector parent gate", () => {
     });
 
     expect(onOpenSettings).toHaveBeenCalledTimes(1);
+  });
+
+  it("signals when a morning routine is ready", () => {
+    renderSelector({
+      globalTheme: "morning",
+      dueRoutineByChild: { "child-1": "morning" },
+    });
+
+    expect(screen.getByRole("heading", { name: "Morning routine time" })).toBeInTheDocument();
+    expect(screen.getByText("The sun is up and morning routines are ready.")).toBeInTheDocument();
+    expect(screen.getByText("Morning jobs are ready now")).toBeInTheDocument();
+    expect(screen.getByText(/morning routine ready/i)).toBeInTheDocument();
+    expect(screen.getByText("Tap to start now")).toBeInTheDocument();
+  });
+
+  it("signals when an evening routine is ready", () => {
+    renderSelector({
+      globalTheme: "evening",
+      dueRoutineByChild: { "child-1": "evening" },
+    });
+
+    expect(screen.getByRole("heading", { name: "Evening routine time" })).toBeInTheDocument();
+    expect(screen.getByText("The stars are out and bedtime routines are ready.")).toBeInTheDocument();
+    expect(screen.getByText("Evening jobs are ready now")).toBeInTheDocument();
+    expect(screen.getByText(/evening routine ready/i)).toBeInTheDocument();
+    expect(screen.getByText("Tap to start now")).toBeInTheDocument();
+  });
+
+  it("keeps the home screen friendly when no routine is due", () => {
+    renderSelector({
+      globalTheme: "free",
+      dueRoutineByChild: { "child-1": null },
+    });
+
+    expect(screen.getByRole("heading", { name: "Routine Stars" })).toBeInTheDocument();
+    expect(screen.getByText("Who is ready to shine today?")).toBeInTheDocument();
+    expect(screen.getByText("No routine is due right now")).toBeInTheDocument();
+    expect(screen.getByText("Choose a child to play, explore, or check in later.")).toBeInTheDocument();
+    expect(screen.getByText("Tap to check in anyway")).toBeInTheDocument();
   });
 });
