@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Bird, MoonStar } from 'lucide-react';
+import { ArrowLeft, Bird, MoonStar, Sparkles, Star } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { TaskCard } from './TaskCard';
 import { CompletionCelebration } from './CompletionCelebration';
@@ -67,6 +67,7 @@ export const RoutineView = ({ child, routine, onToggleTask, onBack }: RoutineVie
 
   const tasks = child[routine];
   const isComplete = tasks.length > 0 && tasks.every((t) => t.completed);
+  const completedCount = tasks.filter((task) => task.completed).length;
   const routineTaskKey = `${child.id}:${routine}:${tasks.map((task) => task.id).sort().join('|')}`;
   const currentRoutineSignature = isComplete ? tasks.map((task) => task.id).sort().join('|') : null;
   const routineCelebrationKey = currentRoutineSignature ? `${child.id}:${routine}:${currentRoutineSignature}` : null;
@@ -111,16 +112,29 @@ export const RoutineView = ({ child, routine, onToggleTask, onBack }: RoutineVie
           animate={{ opacity: 1, x: 0 }}
           className="mb-8"
         >
-          <div className="mb-3">
+          <div className="mb-5 flex flex-wrap items-center gap-3">
             <span
-              className={`inline-flex rounded-full px-4 py-2 text-sm font-black uppercase tracking-[0.24em] ${
+              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-black uppercase tracking-[0.24em] ${
                 routine === 'morning'
                   ? 'bg-white/85 text-primary'
                   : 'bg-slate-950/45 text-yellow-100'
               }`}
             >
+              {routine === 'morning' ? <Sparkles size={16} /> : <MoonStar size={16} />}
               {routine === 'morning' ? 'Morning routine' : 'Evening routine'}
             </span>
+            {tasks.length > 0 && (
+              <span
+                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-black uppercase tracking-[0.24em] ${
+                  routine === 'morning'
+                    ? 'bg-primary/10 text-primary'
+                    : 'bg-white/10 text-yellow-100'
+                }`}
+              >
+                <Star size={16} />
+                {completedCount}/{tasks.length}
+              </span>
+            )}
           </div>
           <h2
             className={`text-3xl font-bold md:text-4xl ${
@@ -129,11 +143,29 @@ export const RoutineView = ({ child, routine, onToggleTask, onBack }: RoutineVie
           >
             Good {routine === 'morning' ? 'Morning' : 'Evening'}, {child.name}!
           </h2>
-          <p className={`mt-2 text-lg md:text-xl ${routine === 'morning' ? 'text-slate-600' : 'text-slate-200/90'}`}>
-            {isComplete
-              ? 'You finished everything! Great job! 🎉'
-              : "Let's see what's next on your list."}
-          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {tasks.map((task) => (
+              <span
+                key={`progress-${task.id}`}
+                className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
+                  task.completed
+                    ? 'border-success bg-success text-success-foreground'
+                    : routine === 'morning'
+                      ? 'border-primary/25 bg-white/75 text-primary'
+                      : 'border-white/20 bg-white/10 text-yellow-100'
+                }`}
+                aria-label={task.completed ? 'Task finished' : 'Task to do'}
+              >
+                {task.completed ? <Star size={18} fill="currentColor" /> : <span className="text-xs font-black">{tasks.indexOf(task) + 1}</span>}
+              </span>
+            ))}
+          </div>
+          <div className={`mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold ${
+            routine === 'morning' ? 'bg-white/80 text-slate-700' : 'bg-slate-950/45 text-slate-100'
+          }`}>
+            <Sparkles size={16} />
+            {isComplete ? 'All done!' : 'Tap the cards'}
+          </div>
         </motion.header>
 
         <div className="space-y-4">
@@ -157,8 +189,10 @@ export const RoutineView = ({ child, routine, onToggleTask, onBack }: RoutineVie
           ))}
           {tasks.length === 0 && (
             <div className="rounded-[32px] border-4 border-dashed border-white/35 bg-white/35 py-20 text-center backdrop-blur-sm">
-              <p className="text-xl text-muted-foreground">No tasks set up yet!</p>
-              <p className="mt-1 text-muted-foreground">Ask a parent to add some.</p>
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/70 text-primary">
+                <Sparkles size={28} />
+              </div>
+              <p className="mt-4 text-xl font-bold text-muted-foreground">No cards yet</p>
             </div>
           )}
         </div>

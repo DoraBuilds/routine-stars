@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { balloons } from 'balloons-js';
-import { PartyPopper } from 'lucide-react';
+import { PartyPopper, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 type CelebrationVariant = 'task' | 'routine';
@@ -87,8 +87,12 @@ export const CompletionCelebration = ({ variant, childName, onFinish }: Completi
             <PartyPopper size={24} />
           </div>
           <div>
-            <p className="text-sm font-black uppercase tracking-[0.22em] text-primary">Routine complete</p>
-            <p className="text-xl font-bold">Well done, {childName}!</p>
+            <div className="flex items-center gap-2 text-primary">
+              <Star size={16} fill="currentColor" />
+              <Star size={16} fill="currentColor" />
+              <Star size={16} fill="currentColor" />
+            </div>
+            <p className="mt-1 text-xl font-bold">All done, {childName}!</p>
           </div>
         </div>
       </div>
