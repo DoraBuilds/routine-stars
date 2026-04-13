@@ -2,10 +2,11 @@ import { createContext, useEffect, useMemo, useState, type PropsWithChildren } f
 import type { Session, User } from '@supabase/supabase-js';
 import type { HouseholdRecord } from '@/lib/data/models';
 import { ensureHousehold } from './household-bootstrap';
-import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase/client';
+import { getSupabaseClient, getSupabaseEmailRedirectUrl, isSupabaseConfigured } from '@/lib/supabase/client';
 
 type AuthStatus = 'unavailable' | 'loading' | 'signed_out' | 'signed_in';
 type HouseholdStatus = 'idle' | 'loading' | 'ready' | 'error';
+type AuthLinkMode = 'signin' | 'signup';
 
 export interface AuthContextValue {
   status: AuthStatus;
@@ -14,8 +15,7 @@ export interface AuthContextValue {
   householdStatus: HouseholdStatus;
   household: HouseholdRecord | null;
   error: string | null;
-  signIn: (email: string, password: string) => Promise<boolean>;
-  signUp: (email: string, password: string) => Promise<boolean>;
+  sendEmailLink: (email: string, mode: AuthLinkMode) => Promise<boolean>;
   signOut: () => Promise<void>;
   clearError: () => void;
   configured: boolean;
@@ -107,32 +107,23 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       household,
       error,
       clearError: () => setError(null),
-      signIn: async (email, password) => {
+      sendEmailLink: async (email, mode) => {
         const supabase = getSupabaseClient();
         if (!supabase) {
           setError('Supabase is not configured yet.');
           return false;
         }
 
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-        if (signInError) {
-          setError(signInError.message);
-          return false;
-        }
+        const { error: authError } = await supabase.auth.signInWithOtp({
+          email,
+          options: {
+            emailRedirectTo: getSupabaseEmailRedirectUrl(),
+            shouldCreateUser: mode === 'signup',
+          },
+        });
 
-        setError(null);
-        return true;
-      },
-      signUp: async (email, password) => {
-        const supabase = getSupabaseClient();
-        if (!supabase) {
-          setError('Supabase is not configured yet.');
-          return false;
-        }
-
-        const { error: signUpError } = await supabase.auth.signUp({ email, password });
-        if (signUpError) {
-          setError(signUpError.message);
+        if (authError) {
+          setError(authError.message);
           return false;
         }
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Cloud, CloudOff, LoaderCircle, LogIn, LogOut, Mail, ShieldCheck, UserRoundPlus } from 'lucide-react';
+import { CheckCircle2, Cloud, CloudOff, LoaderCircle, LogIn, LogOut, Mail, ShieldCheck, UserRoundPlus } from 'lucide-react';
 import { useAuth } from '@/lib/auth/use-auth';
 
 type AuthMode = 'signin' | 'signup';
@@ -13,24 +13,22 @@ export const AccountSettingsCard = () => {
     household,
     error,
     clearError,
-    signIn,
+    sendEmailLink,
     signOut,
-    signUp,
   } = useAuth();
   const [mode, setMode] = useState<AuthMode>('signin');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [emailSentTo, setEmailSentTo] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     clearError();
-    const ok =
-      mode === 'signin'
-        ? await signIn(email.trim(), password)
-        : await signUp(email.trim(), password);
+    setEmailSentTo(null);
+    const trimmedEmail = email.trim();
+    const ok = await sendEmailLink(trimmedEmail, mode);
     if (ok) {
-      setPassword('');
+      setEmailSentTo(trimmedEmail);
     }
     setIsSubmitting(false);
   };
@@ -120,6 +118,7 @@ export const AccountSettingsCard = () => {
                 type="button"
                 onClick={() => {
                   clearError();
+                  setEmailSentTo(null);
                   setMode(value);
                 }}
                 className={`flex-1 rounded-full px-4 py-2 text-sm font-bold transition-colors sm:flex-none ${
@@ -131,7 +130,7 @@ export const AccountSettingsCard = () => {
             ))}
           </div>
 
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
+          <div className="mt-5">
             <label className="text-sm font-semibold text-muted-foreground">
               Parent email
               <div className="mt-2 flex items-center gap-3 rounded-2xl bg-muted px-4 py-3">
@@ -145,24 +144,28 @@ export const AccountSettingsCard = () => {
                 />
               </div>
             </label>
-
-            <label className="text-sm font-semibold text-muted-foreground">
-              Password
-              <input
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                className="mt-2 w-full rounded-2xl bg-muted px-4 py-3 text-base font-medium text-foreground outline-none focus:ring-2 focus:ring-primary"
-                placeholder="At least 6 characters"
-              />
-            </label>
           </div>
 
           <p className="mt-4 text-sm text-muted-foreground">
             {mode === 'signin'
-              ? 'Sign in when you want this device to connect to a parent account.'
-              : 'Create the parent account first. The household bootstrap will run right after the first successful login.'}
+              ? 'We will email a sign-in link to this address so the shared device can connect safely.'
+              : 'We will email a one-time sign-up link. After you confirm it, the household bootstrap will run automatically.'}
           </p>
+
+          {emailSentTo && (
+            <div className="mt-4 rounded-2xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-foreground">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 size={18} className="mt-0.5 text-success" />
+                <div>
+                  <p className="font-bold text-foreground">Check your email</p>
+                  <p className="mt-1 text-muted-foreground">
+                    We sent a secure link to <span className="font-semibold text-foreground">{emailSentTo}</span>.
+                    Open it on this device to finish {mode === 'signin' ? 'signing in' : 'creating the parent account'}.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {error && (
             <div className="mt-4 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
@@ -173,11 +176,11 @@ export const AccountSettingsCard = () => {
           <button
             type="button"
             onClick={() => void handleSubmit()}
-            disabled={isSubmitting || !email.trim() || password.length < 6 || status === 'loading'}
+            disabled={isSubmitting || !email.trim() || status === 'loading'}
             className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-button transition-transform active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSubmitting || status === 'loading' ? <LoaderCircle size={16} className="animate-spin" /> : <LogIn size={16} />}
-            {mode === 'signin' ? 'Sign in parent account' : 'Create parent account'}
+            {mode === 'signin' ? 'Email me a sign-in link' : 'Email me a sign-up link'}
           </button>
         </div>
       )}
