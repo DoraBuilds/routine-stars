@@ -22,5 +22,6 @@ You can start from [.env.example](/Users/doraangelov/CodexProjects/daily-star-ch
 
 Still required:
 - applying the migration in `supabase/migrations/20260410194500_create_household_schema.sql` to the remote project
+- making sure the migration includes the `bootstrap_household` RPC so the first owner membership can be created safely under RLS
 - cloud-backed child/routine sync
 - local-to-cloud import flow

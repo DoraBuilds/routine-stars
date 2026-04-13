@@ -12,7 +12,6 @@ import type {
 export interface HouseholdRepository {
   getCurrentHousehold(): Promise<HouseholdRecord | null>;
   createInitialHousehold(input: {
-    userId: string;
     householdName: string;
     timezone: string;
   }): Promise<HouseholdRecord>;

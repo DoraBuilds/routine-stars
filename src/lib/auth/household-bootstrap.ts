@@ -26,7 +26,6 @@ export const ensureHousehold = async (user: User): Promise<HouseholdRecord> => {
   }
 
   return repository.createInitialHousehold({
-    userId: user.id,
     householdName: getSuggestedHouseholdName(user),
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
   });

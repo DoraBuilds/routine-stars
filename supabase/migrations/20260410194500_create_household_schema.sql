@@ -135,6 +135,32 @@ as $$
   );
 $$;
 
+create or replace function public.bootstrap_household(p_name text, p_timezone text)
+returns public.households
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  created_household public.households;
+begin
+  if auth.uid() is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  insert into public.households (name, timezone, created_by_user_id)
+  values (p_name, p_timezone, auth.uid())
+  returning * into created_household;
+
+  insert into public.household_members (household_id, user_id, role)
+  values (created_household.id, auth.uid(), 'owner');
+
+  return created_household;
+end;
+$$;
+
+grant execute on function public.bootstrap_household(text, text) to authenticated;
+
 alter table public.households enable row level security;
 alter table public.household_members enable row level security;
 alter table public.child_profiles enable row level security;
@@ -168,7 +194,17 @@ create policy "owners can insert household memberships"
 on public.household_members
 for insert
 with check (
-  exists (
+  (
+    user_id = auth.uid()
+    and role = 'owner'
+    and exists (
+      select 1
+      from public.households h
+      where h.id = household_id
+        and h.created_by_user_id = auth.uid()
+    )
+  )
+  or exists (
     select 1
     from public.household_members hm
     where hm.household_id = household_id

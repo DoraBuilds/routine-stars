@@ -40,36 +40,17 @@ export class SupabaseHouseholdRepository implements HouseholdRepository {
     return data ? mapHousehold(data) : null;
   }
 
-  async createInitialHousehold(input: { userId: string; householdName: string; timezone: string }) {
-    const { data: household, error: householdError } = await this.supabase
-      .from(HOUSEHOLDS_TABLE)
-      .insert({
-        name: input.householdName,
-        timezone: input.timezone,
-        created_by_user_id: input.userId,
-      })
-      .select('*')
-      .single();
+  async createInitialHousehold(input: { householdName: string; timezone: string }) {
+    const { data, error } = await this.supabase.rpc('bootstrap_household', {
+      p_name: input.householdName,
+      p_timezone: input.timezone,
+    });
 
-    if (householdError) {
-      throw householdError;
+    if (error) {
+      throw error;
     }
 
-    const mappedHousehold = mapHousehold(household);
-
-    const { error: membershipError } = await this.supabase
-      .from(HOUSEHOLD_MEMBERS_TABLE)
-      .insert({
-        household_id: mappedHousehold.id,
-        user_id: input.userId,
-        role: 'owner',
-      });
-
-    if (membershipError) {
-      throw membershipError;
-    }
-
-    return mappedHousehold;
+    return mapHousehold(data);
   }
 
   async listMembers(householdId: string) {
