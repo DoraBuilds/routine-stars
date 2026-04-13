@@ -5,6 +5,7 @@ import { AccountSettingsCard } from '@/components/AccountSettingsCard';
 const sendEmailLink = vi.fn();
 const signOut = vi.fn();
 const clearError = vi.fn();
+const retryHousehold = vi.fn();
 
 vi.mock('@/lib/auth/use-auth', () => ({
   useAuth: () => ({
@@ -16,6 +17,7 @@ vi.mock('@/lib/auth/use-auth', () => ({
     error: null,
     clearError,
     sendEmailLink,
+    retryHousehold,
     signOut,
   }),
 }));

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CheckCircle2, Cloud, CloudOff, LoaderCircle, LogIn, LogOut, Mail, ShieldCheck, UserRoundPlus } from 'lucide-react';
+import { CheckCircle2, Cloud, CloudOff, LoaderCircle, LogIn, LogOut, Mail, RefreshCcw, ShieldCheck, UserRoundPlus } from 'lucide-react';
 import { useAuth } from '@/lib/auth/use-auth';
 
 type AuthMode = 'signin' | 'signup';
@@ -14,6 +14,7 @@ export const AccountSettingsCard = () => {
     error,
     clearError,
     sendEmailLink,
+    retryHousehold,
     signOut,
   } = useAuth();
   const [mode, setMode] = useState<AuthMode>('signin');
@@ -92,18 +93,31 @@ export const AccountSettingsCard = () => {
               ) : (
                 <UserRoundPlus size={18} className="text-primary" />
               )}
-              <p className="text-sm font-black uppercase tracking-[0.18em]">Household bootstrap</p>
+              <p className="text-sm font-black uppercase tracking-[0.18em]">Family space</p>
             </div>
             <p className="mt-4 text-lg font-bold text-foreground">
-              {household?.name ?? 'Preparing family household'}
+              {household?.name ?? 'Preparing family space'}
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
               {householdStatus === 'ready'
-                ? 'The parent account is connected to a household record in Supabase.'
+                ? 'Your parent account is connected to the family space in Supabase.'
                 : householdStatus === 'error'
-                  ? 'We could not prepare the household in Supabase yet.'
+                  ? 'We hit a problem while setting up the family space. You can try again here.'
                   : 'We are preparing the first synced family space for this parent account.'}
             </p>
+            {householdStatus === 'error' && (
+              <div className="mt-4 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3">
+                <p className="text-sm text-destructive">{error ?? 'The family space is not ready yet.'}</p>
+                <button
+                  type="button"
+                  onClick={() => void retryHousehold()}
+                  className="mt-3 inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                >
+                  <RefreshCcw size={16} />
+                  Try again
+                </button>
+              </div>
+            )}
           </div>
         </div>
       ) : (

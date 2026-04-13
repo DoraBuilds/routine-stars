@@ -87,6 +87,7 @@ describe("ParentSettings", () => {
   it("adds a task with the selected icon and default completion state", () => {
     render(<Harness />);
 
+    fireEvent.click(screen.getByRole("button", { name: /routines/i }));
     fireEvent.click(screen.getAllByRole("button", { name: /add task/i })[0]);
     fireEvent.change(screen.getByPlaceholderText("e.g. Brush teeth"), {
       target: { value: "Pack backpack" },
@@ -109,6 +110,7 @@ describe("ParentSettings", () => {
   it("edits an existing task title and preserves its icon", () => {
     render(<Harness />);
 
+    fireEvent.click(screen.getByRole("button", { name: /routines/i }));
     fireEvent.click(screen.getAllByRole("button", { name: "Brush teeth" })[0]);
     fireEvent.change(screen.getByDisplayValue("Brush teeth"), {
       target: { value: "Floss teeth" },
@@ -128,6 +130,7 @@ describe("ParentSettings", () => {
   it("adds a task from the other-tasks bucket without opening the modal", () => {
     render(<Harness />);
 
+    fireEvent.click(screen.getByRole("button", { name: /routines/i }));
     fireEvent.click(screen.getAllByRole("button", { name: /pack backpack/i })[0]);
 
     const updated = readState()[0].morning.find((task) => task.title === "Pack backpack");
@@ -167,6 +170,7 @@ describe("ParentSettings", () => {
   it("keeps age buckets collapsed by default in the routine editor", () => {
     const { container } = render(<Harness />);
 
+    fireEvent.click(screen.getByRole("button", { name: /routines/i }));
     const firstBucket = container.querySelector("details");
     expect(firstBucket).not.toBeNull();
     expect(firstBucket).not.toHaveAttribute("open");
@@ -175,6 +179,7 @@ describe("ParentSettings", () => {
   it("shows restart and reset controls for the parent", () => {
     render(<Harness />);
 
+    fireEvent.click(screen.getByRole("button", { name: /admin/i }));
     expect(screen.getByRole("button", { name: /restart setup/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^reset everything$/i })).toBeInTheDocument();
   });
@@ -182,6 +187,7 @@ describe("ParentSettings", () => {
   it("requires confirmation before resetting all app data", () => {
     render(<Harness />);
 
+    fireEvent.click(screen.getByRole("button", { name: /admin/i }));
     fireEvent.click(screen.getByRole("button", { name: /^reset everything$/i }));
 
     expect(screen.getByText(/this clears everything saved in this browser/i)).toBeInTheDocument();
@@ -195,6 +201,7 @@ describe("ParentSettings", () => {
   it("fires restart setup without clearing the current children immediately", () => {
     render(<Harness />);
 
+    fireEvent.click(screen.getByRole("button", { name: /admin/i }));
     fireEvent.click(screen.getByRole("button", { name: /restart setup/i }));
 
     expect(screen.getByTestId("restart-count")).toHaveTextContent("1");

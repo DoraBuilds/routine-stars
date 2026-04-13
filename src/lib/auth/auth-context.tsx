@@ -16,6 +16,7 @@ export interface AuthContextValue {
   household: HouseholdRecord | null;
   error: string | null;
   sendEmailLink: (email: string, mode: AuthLinkMode) => Promise<boolean>;
+  retryHousehold: () => Promise<void>;
   signOut: () => Promise<void>;
   clearError: () => void;
   configured: boolean;
@@ -32,6 +33,35 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [household, setHousehold] = useState<HouseholdRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const syncHousehold = async (nextUser: User | null) => {
+    setUser(nextUser);
+
+    if (!nextUser) {
+      setHousehold(null);
+      setHouseholdStatus('idle');
+      setStatus('signed_out');
+      return;
+    }
+
+    setStatus('signed_in');
+    setHouseholdStatus('loading');
+
+    try {
+      const provisioned = await ensureHousehold(nextUser);
+      setHousehold(provisioned);
+      setHouseholdStatus('ready');
+      setError(null);
+    } catch (bootstrapError) {
+      setHousehold(null);
+      setHouseholdStatus('error');
+      setError(
+        bootstrapError instanceof Error
+          ? bootstrapError.message
+          : 'Could not prepare the family household in Supabase.'
+      );
+    }
+  };
+
   useEffect(() => {
     const supabase = getSupabaseClient();
     if (!supabase) {
@@ -45,33 +75,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       if (!isMounted) return;
 
       setSession(nextSession);
-      setUser(nextSession?.user ?? null);
-
-      if (!nextSession?.user) {
-        setHousehold(null);
-        setHouseholdStatus('idle');
-        setStatus('signed_out');
-        return;
-      }
-
-      setStatus('signed_in');
-      setHouseholdStatus('loading');
-
-      try {
-        const provisioned = await ensureHousehold(nextSession.user);
-        if (!isMounted) return;
-        setHousehold(provisioned);
-        setHouseholdStatus('ready');
-      } catch (bootstrapError) {
-        if (!isMounted) return;
-        setHousehold(null);
-        setHouseholdStatus('error');
-        setError(
-          bootstrapError instanceof Error
-            ? bootstrapError.message
-            : 'Could not prepare the family household in Supabase.'
-        );
-      }
+      await syncHousehold(nextSession?.user ?? null);
     };
 
     supabase.auth.getSession().then(({ data, error: sessionError }) => {
@@ -129,6 +133,10 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
         setError(null);
         return true;
+      },
+      retryHousehold: async () => {
+        setError(null);
+        await syncHousehold(user);
       },
       signOut: async () => {
         const supabase = getSupabaseClient();
