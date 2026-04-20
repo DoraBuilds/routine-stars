@@ -5,6 +5,7 @@ import { InitialSetup } from '@/components/InitialSetup';
 import { RoutineView } from '@/components/RoutineView';
 import { ParentSettings } from '@/components/ParentSettings';
 import { useAuth } from '@/lib/auth/use-auth';
+import { loadCloudHouseholdState } from '@/lib/data/cloud-household-state';
 import type { AppView, Child, HomeScene, RoutineType } from '@/lib/types';
 import {
   clearLocalAppState,
@@ -63,7 +64,7 @@ const getDisplayRoutine = (child: Child, now: Date): RoutineType => {
 const createSetupChildren = (): Child[] => [];
 
 const Index = () => {
-  const { status: authStatus } = useAuth();
+  const { status: authStatus, householdStatus, household } = useAuth();
   const [view, setView] = useState<AppView>('setup');
   const [children, setChildren] = useState<Child[]>(createSetupChildren);
   const [activeChildId, setActiveChildId] = useState<string | null>(null);
@@ -91,41 +92,75 @@ const Index = () => {
 
   // Load from localStorage once auth has settled so startup can be account-aware.
   useEffect(() => {
-    if (authStatus === 'loading') {
+    if (authStatus === 'loading' || (authStatus === 'signed_in' && householdStatus === 'loading')) {
       return;
     }
 
-    const storedState = loadLocalAppState();
-    if (storedState) {
-      const today = new Date().toDateString();
-      if (storedState.lastReset !== today) {
-        const reset = storedState.children.map((c: Child) => ({
-          ...c,
-          morning: c.morning.map((t: Child['morning'][0]) => ({ ...t, completed: false })),
-          evening: c.evening.map((t: Child['evening'][0]) => ({ ...t, completed: false })),
-        }));
-        setChildren(reset);
-      } else {
-        setChildren(storedState.children);
-      }
-      setSetupComplete(storedState.setupComplete);
-      setHomeScene(storedState.homeScene);
-      setView(
-        storedState.setupComplete
-          ? 'home'
-          : storedState.children.length > 0 || authStatus === 'signed_in'
-            ? 'setup'
-            : 'account'
-      );
-    } else {
-      setChildren(createSetupChildren());
-      setSetupComplete(false);
-      setHomeScene('bike');
-      setView(authStatus === 'signed_in' ? 'setup' : 'account');
-    }
+    let isMounted = true;
 
-    setIsReady(true);
-  }, [authStatus]);
+    const bootstrap = async () => {
+      const storedState = loadLocalAppState();
+      if (storedState) {
+        const today = new Date().toDateString();
+        if (storedState.lastReset !== today) {
+          const reset = storedState.children.map((c: Child) => ({
+            ...c,
+            morning: c.morning.map((t: Child['morning'][0]) => ({ ...t, completed: false })),
+            evening: c.evening.map((t: Child['evening'][0]) => ({ ...t, completed: false })),
+          }));
+          if (isMounted) {
+            setChildren(reset);
+          }
+        } else if (isMounted) {
+          setChildren(storedState.children);
+        }
+
+        if (isMounted) {
+          setSetupComplete(storedState.setupComplete);
+          setHomeScene(storedState.homeScene);
+          setView(
+            storedState.setupComplete
+              ? 'home'
+              : storedState.children.length > 0 || authStatus === 'signed_in'
+                ? 'setup'
+                : 'account'
+          );
+          setIsReady(true);
+        }
+        return;
+      }
+
+      if (authStatus === 'signed_in' && householdStatus === 'ready' && household) {
+        try {
+          const cloudState = await loadCloudHouseholdState(household);
+          if (!isMounted) return;
+
+          setChildren(cloudState.children);
+          setHomeScene(cloudState.homeScene);
+          setSetupComplete(cloudState.children.length > 0);
+          setView(cloudState.children.length > 0 ? 'home' : 'setup');
+          setIsReady(true);
+          return;
+        } catch (error) {
+          console.warn('Could not load cloud household state.', error);
+        }
+      }
+
+      if (isMounted) {
+        setChildren(createSetupChildren());
+        setSetupComplete(false);
+        setHomeScene('bike');
+        setView(authStatus === 'signed_in' ? 'setup' : 'account');
+        setIsReady(true);
+      }
+    };
+
+    void bootstrap();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [authStatus, household, householdStatus]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {

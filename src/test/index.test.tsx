@@ -17,8 +17,16 @@ const authState = {
   signOut: vi.fn(),
 };
 
+const { loadCloudHouseholdState } = vi.hoisted(() => ({
+  loadCloudHouseholdState: vi.fn(),
+}));
+
 vi.mock("@/lib/auth/use-auth", () => ({
   useAuth: () => authState,
+}));
+
+vi.mock("@/lib/data/cloud-household-state", () => ({
+  loadCloudHouseholdState,
 }));
 
 const today = () => new Date().toDateString();
@@ -171,6 +179,7 @@ describe("Index", () => {
     authState.householdStatus = "idle";
     authState.household = null;
     authState.error = null;
+    loadCloudHouseholdState.mockReset();
     authState.clearError.mockReset();
     authState.sendEmailLink.mockReset();
     authState.retryHousehold.mockReset();
@@ -264,6 +273,37 @@ describe("Index", () => {
     render(<Index />);
 
     expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("0");
+  });
+
+  it("hydrates cloud household data on a fresh signed-in device", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [
+        {
+          id: "1",
+          name: "Lily",
+          morning: [{ id: "m1", title: "Make bed", icon: "bed", completed: false }],
+          evening: [{ id: "e1", title: "Go to bed", icon: "moon-star", completed: false }],
+        },
+      ],
+    });
+
+    render(<Index />);
+
+    expect(await screen.findByTestId("child-count")).toHaveTextContent("1");
+    expect(loadCloudHouseholdState).toHaveBeenCalledWith(authState.household);
   });
 
   it("re-opens setup when saved data is marked incomplete", async () => {
