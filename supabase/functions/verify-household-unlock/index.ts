@@ -1,10 +1,14 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import {
-  buildPendingEntitlementMutation,
+  buildEntitlementMutationFromDecision,
+  buildVerificationDecision,
   handleVerificationRequest,
   parseVerificationRequest,
   type ExistingEntitlementSnapshot,
+  type VerificationRequest,
 } from './shared.ts';
+import { verifyAppleHouseholdUnlock } from './apple.ts';
+import { verifyGoogleHouseholdUnlock } from './google.ts';
 
 const jsonHeaders = {
   'Content-Type': 'application/json',
@@ -12,6 +16,14 @@ const jsonHeaders = {
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+const verifyByPlatform = async (request: VerificationRequest) => {
+  if (request.verificationPayload.platform === 'ios') {
+    return verifyAppleHouseholdUnlock(request);
+  }
+
+  return verifyGoogleHouseholdUnlock(request);
+};
 
 Deno.serve(async (request) => {
   if (request.method !== 'POST') {
@@ -93,8 +105,10 @@ Deno.serve(async (request) => {
     );
   }
 
+  const verifierResult = await verifyByPlatform(parsed);
   const nowIso = new Date().toISOString();
-  const mutation = buildPendingEntitlementMutation(parsed, existingEntitlement ?? null, nowIso);
+  const decision = buildVerificationDecision(parsed, existingEntitlement ?? null, verifierResult);
+  const mutation = buildEntitlementMutationFromDecision(decision, nowIso);
   const { error: upsertError } = await supabase.from('household_entitlements').upsert(
     {
       household_id: parsed.householdId,
@@ -117,12 +131,18 @@ Deno.serve(async (request) => {
   }
 
   const responseBody =
-    mutation.status === 'active'
+    decision.status === 'verified'
       ? {
           status: 'verified' as const,
-          message: `Existing paid access for household ${parsed.householdId} was preserved while verification evidence was refreshed.`,
+          message:
+            existingEntitlement?.status === 'active'
+              ? `Existing paid access for household ${parsed.householdId} was preserved while verification evidence was refreshed.`
+              : decision.message,
         }
-      : result.body;
+      : {
+          status: 'pending' as const,
+          message: decision.message,
+        };
 
   return new Response(JSON.stringify(responseBody), {
     status: responseBody.status === 'verified' ? 200 : result.status,

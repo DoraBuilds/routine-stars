@@ -19,6 +19,16 @@ export interface VerificationResult {
   message: string;
 }
 
+export interface VerificationDecision {
+  status: 'verified' | 'pending';
+  message: string;
+  platform: 'ios' | 'android';
+  storeProductId: string | null;
+  sourceTransactionId: string | null;
+  sourceOriginalTransactionId: string | null;
+  grantedAt: string | null;
+}
+
 export interface ExistingEntitlementSnapshot {
   id: string;
   household_id: string;
@@ -128,17 +138,33 @@ export const handleVerificationRequest = (input: unknown): VerificationHttpRespo
   };
 };
 
-export const buildPendingEntitlementMutation = (
-  request: VerificationRequest,
-  existingEntitlement: ExistingEntitlementSnapshot | null,
+export const buildEntitlementMutationFromDecision = (
+  decision: VerificationDecision,
   nowIso: string
 ): PendingEntitlementMutation => ({
-  status: existingEntitlement?.status === 'active' ? 'active' : 'pending',
-  platform: request.verificationPayload.platform,
-  store_product_id: request.verificationPayload.storeProductId,
-  source_transaction_id: request.verificationPayload.sourceTransactionId,
-  source_original_transaction_id: request.verificationPayload.sourceOriginalTransactionId,
-  granted_at: existingEntitlement?.status === 'active' ? existingEntitlement.granted_at : null,
+  status: decision.status === 'verified' ? 'active' : 'pending',
+  platform: decision.platform,
+  store_product_id: decision.storeProductId,
+  source_transaction_id: decision.sourceTransactionId,
+  source_original_transaction_id: decision.sourceOriginalTransactionId,
+  granted_at: decision.status === 'verified' ? decision.grantedAt ?? nowIso : null,
   revoked_at: null,
   verification_checked_at: nowIso,
+});
+
+export const buildVerificationDecision = (
+  request: VerificationRequest,
+  existingEntitlement: ExistingEntitlementSnapshot | null,
+  verifierResult: Pick<VerificationResult, 'status' | 'message'>
+): VerificationDecision => ({
+  status:
+    verifierResult.status === 'verified' || existingEntitlement?.status === 'active'
+      ? 'verified'
+      : 'pending',
+  message: verifierResult.message,
+  platform: request.verificationPayload.platform,
+  storeProductId: request.verificationPayload.storeProductId,
+  sourceTransactionId: request.verificationPayload.sourceTransactionId,
+  sourceOriginalTransactionId: request.verificationPayload.sourceOriginalTransactionId,
+  grantedAt: existingEntitlement?.status === 'active' ? existingEntitlement.granted_at : null,
 });
