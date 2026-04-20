@@ -4,6 +4,23 @@ import Index from "@/pages/Index";
 import { CURRENT_LOCAL_APP_STATE_VERSION } from "@/lib/storage/local-app-state";
 import type { Child } from "@/lib/types";
 
+const authState = {
+  configured: true,
+  status: "signed_out",
+  user: null,
+  householdStatus: "idle",
+  household: null,
+  error: null,
+  clearError: vi.fn(),
+  sendEmailLink: vi.fn(),
+  retryHousehold: vi.fn(),
+  signOut: vi.fn(),
+};
+
+vi.mock("@/lib/auth/use-auth", () => ({
+  useAuth: () => authState,
+}));
+
 const today = () => new Date().toDateString();
 
 const yesterday = () => {
@@ -115,6 +132,21 @@ vi.mock("@/components/InitialSetup", () => ({
   ),
 }));
 
+vi.mock("@/components/AccountEntryScreen", () => ({
+  AccountEntryScreen: ({
+    onContinueLocalSetup,
+  }: {
+    onContinueLocalSetup: () => void;
+  }) => (
+    <div>
+      <div data-testid="account-entry-screen">account-entry</div>
+      <button type="button" onClick={onContinueLocalSetup}>
+        continue-local-setup
+      </button>
+    </div>
+  ),
+}));
+
 const createStoredState = (completed: boolean, lastReset: string) => ({
   children: [
     {
@@ -133,6 +165,16 @@ const createStoredState = (completed: boolean, lastReset: string) => ({
 describe("Index", () => {
   beforeEach(() => {
     localStorage.clear();
+    authState.configured = true;
+    authState.status = "signed_out";
+    authState.user = null;
+    authState.householdStatus = "idle";
+    authState.household = null;
+    authState.error = null;
+    authState.clearError.mockReset();
+    authState.sendEmailLink.mockReset();
+    authState.retryHousehold.mockReset();
+    authState.signOut.mockReset();
   });
 
   it("resets completed tasks when stored data is from a previous day", async () => {
@@ -201,7 +243,24 @@ describe("Index", () => {
     expect(screen.getByTestId("active-routine")).toHaveTextContent("evening");
   });
 
-  it("shows the initial setup flow when there is no saved data", async () => {
+  it("shows the account entry flow when there is no saved data and no signed-in parent", async () => {
+    render(<Index />);
+
+    expect(await screen.findByTestId("account-entry-screen")).toBeInTheDocument();
+  });
+
+  it("lets a parent continue into local-only setup from the account entry flow", async () => {
+    render(<Index />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "continue-local-setup" }));
+
+    expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("0");
+  });
+
+  it("opens setup immediately on a fresh device when the parent is already signed in", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
+
     render(<Index />);
 
     expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("0");
@@ -237,6 +296,7 @@ describe("Index", () => {
   it("completes first-run setup and persists the configured routines", async () => {
     render(<Index />);
 
+    fireEvent.click(await screen.findByRole("button", { name: "continue-local-setup" }));
     fireEvent.click(await screen.findByRole("button", { name: "finish-setup" }));
 
     expect(await screen.findByTestId("child-count")).toHaveTextContent("1");

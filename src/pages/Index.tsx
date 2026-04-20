@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ChildSelector } from '@/components/ChildSelector';
+import { AccountEntryScreen } from '@/components/AccountEntryScreen';
 import { InitialSetup } from '@/components/InitialSetup';
 import { RoutineView } from '@/components/RoutineView';
 import { ParentSettings } from '@/components/ParentSettings';
+import { useAuth } from '@/lib/auth/use-auth';
 import type { AppView, Child, HomeScene, RoutineType } from '@/lib/types';
 import {
   clearLocalAppState,
@@ -61,6 +63,7 @@ const getDisplayRoutine = (child: Child, now: Date): RoutineType => {
 const createSetupChildren = (): Child[] => [];
 
 const Index = () => {
+  const { status: authStatus } = useAuth();
   const [view, setView] = useState<AppView>('setup');
   const [children, setChildren] = useState<Child[]>(createSetupChildren);
   const [activeChildId, setActiveChildId] = useState<string | null>(null);
@@ -86,8 +89,12 @@ const Index = () => {
     setNow(new Date());
   }, []);
 
-  // Load from localStorage with daily reset
+  // Load from localStorage once auth has settled so startup can be account-aware.
   useEffect(() => {
+    if (authStatus === 'loading') {
+      return;
+    }
+
     const storedState = loadLocalAppState();
     if (storedState) {
       const today = new Date().toDateString();
@@ -103,16 +110,22 @@ const Index = () => {
       }
       setSetupComplete(storedState.setupComplete);
       setHomeScene(storedState.homeScene);
-      setView(storedState.setupComplete ? 'home' : 'setup');
+      setView(
+        storedState.setupComplete
+          ? 'home'
+          : storedState.children.length > 0 || authStatus === 'signed_in'
+            ? 'setup'
+            : 'account'
+      );
     } else {
       setChildren(createSetupChildren());
       setSetupComplete(false);
       setHomeScene('bike');
-      setView('setup');
+      setView(authStatus === 'signed_in' ? 'setup' : 'account');
     }
 
     setIsReady(true);
-  }, []);
+  }, [authStatus]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -181,6 +194,10 @@ const Index = () => {
 
   if (!isReady) {
     return null;
+  }
+
+  if (view === 'account') {
+    return <AccountEntryScreen onContinueLocalSetup={() => setView('setup')} />;
   }
 
   if (view === 'setup') {
