@@ -23,6 +23,9 @@ const { loadCloudHouseholdState } = vi.hoisted(() => ({
 const { importLocalFamilyToCloud } = vi.hoisted(() => ({
   importLocalFamilyToCloud: vi.fn(),
 }));
+const { saveHouseholdConfigToCloud } = vi.hoisted(() => ({
+  saveHouseholdConfigToCloud: vi.fn(),
+}));
 
 vi.mock("@/lib/auth/use-auth", () => ({
   useAuth: () => authState,
@@ -33,6 +36,9 @@ vi.mock("@/lib/data/cloud-household-state", () => ({
 }));
 vi.mock("@/lib/data/local-to-cloud-import", () => ({
   importLocalFamilyToCloud,
+}));
+vi.mock("@/lib/data/cloud-household-write", () => ({
+  saveHouseholdConfigToCloud,
 }));
 
 const today = () => new Date().toDateString();
@@ -213,6 +219,7 @@ describe("Index", () => {
     authState.error = null;
     loadCloudHouseholdState.mockReset();
     importLocalFamilyToCloud.mockReset();
+    saveHouseholdConfigToCloud.mockReset();
     authState.clearError.mockReset();
     authState.sendEmailLink.mockReset();
     authState.retryHousehold.mockReset();
@@ -388,6 +395,20 @@ describe("Index", () => {
       children: [],
     });
     importLocalFamilyToCloud.mockResolvedValue(undefined);
+    loadCloudHouseholdState.mockResolvedValueOnce({
+      homeScene: "kite",
+      children: [],
+    }).mockResolvedValueOnce({
+      homeScene: "school",
+      children: [
+        {
+          id: "1",
+          name: "Lily",
+          morning: [{ id: "m1", title: "Make bed", icon: "bed", completed: false }],
+          evening: [{ id: "e1", title: "Go to bed", icon: "moon-star", completed: false }],
+        },
+      ],
+    });
     localStorage.setItem(
       "routine_stars_data",
       JSON.stringify({
@@ -411,6 +432,39 @@ describe("Index", () => {
     });
 
     expect(await screen.findByTestId("child-count")).toHaveTextContent("1");
+  });
+
+  it("syncs configuration changes to cloud after signed-in setup is completed", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [],
+    });
+    saveHouseholdConfigToCloud.mockResolvedValue(undefined);
+
+    render(<Index />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "finish-setup" }));
+
+    await waitFor(() => {
+      expect(saveHouseholdConfigToCloud).toHaveBeenCalledWith(
+        expect.objectContaining({
+          household: authState.household,
+          removeMissingChildren: true,
+        })
+      );
+    });
   });
 
   it("lets a parent start fresh instead of importing existing local setup", async () => {

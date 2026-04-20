@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { ChildSelector } from '@/components/ChildSelector';
 import { AccountEntryScreen } from '@/components/AccountEntryScreen';
 import { ImportFamilySetupScreen } from '@/components/ImportFamilySetupScreen';
@@ -7,6 +7,7 @@ import { RoutineView } from '@/components/RoutineView';
 import { ParentSettings } from '@/components/ParentSettings';
 import { useAuth } from '@/lib/auth/use-auth';
 import { loadCloudHouseholdState } from '@/lib/data/cloud-household-state';
+import { saveHouseholdConfigToCloud } from '@/lib/data/cloud-household-write';
 import { importLocalFamilyToCloud } from '@/lib/data/local-to-cloud-import';
 import type { AppView, Child, HomeScene, RoutineType } from '@/lib/types';
 import {
@@ -65,6 +66,35 @@ const getDisplayRoutine = (child: Child, now: Date): RoutineType => {
 
 const createSetupChildren = (): Child[] => [];
 
+const serializeHouseholdConfig = (input: {
+  children: Child[];
+  homeScene: HomeScene;
+  setupComplete: boolean;
+}) =>
+  JSON.stringify({
+    children: input.children.map((child) => ({
+      id: child.id,
+      name: child.name,
+      age: child.age ?? null,
+      ageBucket: child.ageBucket ?? null,
+      avatarAnimal: child.avatarAnimal ?? null,
+      avatarSeed: child.avatarSeed ?? null,
+      schedule: child.schedule ?? null,
+      morning: child.morning.map((task) => ({
+        id: task.id,
+        title: task.title,
+        icon: task.icon,
+      })),
+      evening: child.evening.map((task) => ({
+        id: task.id,
+        title: task.title,
+        icon: task.icon,
+      })),
+    })),
+    homeScene: input.homeScene,
+    setupComplete: input.setupComplete,
+  });
+
 const Index = () => {
   const { status: authStatus, householdStatus, household } = useAuth();
   const [view, setView] = useState<AppView>('setup');
@@ -76,6 +106,8 @@ const Index = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [now, setNow] = useState(() => new Date());
   const [homeScene, setHomeScene] = useState<HomeScene>('bike');
+  const lastSyncedConfigRef = useRef<string | null>(null);
+  const shouldSyncFirstConfigRef = useRef(false);
 
   const resetToFreshSetup = useCallback(() => {
     clearLocalAppState();
@@ -168,6 +200,16 @@ const Index = () => {
         setHomeScene(cloudState.homeScene);
         setSetupComplete(cloudState.children.length > 0);
         setView(cloudState.children.length > 0 ? 'home' : 'setup');
+        if (cloudState.children.length > 0) {
+          lastSyncedConfigRef.current = serializeHouseholdConfig({
+            children: cloudState.children,
+            homeScene: cloudState.homeScene,
+            setupComplete: true,
+          });
+          shouldSyncFirstConfigRef.current = false;
+        } else if (authStatus === 'signed_in') {
+          shouldSyncFirstConfigRef.current = true;
+        }
         setIsReady(true);
         return;
       }
@@ -177,6 +219,7 @@ const Index = () => {
         setSetupComplete(false);
         setHomeScene('bike');
         setView(authStatus === 'signed_in' ? 'setup' : 'account');
+        shouldSyncFirstConfigRef.current = authStatus === 'signed_in';
         setIsReady(true);
       }
     };
@@ -187,6 +230,41 @@ const Index = () => {
       isMounted = false;
     };
   }, [authStatus, household, householdStatus]);
+
+  const householdConfigSignature = useMemo(
+    () => serializeHouseholdConfig({ children, homeScene, setupComplete }),
+    [children, homeScene, setupComplete]
+  );
+
+  useEffect(() => {
+    if (!isReady || authStatus !== 'signed_in' || householdStatus !== 'ready' || !household || !setupComplete) {
+      lastSyncedConfigRef.current = null;
+      return;
+    }
+
+    if (lastSyncedConfigRef.current === null) {
+      if (!shouldSyncFirstConfigRef.current) {
+        lastSyncedConfigRef.current = householdConfigSignature;
+        return;
+      }
+    }
+
+    if (lastSyncedConfigRef.current === householdConfigSignature) {
+      return;
+    }
+
+    shouldSyncFirstConfigRef.current = false;
+    lastSyncedConfigRef.current = householdConfigSignature;
+
+    void saveHouseholdConfigToCloud({
+      household,
+      children,
+      homeScene,
+      removeMissingChildren: true,
+    }).catch((error) => {
+      console.warn('Could not sync household configuration to cloud.', error);
+    });
+  }, [authStatus, children, homeScene, household, householdConfigSignature, householdStatus, isReady, setupComplete]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -277,9 +355,18 @@ const Index = () => {
             children,
             homeScene,
           })
-            .then(() => {
-              setSetupComplete(children.length > 0);
-              setView(children.length > 0 ? 'home' : 'setup');
+            .then(async () => {
+              const cloudState = await loadCloudHouseholdState(household);
+              setChildren(cloudState.children);
+              setHomeScene(cloudState.homeScene);
+              setSetupComplete(cloudState.children.length > 0);
+              setView(cloudState.children.length > 0 ? 'home' : 'setup');
+              lastSyncedConfigRef.current = serializeHouseholdConfig({
+                children: cloudState.children,
+                homeScene: cloudState.homeScene,
+                setupComplete: cloudState.children.length > 0,
+              });
+              shouldSyncFirstConfigRef.current = false;
             })
             .catch((error) => {
               setImportError(
@@ -297,6 +384,7 @@ const Index = () => {
           setHomeScene('bike');
           setView('setup');
           setImportError(null);
+          shouldSyncFirstConfigRef.current = true;
         }}
       />
     );
