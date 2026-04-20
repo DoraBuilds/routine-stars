@@ -3,6 +3,7 @@
 This project now includes the first household-sync migration in:
 
 - [20260410194500_create_household_schema.sql](/Users/doraangelov/CodexProjects/daily-star-chart/supabase/migrations/20260410194500_create_household_schema.sql)
+- [20260420184000_add_household_entitlements.sql](/Users/doraangelov/CodexProjects/daily-star-chart/supabase/migrations/20260420184000_add_household_entitlements.sql)
 
 ## Tables
 
@@ -13,6 +14,8 @@ This project now includes the first household-sync migration in:
 - `routine_tasks`
 - `daily_routine_progress`
 - `daily_task_progress`
+- `household_entitlements`
+- `purchase_events`
 
 ## Security Model
 

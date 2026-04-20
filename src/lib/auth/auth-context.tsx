@@ -1,11 +1,13 @@
 import { createContext, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
-import type { HouseholdRecord } from '@/lib/data/models';
+import type { HouseholdEntitlementRecord, HouseholdRecord } from '@/lib/data/models';
+import { SupabaseHouseholdEntitlementRepository } from '@/lib/data/supabase-household-entitlement-repository';
 import { ensureHousehold } from './household-bootstrap';
 import { getSupabaseClient, getSupabaseEmailRedirectUrl, isSupabaseConfigured } from '@/lib/supabase/client';
 
 type AuthStatus = 'unavailable' | 'loading' | 'signed_out' | 'signed_in';
 type HouseholdStatus = 'idle' | 'loading' | 'ready' | 'error';
+type EntitlementStatus = 'idle' | 'loading' | 'ready' | 'error';
 type AuthLinkMode = 'signin' | 'signup';
 
 export interface AuthContextValue {
@@ -14,6 +16,8 @@ export interface AuthContextValue {
   user: User | null;
   householdStatus: HouseholdStatus;
   household: HouseholdRecord | null;
+  entitlementStatus: EntitlementStatus;
+  householdEntitlement: HouseholdEntitlementRecord | null;
   error: string | null;
   sendEmailLink: (email: string, mode: AuthLinkMode) => Promise<boolean>;
   retryHousehold: () => Promise<void>;
@@ -31,6 +35,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [user, setUser] = useState<User | null>(null);
   const [householdStatus, setHouseholdStatus] = useState<HouseholdStatus>('idle');
   const [household, setHousehold] = useState<HouseholdRecord | null>(null);
+  const [entitlementStatus, setEntitlementStatus] = useState<EntitlementStatus>('idle');
+  const [householdEntitlement, setHouseholdEntitlement] = useState<HouseholdEntitlementRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const syncHousehold = async (nextUser: User | null) => {
@@ -39,25 +45,50 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     if (!nextUser) {
       setHousehold(null);
       setHouseholdStatus('idle');
+      setHouseholdEntitlement(null);
+      setEntitlementStatus('idle');
       setStatus('signed_out');
       return;
     }
 
     setStatus('signed_in');
     setHouseholdStatus('loading');
+    setEntitlementStatus('loading');
 
     try {
+      const supabase = getSupabaseClient();
+      if (!supabase) {
+        throw new Error('Supabase is not configured yet.');
+      }
+
       const provisioned = await ensureHousehold(nextUser);
       setHousehold(provisioned);
       setHouseholdStatus('ready');
-      setError(null);
+
+      try {
+        const entitlementRepository = new SupabaseHouseholdEntitlementRepository(supabase);
+        const entitlement = await entitlementRepository.getByHousehold(provisioned.id);
+        setHouseholdEntitlement(entitlement);
+        setEntitlementStatus('ready');
+        setError(null);
+      } catch (entitlementError) {
+        setHouseholdEntitlement(null);
+        setEntitlementStatus('error');
+        setError(
+          entitlementError instanceof Error
+            ? entitlementError.message
+            : 'Could not load the household billing access yet.'
+        );
+      }
     } catch (bootstrapError) {
       setHousehold(null);
+      setHouseholdEntitlement(null);
       setHouseholdStatus('error');
+      setEntitlementStatus('error');
       setError(
         bootstrapError instanceof Error
           ? bootstrapError.message
-          : 'Could not prepare the family household in Supabase.'
+          : 'Could not prepare the family household and billing access in Supabase.'
       );
     }
   };
@@ -109,6 +140,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       user,
       householdStatus,
       household,
+      entitlementStatus,
+      householdEntitlement,
       error,
       clearError: () => setError(null),
       sendEmailLink: async (email, mode) => {
@@ -150,7 +183,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         }
       },
     }),
-    [configured, error, household, householdStatus, session, status, user]
+    [configured, entitlementStatus, error, household, householdEntitlement, householdStatus, session, status, user]
   );
 
   return <AuthContext.Provider value={authActions}>{children}</AuthContext.Provider>;
