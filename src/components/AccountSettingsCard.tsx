@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { CheckCircle2, Cloud, CloudOff, CreditCard, LoaderCircle, LogIn, LogOut, Mail, RefreshCcw, ShieldCheck, UserRoundPlus } from 'lucide-react';
 import { useAuth } from '@/lib/auth/use-auth';
+import { useBilling } from '@/lib/billing/billing-context';
 
 type AuthMode = 'signin' | 'signup';
 
@@ -19,6 +20,7 @@ export const AccountSettingsCard = () => {
     retryHousehold,
     signOut,
   } = useAuth();
+  const { householdUnlockProduct, isProcessing, purchaseHouseholdUnlock, restorePurchases } = useBilling();
   const [mode, setMode] = useState<AuthMode>('signin');
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -149,25 +151,31 @@ export const AccountSettingsCard = () => {
                   ? 'This household has a verified paid unlock saved to the account.'
                   : householdEntitlement?.status === 'revoked'
                     ? 'This household had paid access before, but the entitlement is no longer active.'
-                    : 'This household is signed in and ready for the parent-only purchase flow.'}
+                    : `This household is signed in and ready for the ${householdUnlockProduct.priceLabel} parent-only purchase flow.`}
             </p>
             {(householdEntitlement?.status !== 'active' || entitlementStatus === 'error') && entitlementStatus !== 'loading' && (
               <div className="mt-5 flex flex-wrap gap-3">
                 <button
                   type="button"
-                  onClick={() =>
-                    setBillingMessage('Store purchase wiring is the next slice. This button is now the parent-only entry point for the unlock flow.')
-                  }
+                  onClick={() => {
+                    void purchaseHouseholdUnlock().then((result) => {
+                      setBillingMessage(result.message);
+                    });
+                  }}
+                  disabled={isProcessing}
                   className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow-button transition-transform active:translate-y-0.5"
                 >
-                  <CreditCard size={16} />
-                  Unlock Routine Stars
+                  {isProcessing ? <LoaderCircle size={16} className="animate-spin" /> : <CreditCard size={16} />}
+                  Unlock Routine Stars for {householdUnlockProduct.priceLabel}
                 </button>
                 <button
                   type="button"
-                  onClick={() =>
-                    setBillingMessage('Restore purchases will connect to Apple and Google account restoration in the next billing integration slice.')
-                  }
+                  onClick={() => {
+                    void restorePurchases().then((result) => {
+                      setBillingMessage(result.message);
+                    });
+                  }}
+                  disabled={isProcessing}
                   className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
                 >
                   <RefreshCcw size={16} />
@@ -263,7 +271,7 @@ export const AccountSettingsCard = () => {
           <button
             type="button"
             onClick={() => void handleSubmit()}
-            disabled={isSubmitting || !email.trim() || status === 'loading'}
+            disabled={isSubmitting || isProcessing || !email.trim() || status === 'loading'}
             className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-button transition-transform active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSubmitting || status === 'loading' ? <LoaderCircle size={16} className="animate-spin" /> : <LogIn size={16} />}

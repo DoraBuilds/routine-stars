@@ -6,6 +6,8 @@ const sendEmailLink = vi.fn();
 const signOut = vi.fn();
 const clearError = vi.fn();
 const retryHousehold = vi.fn();
+const purchaseHouseholdUnlock = vi.fn();
+const restorePurchases = vi.fn();
 const authState = {
   configured: true,
   status: 'signed_out',
@@ -25,6 +27,17 @@ vi.mock('@/lib/auth/use-auth', () => ({
   useAuth: () => authState,
 }));
 
+vi.mock('@/lib/billing/billing-context', () => ({
+  useBilling: () => ({
+    householdUnlockProduct: {
+      priceLabel: 'EUR 9.99',
+    },
+    isProcessing: false,
+    purchaseHouseholdUnlock,
+    restorePurchases,
+  }),
+}));
+
 describe('AccountSettingsCard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -37,6 +50,14 @@ describe('AccountSettingsCard', () => {
     authState.householdEntitlement = null;
     authState.error = null;
     sendEmailLink.mockResolvedValue(true);
+    purchaseHouseholdUnlock.mockResolvedValue({
+      status: 'unsupported',
+      message: 'Billing unavailable in this build.',
+    });
+    restorePurchases.mockResolvedValue({
+      status: 'unsupported',
+      message: 'Restore unavailable in this build.',
+    });
   });
 
   it('uses email link copy instead of password fields', () => {
@@ -76,10 +97,10 @@ describe('AccountSettingsCard', () => {
     render(<AccountSettingsCard />);
 
     expect(screen.getByText(/not purchased yet/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /unlock routine stars/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /unlock routine stars for eur 9.99/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /restore purchases/i })).toBeInTheDocument();
     expect(
-      screen.getByText(/signed in and ready for the parent-only purchase flow/i)
+      screen.getByText(/signed in and ready for the eur 9.99 parent-only purchase flow/i)
     ).toBeInTheDocument();
   });
 
@@ -98,7 +119,7 @@ describe('AccountSettingsCard', () => {
     expect(screen.queryByRole('button', { name: /restore purchases/i })).toBeNull();
   });
 
-  it('shows a progress note when the parent taps unlock', () => {
+  it('calls the billing adapter when the parent taps unlock', async () => {
     authState.status = 'signed_in';
     authState.user = { email: 'parent@example.com' };
     authState.householdStatus = 'ready';
@@ -108,8 +129,12 @@ describe('AccountSettingsCard', () => {
 
     render(<AccountSettingsCard />);
 
-    fireEvent.click(screen.getByRole('button', { name: /unlock routine stars/i }));
+    fireEvent.click(screen.getByRole('button', { name: /unlock routine stars for eur 9.99/i }));
 
-    expect(screen.getByText(/store purchase wiring is the next slice/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(purchaseHouseholdUnlock).toHaveBeenCalled();
+    });
+
+    expect(screen.getByText(/billing unavailable in this build/i)).toBeInTheDocument();
   });
 });

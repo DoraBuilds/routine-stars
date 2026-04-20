@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { ParentSettings } from "@/components/ParentSettings";
 import { AuthProvider } from "@/lib/auth/auth-context";
+import { BillingProvider } from "@/lib/billing/billing-context";
 import type { Child, HomeScene } from "@/lib/types";
 
 vi.mock("framer-motion", () => ({
@@ -52,20 +53,22 @@ const Harness = ({ seedChildren = initialChildren }: { seedChildren?: Child[] })
 
   return (
     <AuthProvider>
-      <div>
-        <pre data-testid="state">{JSON.stringify(children)}</pre>
-        <div data-testid="restart-count">{restartCount}</div>
-        <div data-testid="reset-count">{resetCount}</div>
-        <ParentSettings
-          children={children}
-          homeScene={homeScene}
-          onChange={setChildren}
-          onHomeSceneChange={setHomeScene}
-          onRestartSetup={() => setRestartCount((count) => count + 1)}
-          onResetAppData={() => setResetCount((count) => count + 1)}
-          onBack={() => {}}
-        />
-      </div>
+      <BillingProvider>
+        <div>
+          <pre data-testid="state">{JSON.stringify(children)}</pre>
+          <div data-testid="restart-count">{restartCount}</div>
+          <div data-testid="reset-count">{resetCount}</div>
+          <ParentSettings
+            children={children}
+            homeScene={homeScene}
+            onChange={setChildren}
+            onHomeSceneChange={setHomeScene}
+            onRestartSetup={() => setRestartCount((count) => count + 1)}
+            onResetAppData={() => setResetCount((count) => count + 1)}
+            onBack={() => {}}
+          />
+        </div>
+      </BillingProvider>
     </AuthProvider>
   );
 };

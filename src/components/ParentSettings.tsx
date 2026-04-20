@@ -10,6 +10,7 @@ import { ChildProfileAvatar } from './ChildProfileAvatar';
 import { AccountSettingsCard } from './AccountSettingsCard';
 import { ANIMAL_AVATARS } from './animal-avatars';
 import { useAuth } from '@/lib/auth/use-auth';
+import { useBilling } from '@/lib/billing/billing-context';
 import type { Child, HomeScene, RoutineType } from '@/lib/types';
 import { AGE_BUCKETS, groupTasksByAge, ICON_OPTIONS, TASK_CATALOG } from '@/lib/types';
 import type { TaskCatalogItem } from '@/lib/task-catalog';
@@ -264,6 +265,7 @@ export const ParentSettings = ({
   onBack,
 }: ParentSettingsProps) => {
   const { status: authStatus, signOut, configured, householdStatus, household, entitlementStatus, householdEntitlement } = useAuth();
+  const { householdUnlockProduct, isProcessing, purchaseHouseholdUnlock, restorePurchases } = useBilling();
   const [confirmReset, setConfirmReset] = useState(false);
   const [billingNotice, setBillingNotice] = useState<string | null>(null);
   const [modal, setModal] = useState<{
@@ -872,25 +874,31 @@ export const ParentSettings = ({
                           ? `Paid access is already saved for ${household?.name ?? 'this household'}.`
                           : householdEntitlement?.status === 'revoked'
                             ? 'This household had paid access before. Use restore after we wire the store flows, or re-purchase if needed.'
-                            : 'This parent-only area is where the native store unlock and restore flows will start.'}
+                            : `This parent-only area is where the ${householdUnlockProduct.priceLabel} native store unlock and restore flows will start.`}
                     </p>
                     {entitlementStatus !== 'loading' && householdEntitlement?.status !== 'active' && (
                       <div className="mt-5 flex flex-wrap gap-3">
                         <button
                           type="button"
-                          onClick={() =>
-                            setBillingNotice('Apple and Google purchase wiring is the next slice. This button is now the dedicated parent-only purchase entry point.')
-                          }
+                          onClick={() => {
+                            void purchaseHouseholdUnlock().then((result) => {
+                              setBillingNotice(result.message);
+                            });
+                          }}
+                          disabled={isProcessing}
                           className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-button transition-transform active:translate-y-0.5"
                         >
-                          <CreditCard size={16} />
-                          Start purchase
+                          {isProcessing ? <LoaderCircle size={16} className="animate-spin" /> : <CreditCard size={16} />}
+                          Start purchase for {householdUnlockProduct.priceLabel}
                         </button>
                         <button
                           type="button"
-                          onClick={() =>
-                            setBillingNotice('Restore purchases will connect here once the native store verification flow is wired in.')
-                          }
+                          onClick={() => {
+                            void restorePurchases().then((result) => {
+                              setBillingNotice(result.message);
+                            });
+                          }}
+                          disabled={isProcessing}
                           className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-3 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
                         >
                           <RefreshCcw size={16} />
