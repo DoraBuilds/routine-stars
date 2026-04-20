@@ -41,3 +41,15 @@ Still missing:
 - typed Supabase database definitions
 - true integration between the auth shell and the real household repository
 - local-to-cloud import mapping
+
+## Edge Functions
+
+The first billing verification function scaffold now lives in:
+
+- [supabase/functions/verify-household-unlock/index.ts](/Users/doraangelov/CodexProjects/daily-star-chart/supabase/functions/verify-household-unlock/index.ts)
+
+It currently:
+
+- validates the billing verification request shape
+- returns normalized JSON responses
+- stubs real Apple and Google verification for a later backend slice

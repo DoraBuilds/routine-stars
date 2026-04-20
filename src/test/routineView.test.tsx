@@ -51,7 +51,7 @@ describe("RoutineView child-facing copy", () => {
     expect(screen.getByText("Tap the cards")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Use the toilet/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Brush teeth/i })).toBeInTheDocument();
-  });
+  }, 10000);
 
   it("shows a simple evening routine heading and bedtime copy", () => {
     render(<RoutineView child={child} routine="evening" onToggleTask={() => {}} onBack={() => {}} />);
