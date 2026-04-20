@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  buildPendingEntitlementMutation,
+  buildEntitlementMutationFromDecision,
+  buildVerificationDecision,
   handleVerificationRequest,
   parseVerificationRequest,
 } from '../../supabase/functions/verify-household-unlock/shared';
@@ -74,7 +75,11 @@ describe('verify-household-unlock function contract', () => {
     });
 
     expect(request).not.toBeNull();
-    expect(buildPendingEntitlementMutation(request!, null, '2026-04-20T20:00:00Z')).toEqual({
+    const decision = buildVerificationDecision(request!, null, {
+      status: 'pending',
+      message: 'Verification queued.',
+    });
+    expect(buildEntitlementMutationFromDecision(decision, '2026-04-20T20:00:00Z')).toEqual({
       status: 'pending',
       platform: 'ios',
       store_product_id: 'routine_stars_household_unlock',
@@ -102,23 +107,27 @@ describe('verify-household-unlock function contract', () => {
     });
 
     expect(request).not.toBeNull();
+    const decision = buildVerificationDecision(
+      request!,
+      {
+        id: 'ent-1',
+        household_id: 'house-1',
+        status: 'active',
+        platform: 'android',
+        store_product_id: 'routine_stars_household_unlock',
+        source_transaction_id: 'old-tx',
+        source_original_transaction_id: 'old-orig',
+        granted_at: '2026-04-19T10:00:00Z',
+        revoked_at: null,
+        verification_checked_at: '2026-04-19T10:00:00Z',
+      },
+      {
+        status: 'pending',
+        message: 'Verification queued.',
+      }
+    );
     expect(
-      buildPendingEntitlementMutation(
-        request!,
-        {
-          id: 'ent-1',
-          household_id: 'house-1',
-          status: 'active',
-          platform: 'android',
-          store_product_id: 'routine_stars_household_unlock',
-          source_transaction_id: 'old-tx',
-          source_original_transaction_id: 'old-orig',
-          granted_at: '2026-04-19T10:00:00Z',
-          revoked_at: null,
-          verification_checked_at: '2026-04-19T10:00:00Z',
-        },
-        '2026-04-20T20:00:00Z'
-      )
+      buildEntitlementMutationFromDecision(decision, '2026-04-20T20:00:00Z')
     ).toEqual({
       status: 'active',
       platform: 'android',
@@ -126,6 +135,39 @@ describe('verify-household-unlock function contract', () => {
       source_transaction_id: 'tx-2',
       source_original_transaction_id: 'orig-2',
       granted_at: '2026-04-19T10:00:00Z',
+      revoked_at: null,
+      verification_checked_at: '2026-04-20T20:00:00Z',
+    });
+  });
+
+  it('promotes a new entitlement to active only when the verifier returns verified', () => {
+    const request = parseVerificationRequest({
+      householdId: 'house-1',
+      eventType: 'household_unlock_purchase_completed',
+      verificationPayload: {
+        platform: 'ios',
+        appProductId: 'household_lifetime_unlock',
+        storeProductId: 'routine_stars_household_unlock',
+        sourceTransactionId: 'tx-verified',
+        sourceOriginalTransactionId: 'orig-verified',
+        receiptData: 'verified-receipt',
+        purchaseToken: null,
+      },
+    });
+
+    expect(request).not.toBeNull();
+    const decision = buildVerificationDecision(request!, null, {
+      status: 'verified',
+      message: 'Verified purchase evidence.',
+    });
+
+    expect(buildEntitlementMutationFromDecision(decision, '2026-04-20T20:00:00Z')).toEqual({
+      status: 'active',
+      platform: 'ios',
+      store_product_id: 'routine_stars_household_unlock',
+      source_transaction_id: 'tx-verified',
+      source_original_transaction_id: 'orig-verified',
+      granted_at: '2026-04-20T20:00:00Z',
       revoked_at: null,
       verification_checked_at: '2026-04-20T20:00:00Z',
     });
