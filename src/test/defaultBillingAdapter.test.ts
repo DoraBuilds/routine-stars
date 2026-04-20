@@ -19,12 +19,14 @@ describe('createDefaultBillingAdapter', () => {
     await expect(adapter.purchaseHouseholdUnlock()).resolves.toEqual(
       expect.objectContaining({
         status: 'unsupported',
+        source: 'fallback',
       })
     );
 
     await expect(adapter.restorePurchases()).resolves.toEqual(
       expect.objectContaining({
         status: 'unsupported',
+        source: 'fallback',
       })
     );
   });

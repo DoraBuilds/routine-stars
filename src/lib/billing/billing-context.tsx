@@ -1,9 +1,9 @@
 import { createContext, useContext, useMemo, useState, type PropsWithChildren } from 'react';
-import { createDefaultBillingAdapter } from './default-billing-adapter';
+import { createBillingAdapter } from './create-billing-adapter';
 import type { BillingActionResult } from './types';
 
 interface BillingContextValue {
-  householdUnlockProduct: ReturnType<ReturnType<typeof createDefaultBillingAdapter>['getHouseholdUnlockProduct']>;
+  householdUnlockProduct: ReturnType<ReturnType<typeof createBillingAdapter>['getHouseholdUnlockProduct']>;
   isProcessing: boolean;
   purchaseHouseholdUnlock: () => Promise<BillingActionResult>;
   restorePurchases: () => Promise<BillingActionResult>;
@@ -12,7 +12,7 @@ interface BillingContextValue {
 const BillingContext = createContext<BillingContextValue | null>(null);
 
 export const BillingProvider = ({ children }: PropsWithChildren) => {
-  const adapter = useMemo(() => createDefaultBillingAdapter(), []);
+  const adapter = useMemo(() => createBillingAdapter(), []);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const value = useMemo<BillingContextValue>(
