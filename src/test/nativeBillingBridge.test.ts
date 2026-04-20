@@ -21,6 +21,7 @@ describe('native billing bridge', () => {
         storeProductId: 'routine_stars_household_unlock',
         sourceTransactionId: 'tx-1',
         sourceOriginalTransactionId: 'orig-1',
+        receiptData: 'signed-receipt',
       }),
       restorePurchases: vi.fn().mockResolvedValue({
         status: 'ready',
@@ -44,6 +45,12 @@ describe('native billing bridge', () => {
         platform: 'ios',
         storeProductId: 'routine_stars_household_unlock',
         sourceTransactionId: 'tx-1',
+        verificationPayload: expect.objectContaining({
+          platform: 'ios',
+          appProductId: 'household_lifetime_unlock',
+          receiptData: 'signed-receipt',
+          purchaseToken: null,
+        }),
       })
     );
   });
@@ -56,11 +63,13 @@ describe('native billing bridge', () => {
             status: 'cancelled',
             message: 'Purchase cancelled.',
             platform: 'android',
+            purchaseToken: 'purchase-token',
           }),
           restorePurchases: vi.fn().mockResolvedValue({
             status: 'ready',
             message: 'Restore completed.',
             platform: 'android',
+            purchaseToken: 'restore-token',
           }),
         },
       },
@@ -79,6 +88,11 @@ describe('native billing bridge', () => {
         status: 'ready',
         source: 'native_bridge',
         platform: 'android',
+        verificationPayload: expect.objectContaining({
+          platform: 'android',
+          purchaseToken: 'restore-token',
+          receiptData: null,
+        }),
       })
     );
   });

@@ -9,6 +9,7 @@ export const createDefaultBillingAdapter = (): BillingAdapter => ({
       message:
         'Native store billing is not connected in this build yet. The purchase button is wired and ready for the next integration slice.',
       source: 'fallback',
+      verificationPayload: null,
     };
   },
   restorePurchases: async () => {
@@ -17,6 +18,7 @@ export const createDefaultBillingAdapter = (): BillingAdapter => ({
       message:
         'Restore purchases is not connected in this browser build yet. The restore entry point is ready for the native billing integration slice.',
       source: 'fallback',
+      verificationPayload: null,
     };
   },
 });

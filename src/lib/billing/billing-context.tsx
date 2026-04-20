@@ -49,7 +49,10 @@ export const BillingProvider = ({ children }: PropsWithChildren) => {
       sourceOriginalTransactionId: result.sourceOriginalTransactionId ?? null,
       amountMinor: null,
       currency: null,
-      rawPayload: result,
+      rawPayload: {
+        result,
+        verificationPayload: result.verificationPayload ?? null,
+      },
       occurredAt: new Date().toISOString(),
     });
 
