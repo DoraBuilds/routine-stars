@@ -19,6 +19,30 @@ export interface VerificationResult {
   message: string;
 }
 
+export interface ExistingEntitlementSnapshot {
+  id: string;
+  household_id: string;
+  status: 'active' | 'pending' | 'revoked';
+  platform: 'ios' | 'android' | 'web' | null;
+  store_product_id: string | null;
+  source_transaction_id: string | null;
+  source_original_transaction_id: string | null;
+  granted_at: string | null;
+  revoked_at: string | null;
+  verification_checked_at: string | null;
+}
+
+export interface PendingEntitlementMutation {
+  status: 'active' | 'pending';
+  platform: 'ios' | 'android';
+  store_product_id: string | null;
+  source_transaction_id: string | null;
+  source_original_transaction_id: string | null;
+  granted_at: string | null;
+  revoked_at: null;
+  verification_checked_at: string;
+}
+
 export interface VerificationHttpResponse {
   status: number;
   body: VerificationResult;
@@ -103,3 +127,18 @@ export const handleVerificationRequest = (input: unknown): VerificationHttpRespo
     },
   };
 };
+
+export const buildPendingEntitlementMutation = (
+  request: VerificationRequest,
+  existingEntitlement: ExistingEntitlementSnapshot | null,
+  nowIso: string
+): PendingEntitlementMutation => ({
+  status: existingEntitlement?.status === 'active' ? 'active' : 'pending',
+  platform: request.verificationPayload.platform,
+  store_product_id: request.verificationPayload.storeProductId,
+  source_transaction_id: request.verificationPayload.sourceTransactionId,
+  source_original_transaction_id: request.verificationPayload.sourceOriginalTransactionId,
+  granted_at: existingEntitlement?.status === 'active' ? existingEntitlement.granted_at : null,
+  revoked_at: null,
+  verification_checked_at: nowIso,
+});

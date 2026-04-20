@@ -863,6 +863,8 @@ export const ParentSettings = ({
                         ? 'Checking access'
                         : householdEntitlement?.status === 'active'
                           ? 'Lifetime unlock active'
+                          : householdEntitlement?.status === 'pending'
+                            ? 'Verification in progress'
                           : householdEntitlement?.status === 'revoked'
                             ? 'Access needs attention'
                             : 'Unlock this household'}
@@ -872,6 +874,8 @@ export const ParentSettings = ({
                         ? 'We are checking the latest paid access state for this family.'
                         : householdEntitlement?.status === 'active'
                           ? `Paid access is already saved for ${household?.name ?? 'this household'}.`
+                          : householdEntitlement?.status === 'pending'
+                            ? 'The household submitted purchase evidence and is waiting for verification to complete.'
                           : householdEntitlement?.status === 'revoked'
                             ? 'This household had paid access before. Use restore after we wire the store flows, or re-purchase if needed.'
                             : `This parent-only area is where the ${householdUnlockProduct.priceLabel} native store unlock and restore flows will start.`}
