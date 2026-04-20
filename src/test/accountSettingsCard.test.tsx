@@ -6,25 +6,36 @@ const sendEmailLink = vi.fn();
 const signOut = vi.fn();
 const clearError = vi.fn();
 const retryHousehold = vi.fn();
+const authState = {
+  configured: true,
+  status: 'signed_out',
+  user: null,
+  householdStatus: 'idle',
+  household: null,
+  entitlementStatus: 'idle',
+  householdEntitlement: null,
+  error: null,
+  clearError,
+  sendEmailLink,
+  retryHousehold,
+  signOut,
+};
 
 vi.mock('@/lib/auth/use-auth', () => ({
-  useAuth: () => ({
-    configured: true,
-    status: 'signed_out',
-    user: null,
-    householdStatus: 'idle',
-    household: null,
-    error: null,
-    clearError,
-    sendEmailLink,
-    retryHousehold,
-    signOut,
-  }),
+  useAuth: () => authState,
 }));
 
 describe('AccountSettingsCard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    authState.configured = true;
+    authState.status = 'signed_out';
+    authState.user = null;
+    authState.householdStatus = 'idle';
+    authState.household = null;
+    authState.entitlementStatus = 'idle';
+    authState.householdEntitlement = null;
+    authState.error = null;
     sendEmailLink.mockResolvedValue(true);
   });
 
@@ -52,5 +63,21 @@ describe('AccountSettingsCard', () => {
 
     expect(screen.getByText(/check your email/i)).toBeInTheDocument();
     expect(screen.getByText(/parent@example.com/i)).toBeInTheDocument();
+  });
+
+  it('shows unpaid access copy for a signed-in household without an entitlement yet', () => {
+    authState.status = 'signed_in';
+    authState.user = { email: 'parent@example.com' };
+    authState.householdStatus = 'ready';
+    authState.household = { name: 'Parent Family' };
+    authState.entitlementStatus = 'ready';
+    authState.householdEntitlement = null;
+
+    render(<AccountSettingsCard />);
+
+    expect(screen.getByText(/not purchased yet/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/signed in and ready for the upcoming parent-only purchase flow/i)
+    ).toBeInTheDocument();
   });
 });

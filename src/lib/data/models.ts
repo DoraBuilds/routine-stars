@@ -1,6 +1,8 @@
 import type { AgeBucket, HomeScene, IconKey, RoutineType } from '@/lib/types';
 
 export type HouseholdRole = 'owner' | 'parent';
+export type BillingPlatform = 'ios' | 'android' | 'web';
+export type HouseholdEntitlementStatus = 'active' | 'revoked';
 
 export interface HouseholdRecord {
   id: string;
@@ -17,6 +19,36 @@ export interface HouseholdMemberRecord {
   householdId: string;
   userId: string;
   role: HouseholdRole;
+  createdAt: string;
+}
+
+export interface HouseholdEntitlementRecord {
+  id: string;
+  householdId: string;
+  status: HouseholdEntitlementStatus;
+  platform: BillingPlatform | null;
+  storeProductId: string | null;
+  sourceTransactionId: string | null;
+  sourceOriginalTransactionId: string | null;
+  grantedAt: string | null;
+  revokedAt: string | null;
+  verificationCheckedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PurchaseEventRecord {
+  id: string;
+  householdId: string;
+  platform: BillingPlatform;
+  eventType: string;
+  storeProductId: string | null;
+  sourceTransactionId: string | null;
+  sourceOriginalTransactionId: string | null;
+  amountMinor: number | null;
+  currency: string | null;
+  rawPayload: unknown;
+  occurredAt: string;
   createdAt: string;
 }
 
