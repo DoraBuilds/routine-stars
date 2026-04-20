@@ -151,6 +151,23 @@ const Index = () => {
       }
 
       if (storedState) {
+        if (authStatus === 'signed_in' && householdStatus === 'ready' && household && cloudState?.children.length) {
+          if (isMounted) {
+            setChildren(cloudState.children);
+            setHomeScene(cloudState.homeScene);
+            setSetupComplete(cloudState.children.length > 0);
+            setView(cloudState.children.length > 0 ? 'home' : 'setup');
+            lastSyncedConfigRef.current = serializeHouseholdConfig({
+              children: cloudState.children,
+              homeScene: cloudState.homeScene,
+              setupComplete: cloudState.children.length > 0,
+            });
+            shouldSyncFirstConfigRef.current = false;
+            setIsReady(true);
+          }
+          return;
+        }
+
         if (
           authStatus === 'signed_in' &&
           householdStatus === 'ready' &&
@@ -306,8 +323,15 @@ const Index = () => {
     }
   }, [children, homeScene, isReady, setupComplete]);
 
+  const activeChild = children.find((c) => c.id === activeChildId);
+  const activeRoutine = activeChild ? getDisplayRoutine(activeChild, now) : 'morning';
+
   const toggleTask = useCallback(
     (taskId: string) => {
+      if (!activeChild) return;
+
+      const resolvedRoutine = getDisplayRoutine(activeChild, new Date());
+      const toggledAt = new Date().toISOString();
       let nextProgressWrite:
         | {
             childId: string;
@@ -315,33 +339,43 @@ const Index = () => {
             taskId: string;
             completed: boolean;
             completedAt: string | null;
+            routineCompleted: boolean;
           }
         | null = null;
 
+      const nextRoutine = activeChild[resolvedRoutine].map((task) => {
+        if (task.id !== taskId) return task;
+
+        const completed = !task.completed;
+        nextProgressWrite = {
+          childId: activeChild.id,
+          routineType: resolvedRoutine,
+          taskId,
+          completed,
+          completedAt: completed ? toggledAt : null,
+          routineCompleted: false,
+        };
+
+        return { ...task, completed };
+      });
+
+      if (!nextProgressWrite) return;
+
+      const routineCompleted = nextRoutine.length > 0 && nextRoutine.every((task) => task.completed);
+      nextProgressWrite = {
+        ...nextProgressWrite,
+        routineCompleted,
+      };
+
       setChildren((prev) =>
-        prev.map((c) => {
-          if (c.id !== activeChildId) return c;
-          const resolvedRoutine = getDisplayRoutine(c, new Date());
-          const nextRoutine = c[resolvedRoutine].map((t) => {
-            if (t.id !== taskId) return t;
-
-            const completed = !t.completed;
-            nextProgressWrite = {
-              childId: c.id,
-              routineType: resolvedRoutine,
-              taskId,
-              completed,
-              completedAt: completed ? new Date().toISOString() : null,
-            };
-
-            return { ...t, completed };
-          });
-
-          return {
-            ...c,
-            [resolvedRoutine]: nextRoutine,
-          };
-        })
+        prev.map((child) =>
+          child.id === activeChild.id
+            ? {
+                ...child,
+                [resolvedRoutine]: nextRoutine,
+              }
+            : child
+        )
       );
 
       if (
@@ -363,24 +397,28 @@ const Index = () => {
             progressDate,
             completedAt: null,
           })
-          .then((dailyRoutineProgress) =>
-            progressRepository.setTaskCompletion({
+          .then(async (dailyRoutineProgress) => {
+            await progressRepository.setTaskCompletion({
               dailyRoutineProgressId: dailyRoutineProgress.id,
               routineTaskId: nextProgressWrite.taskId,
               completed: nextProgressWrite.completed,
               completedAt: nextProgressWrite.completedAt,
-            })
-          )
+            });
+
+            await progressRepository.upsertRoutineProgress({
+              childProfileId: nextProgressWrite.childId,
+              routineType: nextProgressWrite.routineType,
+              progressDate,
+              completedAt: nextProgressWrite.routineCompleted ? new Date().toISOString() : null,
+            });
+          })
           .catch((error) => {
             console.warn('Could not sync routine progress to cloud.', error);
           });
       }
     },
-    [activeChildId, authStatus, household, householdStatus]
+    [activeChild, authStatus, household, householdStatus]
   );
-
-  const activeChild = children.find((c) => c.id === activeChildId);
-  const activeRoutine = activeChild ? getDisplayRoutine(activeChild, now) : 'morning';
   const dueRoutineByChild = Object.fromEntries(
     children.map((child) => [child.id, getDueRoutine(child, now)])
   ) as Record<string, RoutineType | null>;
