@@ -9,6 +9,8 @@ import { useAuth } from '@/lib/auth/use-auth';
 import { loadCloudHouseholdState } from '@/lib/data/cloud-household-state';
 import { saveHouseholdConfigToCloud } from '@/lib/data/cloud-household-write';
 import { importLocalFamilyToCloud } from '@/lib/data/local-to-cloud-import';
+import { SupabaseProgressRepository } from '@/lib/data/supabase-progress-repository';
+import { getSupabaseClient } from '@/lib/supabase/client';
 import type { AppView, Child, HomeScene, RoutineType } from '@/lib/types';
 import {
   clearLocalAppState,
@@ -65,6 +67,8 @@ const getDisplayRoutine = (child: Child, now: Date): RoutineType => {
 };
 
 const createSetupChildren = (): Child[] => [];
+const getLocalProgressDate = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
 const serializeHouseholdConfig = (input: {
   children: Child[];
@@ -304,20 +308,75 @@ const Index = () => {
 
   const toggleTask = useCallback(
     (taskId: string) => {
+      let nextProgressWrite:
+        | {
+            childId: string;
+            routineType: RoutineType;
+            taskId: string;
+            completed: boolean;
+            completedAt: string | null;
+          }
+        | null = null;
+
       setChildren((prev) =>
         prev.map((c) => {
           if (c.id !== activeChildId) return c;
           const resolvedRoutine = getDisplayRoutine(c, new Date());
+          const nextRoutine = c[resolvedRoutine].map((t) => {
+            if (t.id !== taskId) return t;
+
+            const completed = !t.completed;
+            nextProgressWrite = {
+              childId: c.id,
+              routineType: resolvedRoutine,
+              taskId,
+              completed,
+              completedAt: completed ? new Date().toISOString() : null,
+            };
+
+            return { ...t, completed };
+          });
+
           return {
             ...c,
-            [resolvedRoutine]: c[resolvedRoutine].map((t) =>
-              t.id === taskId ? { ...t, completed: !t.completed } : t
-            ),
+            [resolvedRoutine]: nextRoutine,
           };
         })
       );
+
+      if (
+        nextProgressWrite &&
+        authStatus === 'signed_in' &&
+        householdStatus === 'ready' &&
+        household
+      ) {
+        const supabase = getSupabaseClient();
+        if (!supabase) return;
+
+        const progressRepository = new SupabaseProgressRepository(supabase);
+        const progressDate = getLocalProgressDate(new Date());
+
+        void progressRepository
+          .upsertRoutineProgress({
+            childProfileId: nextProgressWrite.childId,
+            routineType: nextProgressWrite.routineType,
+            progressDate,
+            completedAt: null,
+          })
+          .then((dailyRoutineProgress) =>
+            progressRepository.setTaskCompletion({
+              dailyRoutineProgressId: dailyRoutineProgress.id,
+              routineTaskId: nextProgressWrite.taskId,
+              completed: nextProgressWrite.completed,
+              completedAt: nextProgressWrite.completedAt,
+            })
+          )
+          .catch((error) => {
+            console.warn('Could not sync routine progress to cloud.', error);
+          });
+      }
     },
-    [activeChildId]
+    [activeChildId, authStatus, household, householdStatus]
   );
 
   const activeChild = children.find((c) => c.id === activeChildId);
