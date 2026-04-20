@@ -76,8 +76,40 @@ describe('AccountSettingsCard', () => {
     render(<AccountSettingsCard />);
 
     expect(screen.getByText(/not purchased yet/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /unlock routine stars/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /restore purchases/i })).toBeInTheDocument();
     expect(
-      screen.getByText(/signed in and ready for the upcoming parent-only purchase flow/i)
+      screen.getByText(/signed in and ready for the parent-only purchase flow/i)
     ).toBeInTheDocument();
+  });
+
+  it('shows active access without purchase prompts for paid households', () => {
+    authState.status = 'signed_in';
+    authState.user = { email: 'parent@example.com' };
+    authState.householdStatus = 'ready';
+    authState.household = { name: 'Parent Family' };
+    authState.entitlementStatus = 'ready';
+    authState.householdEntitlement = { status: 'active', platform: 'ios' };
+
+    render(<AccountSettingsCard />);
+
+    expect(screen.getByText(/lifetime unlock active/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /unlock routine stars/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /restore purchases/i })).toBeNull();
+  });
+
+  it('shows a progress note when the parent taps unlock', () => {
+    authState.status = 'signed_in';
+    authState.user = { email: 'parent@example.com' };
+    authState.householdStatus = 'ready';
+    authState.household = { name: 'Parent Family' };
+    authState.entitlementStatus = 'ready';
+    authState.householdEntitlement = null;
+
+    render(<AccountSettingsCard />);
+
+    fireEvent.click(screen.getByRole('button', { name: /unlock routine stars/i }));
+
+    expect(screen.getByText(/store purchase wiring is the next slice/i)).toBeInTheDocument();
   });
 });
