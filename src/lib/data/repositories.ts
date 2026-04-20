@@ -4,7 +4,9 @@ import type {
   DailyRoutineProgressRecord,
   DailyTaskProgressRecord,
   HouseholdMemberRecord,
+  HouseholdEntitlementRecord,
   HouseholdRecord,
+  PurchaseEventRecord,
   RoutineRecord,
   RoutineTaskRecord,
 } from './models';
@@ -17,6 +19,16 @@ export interface HouseholdRepository {
   }): Promise<HouseholdRecord>;
   listMembers(householdId: string): Promise<HouseholdMemberRecord[]>;
   updateHomeScene(householdId: string, homeScene: HouseholdRecord['homeScene']): Promise<HouseholdRecord>;
+}
+
+export interface HouseholdEntitlementRepository {
+  getByHousehold(householdId: string): Promise<HouseholdEntitlementRecord | null>;
+  upsert(
+    entitlement: Omit<HouseholdEntitlementRecord, 'createdAt' | 'updatedAt'>
+  ): Promise<HouseholdEntitlementRecord>;
+  recordPurchaseEvent(
+    event: Omit<PurchaseEventRecord, 'createdAt'>
+  ): Promise<PurchaseEventRecord>;
 }
 
 export interface ChildProfileRepository {
