@@ -263,8 +263,9 @@ export const ParentSettings = ({
   onResetAppData,
   onBack,
 }: ParentSettingsProps) => {
-  const { status: authStatus, signOut } = useAuth();
+  const { status: authStatus, signOut, configured, householdStatus, household, entitlementStatus, householdEntitlement } = useAuth();
   const [confirmReset, setConfirmReset] = useState(false);
+  const [billingNotice, setBillingNotice] = useState<string | null>(null);
   const [modal, setModal] = useState<{
     childId: string;
     routine: RoutineType;
@@ -832,17 +833,87 @@ export const ParentSettings = ({
                 <div>
                   <h3 className="text-2xl font-bold text-foreground">Billing</h3>
                   <p className="text-sm text-muted-foreground">
-                    This will be the home for subscriptions and paid family features when we are ready for them.
+                    Parent-only purchase and restore actions live here without touching the child-facing shared-device flow.
                   </p>
                 </div>
               </div>
 
-              <div className="mt-6 rounded-[28px] border border-dashed border-primary/25 bg-primary/5 p-6">
-                <p className="text-lg font-bold text-foreground">Coming soon</p>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  For the MVP, there is nothing to configure here yet.
-                </p>
-              </div>
+              {!configured ? (
+                <div className="mt-6 rounded-[28px] border border-dashed border-primary/25 bg-primary/5 p-6">
+                  <p className="text-lg font-bold text-foreground">Connect Supabase first</p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Billing and restore flows need the parent account and household backend before we can safely unlock access across devices.
+                  </p>
+                </div>
+              ) : authStatus !== 'signed_in' ? (
+                <div className="mt-6 rounded-[28px] border border-dashed border-primary/25 bg-primary/5 p-6">
+                  <p className="text-lg font-bold text-foreground">Sign in as a parent first</p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    The purchase flow belongs to the household account, so we only show it after the parent signs in.
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-6 grid gap-4 md:grid-cols-[minmax(0,1fr)_280px]">
+                  <div className="rounded-[28px] border border-border bg-background p-6">
+                    <p className="text-xs font-black uppercase tracking-[0.22em] text-muted-foreground">Household access</p>
+                    <h4 className="mt-3 text-2xl font-bold text-foreground">
+                      {entitlementStatus === 'loading'
+                        ? 'Checking access'
+                        : householdEntitlement?.status === 'active'
+                          ? 'Lifetime unlock active'
+                          : householdEntitlement?.status === 'revoked'
+                            ? 'Access needs attention'
+                            : 'Unlock this household'}
+                    </h4>
+                    <p className="mt-3 text-sm text-muted-foreground">
+                      {entitlementStatus === 'loading'
+                        ? 'We are checking the latest paid access state for this family.'
+                        : householdEntitlement?.status === 'active'
+                          ? `Paid access is already saved for ${household?.name ?? 'this household'}.`
+                          : householdEntitlement?.status === 'revoked'
+                            ? 'This household had paid access before. Use restore after we wire the store flows, or re-purchase if needed.'
+                            : 'This parent-only area is where the native store unlock and restore flows will start.'}
+                    </p>
+                    {entitlementStatus !== 'loading' && householdEntitlement?.status !== 'active' && (
+                      <div className="mt-5 flex flex-wrap gap-3">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setBillingNotice('Apple and Google purchase wiring is the next slice. This button is now the dedicated parent-only purchase entry point.')
+                          }
+                          className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-button transition-transform active:translate-y-0.5"
+                        >
+                          <CreditCard size={16} />
+                          Start purchase
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setBillingNotice('Restore purchases will connect here once the native store verification flow is wired in.')
+                          }
+                          className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-3 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                        >
+                          <RefreshCcw size={16} />
+                          Restore purchases
+                        </button>
+                      </div>
+                    )}
+                    {billingNotice && (
+                      <div className="mt-4 rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3">
+                        <p className="text-sm text-foreground">{billingNotice}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="rounded-[28px] border border-border bg-background p-6">
+                    <p className="text-xs font-black uppercase tracking-[0.22em] text-muted-foreground">What stays the same</p>
+                    <h4 className="mt-3 text-xl font-bold text-foreground">Kids can keep using the device</h4>
+                    <p className="mt-3 text-sm text-muted-foreground">
+                      Billing stays inside parent-gated areas only. The shared-device home and routine screens stay simple for children.
+                    </p>
+                  </div>
+                </div>
+              )}
             </section>
           )}
         </div>

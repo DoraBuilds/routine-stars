@@ -23,11 +23,13 @@ export const AccountSettingsCard = () => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailSentTo, setEmailSentTo] = useState<string | null>(null);
+  const [billingMessage, setBillingMessage] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     clearError();
     setEmailSentTo(null);
+    setBillingMessage(null);
     const trimmedEmail = email.trim();
     const ok = await sendEmailLink(trimmedEmail, mode);
     if (ok) {
@@ -147,8 +149,37 @@ export const AccountSettingsCard = () => {
                   ? 'This household has a verified paid unlock saved to the account.'
                   : householdEntitlement?.status === 'revoked'
                     ? 'This household had paid access before, but the entitlement is no longer active.'
-                    : 'This household is signed in and ready for the upcoming parent-only purchase flow.'}
+                    : 'This household is signed in and ready for the parent-only purchase flow.'}
             </p>
+            {(householdEntitlement?.status !== 'active' || entitlementStatus === 'error') && entitlementStatus !== 'loading' && (
+              <div className="mt-5 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setBillingMessage('Store purchase wiring is the next slice. This button is now the parent-only entry point for the unlock flow.')
+                  }
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow-button transition-transform active:translate-y-0.5"
+                >
+                  <CreditCard size={16} />
+                  Unlock Routine Stars
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setBillingMessage('Restore purchases will connect to Apple and Google account restoration in the next billing integration slice.')
+                  }
+                  className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                >
+                  <RefreshCcw size={16} />
+                  Restore purchases
+                </button>
+              </div>
+            )}
+            {billingMessage && (
+              <div className="mt-4 rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3">
+                <p className="text-sm text-foreground">{billingMessage}</p>
+              </div>
+            )}
             {(entitlementStatus === 'error' || householdEntitlement?.status === 'revoked') && (
               <button
                 type="button"
@@ -173,9 +204,10 @@ export const AccountSettingsCard = () => {
                 type="button"
                 onClick={() => {
                   clearError();
-                  setEmailSentTo(null);
-                  setMode(value);
-                }}
+                    setEmailSentTo(null);
+                    setBillingMessage(null);
+                    setMode(value);
+                  }}
                 className={`flex-1 rounded-full px-4 py-2 text-sm font-bold transition-colors sm:flex-none ${
                   mode === value ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
                 }`}
