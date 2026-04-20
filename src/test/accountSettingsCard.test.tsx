@@ -119,6 +119,23 @@ describe('AccountSettingsCard', () => {
     expect(screen.queryByRole('button', { name: /restore purchases/i })).toBeNull();
   });
 
+  it('shows pending verification copy when the household is awaiting verification', () => {
+    authState.status = 'signed_in';
+    authState.user = { email: 'parent@example.com' };
+    authState.householdStatus = 'ready';
+    authState.household = { name: 'Parent Family' };
+    authState.entitlementStatus = 'ready';
+    authState.householdEntitlement = { status: 'pending', platform: 'ios' };
+
+    render(<AccountSettingsCard />);
+
+    expect(screen.getByText(/purchase verification in progress/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/captured the purchase evidence and the household is waiting for verification/i)
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /retry purchase check/i })).toBeInTheDocument();
+  });
+
   it('calls the billing adapter when the parent taps unlock', async () => {
     authState.status = 'signed_in';
     authState.user = { email: 'parent@example.com' };

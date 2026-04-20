@@ -140,6 +140,8 @@ export const AccountSettingsCard = () => {
                 ? 'Checking access'
                 : householdEntitlement?.status === 'active'
                   ? 'Lifetime unlock active'
+                  : householdEntitlement?.status === 'pending'
+                    ? 'Purchase verification in progress'
                   : householdEntitlement?.status === 'revoked'
                     ? 'Access needs attention'
                     : 'Not purchased yet'}
@@ -149,6 +151,8 @@ export const AccountSettingsCard = () => {
                 ? 'We could not verify billing access yet. You can retry from here.'
                 : householdEntitlement?.status === 'active'
                   ? 'This household has a verified paid unlock saved to the account.'
+                  : householdEntitlement?.status === 'pending'
+                    ? 'We captured the purchase evidence and the household is waiting for verification to finish.'
                   : householdEntitlement?.status === 'revoked'
                     ? 'This household had paid access before, but the entitlement is no longer active.'
                     : `This household is signed in and ready for the ${householdUnlockProduct.priceLabel} parent-only purchase flow.`}
@@ -166,7 +170,9 @@ export const AccountSettingsCard = () => {
                   className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow-button transition-transform active:translate-y-0.5"
                 >
                   {isProcessing ? <LoaderCircle size={16} className="animate-spin" /> : <CreditCard size={16} />}
-                  Unlock Routine Stars for {householdUnlockProduct.priceLabel}
+                  {householdEntitlement?.status === 'pending'
+                    ? 'Retry purchase check'
+                    : `Unlock Routine Stars for ${householdUnlockProduct.priceLabel}`}
                 </button>
                 <button
                   type="button"

@@ -2,7 +2,7 @@ import type { AgeBucket, HomeScene, IconKey, RoutineType } from '@/lib/types';
 
 export type HouseholdRole = 'owner' | 'parent';
 export type BillingPlatform = 'ios' | 'android' | 'web';
-export type HouseholdEntitlementStatus = 'active' | 'revoked';
+export type HouseholdEntitlementStatus = 'active' | 'pending' | 'revoked';
 
 export interface HouseholdRecord {
   id: string;
