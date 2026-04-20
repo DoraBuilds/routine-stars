@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CheckCircle2, Cloud, CloudOff, LoaderCircle, LogIn, LogOut, Mail, RefreshCcw, ShieldCheck, UserRoundPlus } from 'lucide-react';
+import { CheckCircle2, Cloud, CloudOff, CreditCard, LoaderCircle, LogIn, LogOut, Mail, RefreshCcw, ShieldCheck, UserRoundPlus } from 'lucide-react';
 import { useAuth } from '@/lib/auth/use-auth';
 
 type AuthMode = 'signin' | 'signup';
@@ -11,6 +11,8 @@ export const AccountSettingsCard = () => {
     user,
     householdStatus,
     household,
+    entitlementStatus,
+    householdEntitlement,
     error,
     clearError,
     sendEmailLink,
@@ -66,7 +68,7 @@ export const AccountSettingsCard = () => {
           </div>
         </div>
       ) : status === 'signed_in' && user ? (
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
           <div className="rounded-[28px] border border-border bg-background p-5">
             <div className="flex items-center gap-2 text-foreground">
               <ShieldCheck size={18} className="text-primary" />
@@ -117,6 +119,45 @@ export const AccountSettingsCard = () => {
                   Try again
                 </button>
               </div>
+            )}
+          </div>
+
+          <div className="rounded-[28px] border border-border bg-background p-5">
+            <div className="flex items-center gap-2 text-foreground">
+              {entitlementStatus === 'loading' ? (
+                <LoaderCircle size={18} className="animate-spin text-primary" />
+              ) : (
+                <CreditCard size={18} className="text-primary" />
+              )}
+              <p className="text-sm font-black uppercase tracking-[0.18em]">Access</p>
+            </div>
+            <p className="mt-4 text-lg font-bold text-foreground">
+              {entitlementStatus === 'loading'
+                ? 'Checking access'
+                : householdEntitlement?.status === 'active'
+                  ? 'Lifetime unlock active'
+                  : householdEntitlement?.status === 'revoked'
+                    ? 'Access needs attention'
+                    : 'Not purchased yet'}
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {entitlementStatus === 'error'
+                ? 'We could not verify billing access yet. You can retry from here.'
+                : householdEntitlement?.status === 'active'
+                  ? 'This household has a verified paid unlock saved to the account.'
+                  : householdEntitlement?.status === 'revoked'
+                    ? 'This household had paid access before, but the entitlement is no longer active.'
+                    : 'This household is signed in and ready for the upcoming parent-only purchase flow.'}
+            </p>
+            {(entitlementStatus === 'error' || householdEntitlement?.status === 'revoked') && (
+              <button
+                type="button"
+                onClick={() => void retryHousehold()}
+                className="mt-5 inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+              >
+                <RefreshCcw size={16} />
+                Refresh access
+              </button>
             )}
           </div>
         </div>
