@@ -66,4 +66,19 @@ export class SupabaseHouseholdRepository implements HouseholdRepository {
 
     return (data ?? []).map(mapMember);
   }
+
+  async updateHomeScene(householdId: string, homeScene: HouseholdRecord['homeScene']) {
+    const { data, error } = await this.supabase
+      .from(HOUSEHOLDS_TABLE)
+      .update({ home_scene: homeScene })
+      .eq('id', householdId)
+      .select('*')
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return mapHousehold(data);
+  }
 }

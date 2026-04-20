@@ -16,6 +16,7 @@ export interface HouseholdRepository {
     timezone: string;
   }): Promise<HouseholdRecord>;
   listMembers(householdId: string): Promise<HouseholdMemberRecord[]>;
+  updateHomeScene(householdId: string, homeScene: HouseholdRecord['homeScene']): Promise<HouseholdRecord>;
 }
 
 export interface ChildProfileRepository {
