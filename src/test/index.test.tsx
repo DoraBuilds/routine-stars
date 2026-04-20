@@ -26,6 +26,11 @@ const { importLocalFamilyToCloud } = vi.hoisted(() => ({
 const { saveHouseholdConfigToCloud } = vi.hoisted(() => ({
   saveHouseholdConfigToCloud: vi.fn(),
 }));
+const { getSupabaseClient, upsertRoutineProgress, setTaskCompletion } = vi.hoisted(() => ({
+  getSupabaseClient: vi.fn(),
+  upsertRoutineProgress: vi.fn(),
+  setTaskCompletion: vi.fn(),
+}));
 
 vi.mock("@/lib/auth/use-auth", () => ({
   useAuth: () => authState,
@@ -39,6 +44,15 @@ vi.mock("@/lib/data/local-to-cloud-import", () => ({
 }));
 vi.mock("@/lib/data/cloud-household-write", () => ({
   saveHouseholdConfigToCloud,
+}));
+vi.mock("@/lib/supabase/client", () => ({
+  getSupabaseClient,
+}));
+vi.mock("@/lib/data/supabase-progress-repository", () => ({
+  SupabaseProgressRepository: class {
+    upsertRoutineProgress = upsertRoutineProgress;
+    setTaskCompletion = setTaskCompletion;
+  },
 }));
 
 const today = () => new Date().toDateString();
@@ -220,6 +234,12 @@ describe("Index", () => {
     loadCloudHouseholdState.mockReset();
     importLocalFamilyToCloud.mockReset();
     saveHouseholdConfigToCloud.mockReset();
+    getSupabaseClient.mockReset();
+    upsertRoutineProgress.mockReset();
+    setTaskCompletion.mockReset();
+    getSupabaseClient.mockReturnValue({});
+    upsertRoutineProgress.mockResolvedValue({ id: "progress-1" });
+    setTaskCompletion.mockResolvedValue({ id: "task-progress-1" });
     authState.clearError.mockReset();
     authState.sendEmailLink.mockReset();
     authState.retryHousehold.mockReset();
@@ -344,6 +364,46 @@ describe("Index", () => {
 
     expect(await screen.findByTestId("child-count")).toHaveTextContent("1");
     expect(loadCloudHouseholdState).toHaveBeenCalledWith(authState.household);
+  });
+
+  it("prefers cloud household state over stale local cache for signed-in households", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [
+        {
+          id: "1",
+          name: "Cloud Lily",
+          morning: [{ id: "m1", title: "Make bed", icon: "bed", completed: true }],
+          evening: [],
+        },
+      ],
+    });
+    localStorage.setItem(
+      "routine_stars_data",
+      JSON.stringify({
+        ...createStoredState(false, today()),
+        setupComplete: true,
+      })
+    );
+
+    render(<Index />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "select-first-child" }));
+
+    expect(await screen.findByTestId("active-child")).toHaveTextContent("Cloud Lily");
+    expect(screen.getByTestId("first-task-completed")).toHaveTextContent("true");
   });
 
   it("shows an import decision when a signed-in device has local setup and cloud is empty", async () => {
@@ -497,6 +557,52 @@ describe("Index", () => {
     fireEvent.click(await screen.findByRole("button", { name: "start-fresh-instead" }));
 
     expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("0");
+  });
+
+  it("syncs signed-in task toggles to cloud-backed progress", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [
+        {
+          id: "1",
+          name: "Lily",
+          morning: [{ id: "m1", title: "Make bed", icon: "bed", completed: false }],
+          evening: [],
+          schedule: {
+            morning: { start: "00:00", end: "23:59" },
+            evening: { start: "00:00", end: "00:01" },
+          },
+        },
+      ],
+    });
+
+    render(<Index />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "select-first-child" }));
+    fireEvent.click(screen.getByRole("button", { name: "toggle-first-task" }));
+
+    await waitFor(() => {
+      expect(upsertRoutineProgress).toHaveBeenCalled();
+      expect(setTaskCompletion).toHaveBeenCalledWith(
+        expect.objectContaining({
+          dailyRoutineProgressId: "progress-1",
+          routineTaskId: "m1",
+          completed: true,
+        })
+      );
+    });
   });
 
   it("re-opens setup when saved data is marked incomplete", async () => {
