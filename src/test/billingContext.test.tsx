@@ -102,8 +102,8 @@ describe('BillingProvider', () => {
       id: 'event-1',
     });
     verifyHouseholdUnlock.mockResolvedValue({
-      status: 'unsupported',
-      message: 'Backend verification is not connected in this build yet.',
+      status: 'pending',
+      message: 'Verification queued.',
     });
   });
 
@@ -136,7 +136,7 @@ describe('BillingProvider', () => {
               householdId: 'house-1',
             }),
             verificationResponse: expect.objectContaining({
-              status: 'unsupported',
+              status: 'pending',
             }),
             verificationPayload: expect.objectContaining({
               platform: 'ios',
