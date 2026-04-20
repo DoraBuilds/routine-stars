@@ -6,7 +6,7 @@ As of April 20, 2026, Routine Stars is a strong local shared-device routine app 
 
 Ship a first paid version where:
 
-- a parent can buy access outside the app
+- a parent can buy access in a store-compliant way for native apps
 - a parent can create or sign in to an account
 - the household data follows them to a second device
 - existing local-only families can move forward safely
@@ -64,38 +64,35 @@ Related issues:
 - #14 Build local-to-cloud import and offline cache strategy
 - #17 Add post-login import-or-start-fresh decision for existing local family data
 
-### 3. Add billing outside the app for a one-time 9.99 EUR purchase
+### 3. Add native-first billing for a one-time 9.99 EUR household unlock
 
 Recommended MVP direction:
 
-- use Stripe-hosted checkout outside the app
-- start with Stripe Payment Links for the lowest-friction external checkout
-- use webhook fulfillment to grant a household entitlement after payment
+- use a non-consumable one-time unlock on Apple
+- use a non-consumable one-time product on Google Play
+- map store purchases to a backend household entitlement
 
 Why this direction:
 
-- Payment Links provide a hosted payment page with very low integration effort
-- Stripe Checkout and Payment Links both support hosted one-time payments
-- Stripe recommends webhook-based fulfillment so purchase access is granted reliably
+- Routine Stars is planning a native-first launch
+- digital app access in native store apps still falls under store billing rules
+- a household lifetime unlock matches the product and avoids subscription complexity
 
 Operational recommendations:
 
-- sell one household lifetime unlock
-- price it at 9.99 EUR
-- treat it as B2C pricing and set tax behavior intentionally for EU markets
-- define refund handling before launch
+- ship as a free download with a one-time `EUR 9.99` parent unlock
+- restore purchases across devices through the parent account
+- keep the purchase gate parent-only
+- define refund and revoked-entitlement handling before launch
 
 Related issues:
 
 - #19 Add billing architecture for external one-time purchase at €9.99
 - #20 Grant paid household access from billing entitlement and webhook fulfillment
 
-Useful references:
+Decision doc:
 
-- https://docs.stripe.com/payment-links
-- https://docs.stripe.com/payments/checkout/how-checkout-works
-- https://docs.stripe.com/checkout/fulfillment
-- https://docs.stripe.com/tax/products-prices-tax-codes-tax-behavior
+- `docs/native-billing-architecture.md`
 
 ### 4. Tie access to a durable paid entitlement
 
@@ -104,10 +101,10 @@ Selling the app is not just taking payment. We need a backend entitlement record
 Includes:
 
 - add purchase and entitlement records in Supabase
-- receive Stripe webhook events
+- receive store verification events or backend verification results
 - make fulfillment idempotent
 - expose paid vs unpaid state in app bootstrap and parent settings
-- route unpaid households to the external purchase page
+- route unpaid households to a parent-gated purchase flow
 
 Related issue:
 
@@ -140,7 +137,7 @@ To keep pull requests reviewable, build in this order:
 4. import/start-fresh decision UI
 5. local-to-cloud import implementation
 6. progress sync and daily reset rules
-7. external billing setup
+7. native billing setup
 8. entitlement fulfillment and purchase gating
 9. launch operations and QA
 
@@ -152,4 +149,4 @@ Unless we decide otherwise later, this roadmap assumes:
 - purchase is one-time, not subscription
 - purchase unlock is per household, not per child
 - child use stays password-free on shared devices
-- billing lives outside the app
+- native apps use store-compliant billing for digital access
