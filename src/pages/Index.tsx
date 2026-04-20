@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ChildSelector } from '@/components/ChildSelector';
 import { AccountEntryScreen } from '@/components/AccountEntryScreen';
+import { ImportFamilySetupScreen } from '@/components/ImportFamilySetupScreen';
 import { InitialSetup } from '@/components/InitialSetup';
 import { RoutineView } from '@/components/RoutineView';
 import { ParentSettings } from '@/components/ParentSettings';
 import { useAuth } from '@/lib/auth/use-auth';
 import { loadCloudHouseholdState } from '@/lib/data/cloud-household-state';
+import { importLocalFamilyToCloud } from '@/lib/data/local-to-cloud-import';
 import type { AppView, Child, HomeScene, RoutineType } from '@/lib/types';
 import {
   clearLocalAppState,
@@ -70,6 +72,8 @@ const Index = () => {
   const [activeChildId, setActiveChildId] = useState<string | null>(null);
   const [setupComplete, setSetupComplete] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
   const [now, setNow] = useState(() => new Date());
   const [homeScene, setHomeScene] = useState<HomeScene>('bike');
 
@@ -100,7 +104,34 @@ const Index = () => {
 
     const bootstrap = async () => {
       const storedState = loadLocalAppState();
+      let cloudState: Awaited<ReturnType<typeof loadCloudHouseholdState>> | null = null;
+
+      if (authStatus === 'signed_in' && householdStatus === 'ready' && household) {
+        try {
+          cloudState = await loadCloudHouseholdState(household);
+        } catch (error) {
+          console.warn('Could not load cloud household state.', error);
+        }
+      }
+
       if (storedState) {
+        if (
+          authStatus === 'signed_in' &&
+          householdStatus === 'ready' &&
+          household &&
+          storedState.children.length > 0 &&
+          (cloudState?.children.length ?? 0) === 0
+        ) {
+          if (isMounted) {
+            setChildren(storedState.children);
+            setHomeScene(storedState.homeScene);
+            setSetupComplete(storedState.setupComplete);
+            setView('import');
+            setIsReady(true);
+          }
+          return;
+        }
+
         const today = new Date().toDateString();
         if (storedState.lastReset !== today) {
           const reset = storedState.children.map((c: Child) => ({
@@ -130,20 +161,15 @@ const Index = () => {
         return;
       }
 
-      if (authStatus === 'signed_in' && householdStatus === 'ready' && household) {
-        try {
-          const cloudState = await loadCloudHouseholdState(household);
-          if (!isMounted) return;
+      if (cloudState) {
+        if (!isMounted) return;
 
-          setChildren(cloudState.children);
-          setHomeScene(cloudState.homeScene);
-          setSetupComplete(cloudState.children.length > 0);
-          setView(cloudState.children.length > 0 ? 'home' : 'setup');
-          setIsReady(true);
-          return;
-        } catch (error) {
-          console.warn('Could not load cloud household state.', error);
-        }
+        setChildren(cloudState.children);
+        setHomeScene(cloudState.homeScene);
+        setSetupComplete(cloudState.children.length > 0);
+        setView(cloudState.children.length > 0 ? 'home' : 'setup');
+        setIsReady(true);
+        return;
       }
 
       if (isMounted) {
@@ -233,6 +259,47 @@ const Index = () => {
 
   if (view === 'account') {
     return <AccountEntryScreen onContinueLocalSetup={() => setView('setup')} />;
+  }
+
+  if (view === 'import') {
+    return (
+      <ImportFamilySetupScreen
+        isImporting={isImporting}
+        error={importError}
+        onImport={() => {
+          if (!household) return;
+
+          setIsImporting(true);
+          setImportError(null);
+
+          void importLocalFamilyToCloud({
+            household,
+            children,
+            homeScene,
+          })
+            .then(() => {
+              setSetupComplete(children.length > 0);
+              setView(children.length > 0 ? 'home' : 'setup');
+            })
+            .catch((error) => {
+              setImportError(
+                error instanceof Error ? error.message : 'Could not import this family setup right now.'
+              );
+            })
+            .finally(() => {
+              setIsImporting(false);
+            });
+        }}
+        onStartFresh={() => {
+          clearLocalAppState();
+          setChildren(createSetupChildren());
+          setSetupComplete(false);
+          setHomeScene('bike');
+          setView('setup');
+          setImportError(null);
+        }}
+      />
+    );
   }
 
   if (view === 'setup') {
