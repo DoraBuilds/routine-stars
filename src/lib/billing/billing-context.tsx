@@ -1,6 +1,7 @@
 import { createContext, useContext, useMemo, useState, type PropsWithChildren } from 'react';
 import { createBillingAdapter } from './create-billing-adapter';
 import type { BillingActionResult } from './types';
+import { createBillingVerificationClient } from './verification-client';
 import { useAuth } from '@/lib/auth/use-auth';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { SupabaseHouseholdEntitlementRepository } from '@/lib/data/supabase-household-entitlement-repository';
@@ -16,6 +17,7 @@ const BillingContext = createContext<BillingContextValue | null>(null);
 
 export const BillingProvider = ({ children }: PropsWithChildren) => {
   const adapter = useMemo(() => createBillingAdapter(), []);
+  const verificationClient = useMemo(() => createBillingVerificationClient(), []);
   const { household, retryHousehold, status: authStatus } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -38,6 +40,16 @@ export const BillingProvider = ({ children }: PropsWithChildren) => {
     }
 
     const repository = new SupabaseHouseholdEntitlementRepository(supabase);
+    const verificationRequest = result.verificationPayload
+      ? {
+          householdId: household.id,
+          eventType,
+          verificationPayload: result.verificationPayload,
+        }
+      : null;
+    const verificationResponse = verificationRequest
+      ? await verificationClient.verifyHouseholdUnlock(verificationRequest)
+      : null;
 
     await repository.recordPurchaseEvent({
       id: crypto.randomUUID(),
@@ -52,6 +64,8 @@ export const BillingProvider = ({ children }: PropsWithChildren) => {
       rawPayload: {
         result,
         verificationPayload: result.verificationPayload ?? null,
+        verificationRequest,
+        verificationResponse,
       },
       occurredAt: new Date().toISOString(),
     });
@@ -60,7 +74,7 @@ export const BillingProvider = ({ children }: PropsWithChildren) => {
 
     return {
       ...result,
-      message: `${result.message} Household access was refreshed just now.`,
+      message: `${result.message} ${verificationResponse?.message ? `${verificationResponse.message} ` : ''}Household access was refreshed just now.`,
     } satisfies BillingActionResult;
   };
 
@@ -87,7 +101,7 @@ export const BillingProvider = ({ children }: PropsWithChildren) => {
         }
       },
     }),
-    [adapter, authStatus, household, isProcessing, retryHousehold]
+    [adapter, authStatus, household, isProcessing, retryHousehold, verificationClient]
   );
 
   return <BillingContext.Provider value={value}>{children}</BillingContext.Provider>;

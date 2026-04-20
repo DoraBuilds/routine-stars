@@ -2,11 +2,12 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BillingProvider, useBilling } from '@/lib/billing/billing-context';
 
-const { purchaseHouseholdUnlock, restorePurchases, recordPurchaseEvent, getSupabaseClient } = vi.hoisted(() => ({
+const { purchaseHouseholdUnlock, restorePurchases, recordPurchaseEvent, getSupabaseClient, verifyHouseholdUnlock } = vi.hoisted(() => ({
   purchaseHouseholdUnlock: vi.fn(),
   restorePurchases: vi.fn(),
   recordPurchaseEvent: vi.fn(),
   getSupabaseClient: vi.fn(() => ({})),
+  verifyHouseholdUnlock: vi.fn(),
 }));
 
 const authState = {
@@ -44,6 +45,12 @@ vi.mock('@/lib/data/supabase-household-entitlement-repository', () => ({
   SupabaseHouseholdEntitlementRepository: class {
     recordPurchaseEvent = recordPurchaseEvent;
   },
+}));
+
+vi.mock('@/lib/billing/verification-client', () => ({
+  createBillingVerificationClient: () => ({
+    verifyHouseholdUnlock,
+  }),
 }));
 
 const Probe = () => {
@@ -94,6 +101,10 @@ describe('BillingProvider', () => {
     recordPurchaseEvent.mockResolvedValue({
       id: 'event-1',
     });
+    verifyHouseholdUnlock.mockResolvedValue({
+      status: 'unsupported',
+      message: 'Backend verification is not connected in this build yet.',
+    });
   });
 
   it('records successful native purchases and refreshes household access', async () => {
@@ -106,6 +117,14 @@ describe('BillingProvider', () => {
     fireEvent.click(screen.getByRole('button', { name: 'purchase' }));
 
     await waitFor(() => {
+      expect(verifyHouseholdUnlock).toHaveBeenCalledWith({
+        householdId: 'house-1',
+        eventType: 'household_unlock_purchase_completed',
+        verificationPayload: expect.objectContaining({
+          platform: 'ios',
+          receiptData: 'signed-receipt',
+        }),
+      });
       expect(recordPurchaseEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           householdId: 'house-1',
@@ -113,6 +132,12 @@ describe('BillingProvider', () => {
           eventType: 'household_unlock_purchase_completed',
           sourceTransactionId: 'tx-1',
           rawPayload: expect.objectContaining({
+            verificationRequest: expect.objectContaining({
+              householdId: 'house-1',
+            }),
+            verificationResponse: expect.objectContaining({
+              status: 'unsupported',
+            }),
             verificationPayload: expect.objectContaining({
               platform: 'ios',
               receiptData: 'signed-receipt',
@@ -138,6 +163,7 @@ describe('BillingProvider', () => {
     });
 
     expect(recordPurchaseEvent).not.toHaveBeenCalled();
+    expect(verifyHouseholdUnlock).not.toHaveBeenCalled();
     expect(authState.retryHousehold).not.toHaveBeenCalled();
   });
 });
