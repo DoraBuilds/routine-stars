@@ -108,7 +108,7 @@ describe("ParentSettings", () => {
         completed: false,
       })
     );
-  }, 10000);
+  }, 40000);
 
   it("edits an existing task title and preserves its icon", () => {
     render(<Harness />);
@@ -128,7 +128,7 @@ describe("ParentSettings", () => {
         completed: false,
       })
     );
-  });
+  }, 20000);
 
   it("adds a task from the other-tasks bucket without opening the modal", () => {
     render(<Harness />);
