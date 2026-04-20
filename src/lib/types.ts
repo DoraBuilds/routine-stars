@@ -28,6 +28,6 @@ export type Child = {
   evening: Task[];
 };
 
-export type AppView = 'setup' | 'home' | 'routine' | 'parent';
+export type AppView = 'account' | 'setup' | 'home' | 'routine' | 'parent';
 
 export { AGE_BUCKETS, DEFAULT_CHILDREN, groupTasksByAge, ICON_OPTIONS, TASK_CATALOG, TASK_CATALOG_BY_ID, TASK_LIBRARY };
