@@ -75,11 +75,21 @@ describe('BillingProvider', () => {
       storeProductId: 'routine_stars_household_unlock',
       sourceTransactionId: 'tx-1',
       sourceOriginalTransactionId: 'orig-1',
+      verificationPayload: {
+        platform: 'ios',
+        appProductId: 'household_lifetime_unlock',
+        storeProductId: 'routine_stars_household_unlock',
+        sourceTransactionId: 'tx-1',
+        sourceOriginalTransactionId: 'orig-1',
+        receiptData: 'signed-receipt',
+        purchaseToken: null,
+      },
     });
     restorePurchases.mockResolvedValue({
       status: 'unsupported',
       source: 'fallback',
       message: 'Restore unavailable.',
+      verificationPayload: null,
     });
     recordPurchaseEvent.mockResolvedValue({
       id: 'event-1',
@@ -102,6 +112,12 @@ describe('BillingProvider', () => {
           platform: 'ios',
           eventType: 'household_unlock_purchase_completed',
           sourceTransactionId: 'tx-1',
+          rawPayload: expect.objectContaining({
+            verificationPayload: expect.objectContaining({
+              platform: 'ios',
+              receiptData: 'signed-receipt',
+            }),
+          }),
         })
       );
       expect(authState.retryHousehold).toHaveBeenCalled();

@@ -1,5 +1,5 @@
 import type { BillingPlatform } from '@/lib/data/models';
-import type { BillingActionResult, BillingAdapter } from './types';
+import type { BillingActionResult, BillingAdapter, BillingVerificationPayload } from './types';
 import { HOUSEHOLD_LIFETIME_UNLOCK } from './config';
 
 export interface NativeBillingBridgeResult {
@@ -9,6 +9,8 @@ export interface NativeBillingBridgeResult {
   storeProductId?: string | null;
   sourceTransactionId?: string | null;
   sourceOriginalTransactionId?: string | null;
+  receiptData?: string | null;
+  purchaseToken?: string | null;
 }
 
 export interface NativeBillingBridge {
@@ -38,15 +40,31 @@ declare global {
 const toBillingActionResult = (
   result: NativeBillingBridgeResult,
   fallbackMessage: string
-): BillingActionResult => ({
-  status: result.status,
-  message: result.message ?? fallbackMessage,
-  source: 'native_bridge',
-  platform: result.platform,
-  storeProductId: result.storeProductId ?? null,
-  sourceTransactionId: result.sourceTransactionId ?? null,
-  sourceOriginalTransactionId: result.sourceOriginalTransactionId ?? null,
-});
+): BillingActionResult => {
+  const verificationPayload: BillingVerificationPayload | null =
+    result.platform === 'ios' || result.platform === 'android'
+      ? {
+          platform: result.platform,
+          appProductId: HOUSEHOLD_LIFETIME_UNLOCK.id,
+          storeProductId: result.storeProductId ?? null,
+          sourceTransactionId: result.sourceTransactionId ?? null,
+          sourceOriginalTransactionId: result.sourceOriginalTransactionId ?? null,
+          receiptData: result.receiptData ?? null,
+          purchaseToken: result.purchaseToken ?? null,
+        }
+      : null;
+
+  return {
+    status: result.status,
+    message: result.message ?? fallbackMessage,
+    source: 'native_bridge',
+    platform: result.platform,
+    storeProductId: result.storeProductId ?? null,
+    sourceTransactionId: result.sourceTransactionId ?? null,
+    sourceOriginalTransactionId: result.sourceOriginalTransactionId ?? null,
+    verificationPayload,
+  };
+};
 
 export const getNativeBillingBridge = (): NativeBillingBridge | null => {
   if (typeof window === 'undefined') {

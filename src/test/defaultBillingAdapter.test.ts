@@ -20,6 +20,7 @@ describe('createDefaultBillingAdapter', () => {
       expect.objectContaining({
         status: 'unsupported',
         source: 'fallback',
+        verificationPayload: null,
       })
     );
 
@@ -27,6 +28,7 @@ describe('createDefaultBillingAdapter', () => {
       expect.objectContaining({
         status: 'unsupported',
         source: 'fallback',
+        verificationPayload: null,
       })
     );
   });
