@@ -620,6 +620,7 @@ const Index = () => {
       <ParentSettings
         children={children}
         homeScene={homeScene}
+        pendingCloudProgressSync={pendingCloudProgressSync}
         onChange={setChildren}
         onHomeSceneChange={setHomeScene}
         onRestartSetup={restartSetup}

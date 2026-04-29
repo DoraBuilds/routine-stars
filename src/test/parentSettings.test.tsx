@@ -3,8 +3,24 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { ParentSettings } from "@/components/ParentSettings";
-import { AuthProvider } from "@/lib/auth/auth-context";
 import type { Child, HomeScene } from "@/lib/types";
+
+const authState = {
+  configured: true,
+  status: "signed_out",
+  user: null,
+  householdStatus: "idle",
+  household: null,
+  error: null,
+  clearError: vi.fn(),
+  sendEmailLink: vi.fn(),
+  retryHousehold: vi.fn(),
+  signOut: vi.fn(),
+};
+
+vi.mock("@/lib/auth/use-auth", () => ({
+  useAuth: () => authState,
+}));
 
 vi.mock("framer-motion", () => ({
   motion: new Proxy(
@@ -44,35 +60,46 @@ const initialChildren: Child[] = [
 
 const readState = () => JSON.parse(screen.getByTestId("state").textContent ?? "{}") as Child[];
 
-const Harness = ({ seedChildren = initialChildren }: { seedChildren?: Child[] }) => {
+const Harness = ({
+  seedChildren = initialChildren,
+  pendingCloudProgressSync = false,
+}: {
+  seedChildren?: Child[];
+  pendingCloudProgressSync?: boolean;
+}) => {
   const [children, setChildren] = useState(seedChildren);
   const [homeScene, setHomeScene] = useState<HomeScene>("bike");
   const [restartCount, setRestartCount] = useState(0);
   const [resetCount, setResetCount] = useState(0);
 
   return (
-    <AuthProvider>
-      <div>
-        <pre data-testid="state">{JSON.stringify(children)}</pre>
-        <div data-testid="restart-count">{restartCount}</div>
-        <div data-testid="reset-count">{resetCount}</div>
-        <ParentSettings
-          children={children}
-          homeScene={homeScene}
-          onChange={setChildren}
-          onHomeSceneChange={setHomeScene}
-          onRestartSetup={() => setRestartCount((count) => count + 1)}
-          onResetAppData={() => setResetCount((count) => count + 1)}
-          onBack={() => {}}
-        />
-      </div>
-    </AuthProvider>
+    <div>
+      <pre data-testid="state">{JSON.stringify(children)}</pre>
+      <div data-testid="restart-count">{restartCount}</div>
+      <div data-testid="reset-count">{resetCount}</div>
+      <ParentSettings
+        children={children}
+        homeScene={homeScene}
+        pendingCloudProgressSync={pendingCloudProgressSync}
+        onChange={setChildren}
+        onHomeSceneChange={setHomeScene}
+        onRestartSetup={() => setRestartCount((count) => count + 1)}
+        onResetAppData={() => setResetCount((count) => count + 1)}
+        onBack={() => {}}
+      />
+    </div>
   );
 };
 
 describe("ParentSettings", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    authState.status = "signed_out";
+    authState.user = null;
+    authState.signOut.mockReset();
+    authState.clearError.mockReset();
+    authState.sendEmailLink.mockReset();
+    authState.retryHousehold.mockReset();
   });
 
   it("renames a child in place", () => {
@@ -206,5 +233,22 @@ describe("ParentSettings", () => {
 
     expect(screen.getByTestId("restart-count")).toHaveTextContent("1");
     expect(readState()).toHaveLength(2);
+  });
+
+  it("shows a calm local-only sync status when no parent is signed in", () => {
+    render(<Harness />);
+
+    expect(screen.getByText(/this device is local-only right now/i)).toBeInTheDocument();
+  });
+
+  it("shows a pending sync status when this device still has offline progress to flush", () => {
+    authState.status = "signed_in";
+
+    render(<Harness pendingCloudProgressSync />);
+
+    expect(screen.getByText(/this device still has progress waiting to sync/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/we will keep trying quietly in the background/i)
+    ).toBeInTheDocument();
   });
 });

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Reorder } from 'framer-motion';
 import {
   Sun, Moon, Trash2, Plus, GripVertical, UserPlus, ArrowLeft, X, Check, Shuffle, Clock3, Palette, ChevronDown,
-  Users, House, Shield, CreditCard, LogOut, UserRound,
+  Users, House, Shield, CreditCard, LogOut, UserRound, Cloud, CloudOff, RefreshCw,
 } from 'lucide-react';
 import { TaskIcon } from './TaskIcon';
 import { TaskSuggestionPicker } from './TaskSuggestionPicker';
@@ -17,6 +17,7 @@ import type { TaskCatalogItem } from '@/lib/task-catalog';
 interface ParentSettingsProps {
   children: Child[];
   homeScene: HomeScene;
+  pendingCloudProgressSync?: boolean;
   onChange: (children: Child[]) => void;
   onHomeSceneChange: (scene: HomeScene) => void;
   onRestartSetup: () => void;
@@ -257,6 +258,7 @@ const HOME_SCENE_OPTIONS: { key: HomeScene; label: string; preview: string; desc
 export const ParentSettings = ({
   children,
   homeScene,
+  pendingCloudProgressSync = false,
   onChange,
   onHomeSceneChange,
   onRestartSetup,
@@ -393,6 +395,33 @@ export const ParentSettings = ({
             <p className="mt-3 text-lg font-bold text-foreground">{children.length} kids</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Choose a section on the left instead of scrolling through everything at once.
+            </p>
+          </div>
+
+          <div className="mt-4 rounded-[24px] border border-border bg-background p-4">
+            <div className="flex items-center gap-2">
+              {authStatus !== 'signed_in' ? (
+                <CloudOff size={16} className="text-muted-foreground" />
+              ) : pendingCloudProgressSync ? (
+                <RefreshCw size={16} className="text-primary" />
+              ) : (
+                <Cloud size={16} className="text-primary" />
+              )}
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-muted-foreground">Sync status</p>
+            </div>
+            <p className="mt-3 text-base font-bold text-foreground">
+              {authStatus !== 'signed_in'
+                ? 'This device is local-only right now.'
+                : pendingCloudProgressSync
+                  ? 'This device still has progress waiting to sync.'
+                  : 'This device is caught up.'}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {authStatus !== 'signed_in'
+                ? 'Kids can keep using this shared device, but updates stay saved only here until a parent signs in.'
+                : pendingCloudProgressSync
+                  ? 'We will keep trying quietly in the background so the family can continue without losing today’s checkmarks.'
+                  : 'Signed-in household changes and today’s progress are ready to follow the family across devices.'}
             </p>
           </div>
 
