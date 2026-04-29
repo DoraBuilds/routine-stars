@@ -167,6 +167,24 @@ vi.mock("@/components/AccountEntryScreen", () => ({
   ),
 }));
 
+vi.mock("@/components/HouseholdLoadErrorScreen", () => ({
+  HouseholdLoadErrorScreen: ({
+    error,
+    onRetry,
+  }: {
+    error: string;
+    onRetry: () => void;
+  }) => (
+    <div>
+      <div data-testid="household-load-error-screen">household-load-error</div>
+      <div data-testid="household-load-error">{error}</div>
+      <button type="button" onClick={onRetry}>
+        retry-household-load
+      </button>
+    </div>
+  ),
+}));
+
 vi.mock("@/components/ImportFamilySetupScreen", () => ({
   ImportFamilySetupScreen: ({
     onImport,
@@ -344,6 +362,65 @@ describe("Index", () => {
 
     expect(await screen.findByTestId("child-count")).toHaveTextContent("1");
     expect(loadCloudHouseholdState).toHaveBeenCalledWith(authState.household);
+  });
+
+  it("falls back to cached local household data when signed-in cloud loading fails", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockRejectedValue(new Error("Network offline"));
+    localStorage.setItem(
+      "routine_stars_data",
+      JSON.stringify({
+        ...createStoredState(false, today()),
+        setupComplete: true,
+        homeScene: "school",
+      })
+    );
+
+    render(<Index />);
+
+    expect(await screen.findByTestId("child-count")).toHaveTextContent("1");
+    expect(screen.queryByTestId("household-load-error-screen")).not.toBeInTheDocument();
+  });
+
+  it("shows a retryable bootstrap error instead of setup when signed-in cloud loading fails with no local cache", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState
+      .mockRejectedValueOnce(new Error("Supabase timeout"))
+      .mockResolvedValueOnce({
+        homeScene: "kite",
+        children: [],
+      });
+
+    render(<Index />);
+
+    expect(await screen.findByTestId("household-load-error-screen")).toBeInTheDocument();
+    expect(screen.getByTestId("household-load-error")).toHaveTextContent("Supabase timeout");
+
+    fireEvent.click(screen.getByRole("button", { name: "retry-household-load" }));
+
+    expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("0");
   });
 
   it("shows an import decision when a signed-in device has local setup and cloud is empty", async () => {
