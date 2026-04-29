@@ -70,6 +70,62 @@ const createSetupChildren = (): Child[] => [];
 const getLocalProgressDate = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
+const mergeLocalProgressIntoChildren = (cloudChildren: Child[], localChildren: Child[]) =>
+  cloudChildren.map((cloudChild) => {
+    const localChild = localChildren.find((candidate) => candidate.id === cloudChild.id);
+    if (!localChild) {
+      return cloudChild;
+    }
+
+    const mergeRoutine = (routineType: RoutineType) =>
+      cloudChild[routineType].map((cloudTask) => {
+        const localTask = localChild[routineType].find((candidate) => candidate.id === cloudTask.id);
+        return localTask ? { ...cloudTask, completed: localTask.completed } : cloudTask;
+      });
+
+    return {
+      ...cloudChild,
+      morning: mergeRoutine('morning'),
+      evening: mergeRoutine('evening'),
+    };
+  });
+
+const syncPendingProgressToCloud = async (input: { children: Child[] }) => {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    throw new Error('Supabase is not configured yet.');
+  }
+
+  const progressRepository = new SupabaseProgressRepository(supabase);
+  const progressDate = getLocalProgressDate(new Date());
+
+  await Promise.all(
+    input.children.flatMap((child) =>
+      (['morning', 'evening'] as const).map(async (routineType) => {
+        const tasks = child[routineType];
+        const completedTasks = tasks.filter((task) => task.completed);
+        const dailyRoutineProgress = await progressRepository.upsertRoutineProgress({
+          childProfileId: child.id,
+          routineType,
+          progressDate,
+          completedAt: completedTasks.length === tasks.length && tasks.length > 0 ? new Date().toISOString() : null,
+        });
+
+        await Promise.all(
+          tasks.map((task) =>
+            progressRepository.setTaskCompletion({
+              dailyRoutineProgressId: dailyRoutineProgress.id,
+              routineTaskId: task.id,
+              completed: task.completed,
+              completedAt: task.completed ? new Date().toISOString() : null,
+            })
+          )
+        );
+      })
+    )
+  );
+};
+
 const serializeHouseholdConfig = (input: {
   children: Child[];
   homeScene: HomeScene;
@@ -110,6 +166,7 @@ const Index = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [now, setNow] = useState(() => new Date());
   const [homeScene, setHomeScene] = useState<HomeScene>('bike');
+  const [pendingCloudProgressSync, setPendingCloudProgressSync] = useState(false);
   const lastSyncedConfigRef = useRef<string | null>(null);
   const shouldSyncFirstConfigRef = useRef(false);
 
@@ -119,6 +176,7 @@ const Index = () => {
     setActiveChildId(null);
     setSetupComplete(false);
     setHomeScene('bike');
+    setPendingCloudProgressSync(false);
     setView('setup');
     setNow(new Date());
   }, []);
@@ -126,6 +184,7 @@ const Index = () => {
   const restartSetup = useCallback(() => {
     setActiveChildId(null);
     setSetupComplete(false);
+    setPendingCloudProgressSync(false);
     setView('setup');
     setNow(new Date());
   }, []);
@@ -151,14 +210,21 @@ const Index = () => {
       }
 
       if (storedState) {
+        const storedStateIsToday = storedState.lastReset === new Date().toDateString();
+
         if (authStatus === 'signed_in' && householdStatus === 'ready' && household && cloudState?.children.length) {
           if (isMounted) {
-            setChildren(cloudState.children);
+            const nextChildren =
+              storedStateIsToday && storedState.pendingCloudProgressSync
+                ? mergeLocalProgressIntoChildren(cloudState.children, storedState.children)
+                : cloudState.children;
+            setChildren(nextChildren);
             setHomeScene(cloudState.homeScene);
             setSetupComplete(cloudState.children.length > 0);
+            setPendingCloudProgressSync(storedStateIsToday && storedState.pendingCloudProgressSync);
             setView(cloudState.children.length > 0 ? 'home' : 'setup');
             lastSyncedConfigRef.current = serializeHouseholdConfig({
-              children: cloudState.children,
+              children: nextChildren,
               homeScene: cloudState.homeScene,
               setupComplete: cloudState.children.length > 0,
             });
@@ -179,6 +245,7 @@ const Index = () => {
             setChildren(storedState.children);
             setHomeScene(storedState.homeScene);
             setSetupComplete(storedState.setupComplete);
+            setPendingCloudProgressSync(storedStateIsToday && storedState.pendingCloudProgressSync);
             setView('import');
             setIsReady(true);
           }
@@ -202,6 +269,7 @@ const Index = () => {
         if (isMounted) {
           setSetupComplete(storedState.setupComplete);
           setHomeScene(storedState.homeScene);
+          setPendingCloudProgressSync(storedState.lastReset === today ? storedState.pendingCloudProgressSync : false);
           setView(
             storedState.setupComplete
               ? 'home'
@@ -220,6 +288,7 @@ const Index = () => {
         setChildren(cloudState.children);
         setHomeScene(cloudState.homeScene);
         setSetupComplete(cloudState.children.length > 0);
+        setPendingCloudProgressSync(false);
         setView(cloudState.children.length > 0 ? 'home' : 'setup');
         if (cloudState.children.length > 0) {
           lastSyncedConfigRef.current = serializeHouseholdConfig({
@@ -239,6 +308,7 @@ const Index = () => {
         setChildren(createSetupChildren());
         setSetupComplete(false);
         setHomeScene('bike');
+        setPendingCloudProgressSync(false);
         setView(authStatus === 'signed_in' ? 'setup' : 'account');
         shouldSyncFirstConfigRef.current = authStatus === 'signed_in';
         setIsReady(true);
@@ -317,11 +387,41 @@ const Index = () => {
         homeScene,
         lastReset: new Date().toDateString(),
         setupComplete,
+        pendingCloudProgressSync,
       });
     } catch (error) {
       console.warn('Could not save app state to local storage.', error);
     }
-  }, [children, homeScene, isReady, setupComplete]);
+  }, [children, homeScene, isReady, pendingCloudProgressSync, setupComplete]);
+
+  useEffect(() => {
+    if (
+      !isReady ||
+      !pendingCloudProgressSync ||
+      authStatus !== 'signed_in' ||
+      householdStatus !== 'ready' ||
+      !household ||
+      !setupComplete
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void syncPendingProgressToCloud({ children })
+      .then(() => {
+        if (!cancelled) {
+          setPendingCloudProgressSync(false);
+        }
+      })
+      .catch((error) => {
+        console.warn('Could not flush pending local progress to cloud.', error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authStatus, children, household, householdStatus, isReady, pendingCloudProgressSync, setupComplete]);
 
   const activeChild = children.find((c) => c.id === activeChildId);
   const activeRoutine = activeChild ? getDisplayRoutine(activeChild, now) : 'morning';
@@ -389,6 +489,7 @@ const Index = () => {
 
         const progressRepository = new SupabaseProgressRepository(supabase);
         const progressDate = getLocalProgressDate(new Date());
+        setPendingCloudProgressSync(true);
 
         void progressRepository
           .upsertRoutineProgress({
@@ -411,6 +512,7 @@ const Index = () => {
               progressDate,
               completedAt: nextProgressWrite.routineCompleted ? new Date().toISOString() : null,
             });
+            setPendingCloudProgressSync(false);
           })
           .catch((error) => {
             console.warn('Could not sync routine progress to cloud.', error);
@@ -457,6 +559,7 @@ const Index = () => {
               setChildren(cloudState.children);
               setHomeScene(cloudState.homeScene);
               setSetupComplete(cloudState.children.length > 0);
+              setPendingCloudProgressSync(false);
               setView(cloudState.children.length > 0 ? 'home' : 'setup');
               lastSyncedConfigRef.current = serializeHouseholdConfig({
                 children: cloudState.children,
@@ -479,6 +582,7 @@ const Index = () => {
           setChildren(createSetupChildren());
           setSetupComplete(false);
           setHomeScene('bike');
+          setPendingCloudProgressSync(false);
           setView('setup');
           setImportError(null);
           shouldSyncFirstConfigRef.current = true;

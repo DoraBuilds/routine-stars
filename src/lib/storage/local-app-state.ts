@@ -9,6 +9,7 @@ export interface LocalAppState {
   homeScene: HomeScene;
   lastReset: string;
   setupComplete: boolean;
+  pendingCloudProgressSync: boolean;
 }
 
 type LegacyLocalAppState = Partial<Omit<LocalAppState, 'version'>> & {
@@ -34,6 +35,8 @@ const normalizeLocalAppState = (value: unknown): LocalAppState | null => {
     homeScene: legacy.homeScene ?? 'bike',
     lastReset: legacy.lastReset ?? new Date().toDateString(),
     setupComplete: legacy.setupComplete ?? true,
+    pendingCloudProgressSync:
+      typeof value.pendingCloudProgressSync === 'boolean' ? value.pendingCloudProgressSync : false,
   };
 };
 

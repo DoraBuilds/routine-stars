@@ -395,6 +395,48 @@ describe("Index", () => {
       JSON.stringify({
         ...createStoredState(false, today()),
         setupComplete: true,
+        pendingCloudProgressSync: false,
+      })
+    );
+
+    render(<Index />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "select-first-child" }));
+
+    expect(await screen.findByTestId("active-child")).toHaveTextContent("Cloud Lily");
+    expect(screen.getByTestId("first-task-completed")).toHaveTextContent("true");
+  });
+
+  it("preserves same-day local progress over cloud state when a signed-in device has pending offline sync", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [
+        {
+          id: "1",
+          name: "Cloud Lily",
+          morning: [{ id: "m1", title: "Make bed", icon: "bed", completed: false }],
+          evening: [],
+        },
+      ],
+    });
+    localStorage.setItem(
+      "routine_stars_data",
+      JSON.stringify({
+        ...createStoredState(true, today()),
+        setupComplete: true,
+        pendingCloudProgressSync: true,
       })
     );
 
@@ -592,6 +634,53 @@ describe("Index", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: "select-first-child" }));
     fireEvent.click(screen.getByRole("button", { name: "toggle-first-task" }));
+
+    await waitFor(() => {
+      expect(upsertRoutineProgress).toHaveBeenCalled();
+      expect(setTaskCompletion).toHaveBeenCalledWith(
+        expect.objectContaining({
+          dailyRoutineProgressId: "progress-1",
+          routineTaskId: "m1",
+          completed: true,
+        })
+      );
+    });
+  });
+
+  it("retries pending local progress sync after signed-in bootstrap", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [
+        {
+          id: "1",
+          name: "Cloud Lily",
+          morning: [{ id: "m1", title: "Make bed", icon: "bed", completed: false }],
+          evening: [],
+        },
+      ],
+    });
+    localStorage.setItem(
+      "routine_stars_data",
+      JSON.stringify({
+        ...createStoredState(true, today()),
+        setupComplete: true,
+        pendingCloudProgressSync: true,
+      })
+    );
+
+    render(<Index />);
 
     await waitFor(() => {
       expect(upsertRoutineProgress).toHaveBeenCalled();
