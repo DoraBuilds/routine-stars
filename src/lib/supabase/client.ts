@@ -14,7 +14,7 @@ export const getSupabaseEmailRedirectUrl = () => {
     return undefined;
   }
 
-  return new URL(import.meta.env.BASE_URL || '/', window.location.origin).toString();
+  return new URL('auth/callback', window.location.origin + (import.meta.env.BASE_URL || '/')).toString();
 };
 
 export const getSupabaseClient = () => {
