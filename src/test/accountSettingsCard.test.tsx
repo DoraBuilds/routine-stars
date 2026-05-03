@@ -6,26 +6,33 @@ const sendEmailLink = vi.fn();
 const signOut = vi.fn();
 const clearError = vi.fn();
 const retryHousehold = vi.fn();
+const authState = {
+  configured: true,
+  status: 'signed_out',
+  user: null,
+  householdStatus: 'idle',
+  household: null,
+  error: null as string | null,
+  clearError,
+  sendEmailLink,
+  retryHousehold,
+  signOut,
+};
 
 vi.mock('@/lib/auth/use-auth', () => ({
-  useAuth: () => ({
-    configured: true,
-    status: 'signed_out',
-    user: null,
-    householdStatus: 'idle',
-    household: null,
-    error: null,
-    clearError,
-    sendEmailLink,
-    retryHousehold,
-    signOut,
-  }),
+  useAuth: () => authState,
 }));
 
 describe('AccountSettingsCard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     sendEmailLink.mockResolvedValue(true);
+    authState.configured = true;
+    authState.status = 'signed_out';
+    authState.user = null;
+    authState.householdStatus = 'idle';
+    authState.household = null;
+    authState.error = null;
   });
 
   it('uses email link copy instead of password fields', () => {
@@ -52,5 +59,19 @@ describe('AccountSettingsCard', () => {
 
     expect(screen.getByText(/check your email/i)).toBeInTheDocument();
     expect(screen.getByText(/parent@example.com/i)).toBeInTheDocument();
+  });
+
+  it('shows actionable guidance when household bootstrap fails', () => {
+    authState.status = 'signed_in';
+    authState.user = { email: 'parent@example.com' };
+    authState.householdStatus = 'error';
+    authState.error =
+      'Could not prepare the family household in Supabase. The shared household schema appears to be missing in the live Supabase project. Apply the household SQL migration, then try again.';
+
+    render(<AccountSettingsCard />);
+
+    expect(screen.getByText(/shared household schema appears to be missing/i)).toBeInTheDocument();
+    expect(screen.getByText(/after the supabase household schema is applied/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
   });
 });
