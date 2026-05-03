@@ -14,6 +14,7 @@ export interface HouseholdRepository {
   createInitialHousehold(input: {
     householdName: string;
     timezone: string;
+    userId: string;
   }): Promise<HouseholdRecord>;
   listMembers(householdId: string): Promise<HouseholdMemberRecord[]>;
   updateHomeScene(householdId: string, homeScene: HouseholdRecord['homeScene']): Promise<HouseholdRecord>;

@@ -5,6 +5,19 @@ import type { HouseholdRepository } from './repositories';
 const HOUSEHOLDS_TABLE = 'households';
 const HOUSEHOLD_MEMBERS_TABLE = 'household_members';
 
+const shouldFallbackToDirectBootstrap = (error: unknown) => {
+  const message =
+    typeof error === 'object' && error !== null && 'message' in error
+      ? String(error.message).toLowerCase()
+      : '';
+
+  return (
+    message.includes('bootstrap_household') ||
+    message.includes('function') ||
+    message.includes('could not find')
+  );
+};
+
 const mapHousehold = (row: Record<string, unknown>): HouseholdRecord => ({
   id: String(row.id),
   name: String(row.name),
@@ -40,17 +53,49 @@ export class SupabaseHouseholdRepository implements HouseholdRepository {
     return data ? mapHousehold(data) : null;
   }
 
-  async createInitialHousehold(input: { householdName: string; timezone: string }) {
+  async createInitialHousehold(input: { householdName: string; timezone: string; userId: string }) {
     const { data, error } = await this.supabase.rpc('bootstrap_household', {
       p_name: input.householdName,
       p_timezone: input.timezone,
     });
 
-    if (error) {
+    if (!error && data) {
+      return mapHousehold(data);
+    }
+
+    if (error && !shouldFallbackToDirectBootstrap(error)) {
       throw error;
     }
 
-    return mapHousehold(data);
+    const { data: householdRow, error: householdError } = await this.supabase
+      .from(HOUSEHOLDS_TABLE)
+      .insert({
+        name: input.householdName,
+        timezone: input.timezone,
+        created_by_user_id: input.userId,
+      })
+      .select('*')
+      .single();
+
+    if (householdError) {
+      throw householdError;
+    }
+
+    const household = mapHousehold(householdRow);
+
+    const { error: membershipError } = await this.supabase
+      .from(HOUSEHOLD_MEMBERS_TABLE)
+      .insert({
+        household_id: household.id,
+        user_id: input.userId,
+        role: 'owner',
+      });
+
+    if (membershipError) {
+      throw membershipError;
+    }
+
+    return household;
   }
 
   async listMembers(householdId: string) {
