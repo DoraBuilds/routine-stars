@@ -127,15 +127,12 @@ vi.mock("@/components/InitialSetup", () => ({
   InitialSetup: ({
     children,
     onComplete,
-    showEmptyHouseholdRecoveryHint,
   }: {
     children: Child[];
     onComplete: (children: Child[]) => void;
-    showEmptyHouseholdRecoveryHint?: boolean;
   }) => (
     <div>
       <div data-testid="setup-child-count">{children.length}</div>
-      <div data-testid="setup-recovery-hint">{String(Boolean(showEmptyHouseholdRecoveryHint))}</div>
       <button
         type="button"
         onClick={() =>
@@ -150,6 +147,26 @@ vi.mock("@/components/InitialSetup", () => ({
         }
       >
         finish-setup
+      </button>
+    </div>
+  ),
+}));
+
+vi.mock("@/components/ExistingFamilyRecoveryScreen", () => ({
+  ExistingFamilyRecoveryScreen: ({
+    onStartFresh,
+    onSignOut,
+  }: {
+    onStartFresh: () => void;
+    onSignOut: () => void;
+  }) => (
+    <div>
+      <div data-testid="existing-family-recovery-screen">existing-family-recovery</div>
+      <button type="button" onClick={onStartFresh}>
+        recovery-start-fresh
+      </button>
+      <button type="button" onClick={onSignOut}>
+        recovery-sign-out
       </button>
     </div>
   ),
@@ -396,7 +413,6 @@ describe("Index", () => {
     render(<Index />);
 
     expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("0");
-    expect(screen.getByTestId("setup-recovery-hint")).toHaveTextContent("false");
   });
 
   it("hydrates cloud household data on a fresh signed-in device", async () => {
@@ -539,6 +555,7 @@ describe("Index", () => {
 
     render(<Index />);
 
+    fireEvent.click(await screen.findByRole("button", { name: "recovery-start-fresh" }));
     fireEvent.click(await screen.findByRole("button", { name: "finish-setup" }));
 
     await waitFor(() => {
@@ -581,10 +598,9 @@ describe("Index", () => {
     fireEvent.click(await screen.findByRole("button", { name: "start-fresh-instead" }));
 
     expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("0");
-    expect(screen.getByTestId("setup-recovery-hint")).toHaveTextContent("false");
   });
 
-  it("shows a recovery hint when a signed-in household is empty in this browser context", async () => {
+  it("shows a dedicated recovery screen when a signed-in household is empty in this browser context", async () => {
     authState.status = "signed_in";
     authState.user = { id: "user-1", email: "parent@example.com" };
     authState.householdStatus = "ready";
@@ -604,8 +620,32 @@ describe("Index", () => {
 
     render(<Index />);
 
+    expect(await screen.findByTestId("existing-family-recovery-screen")).toBeInTheDocument();
+  });
+
+  it("lets a parent intentionally continue into fresh setup from the recovery screen", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [],
+    });
+
+    render(<Index />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "recovery-start-fresh" }));
+
     expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("0");
-    expect(screen.getByTestId("setup-recovery-hint")).toHaveTextContent("true");
   });
 
   it("re-opens setup when saved data is marked incomplete", async () => {
