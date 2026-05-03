@@ -106,6 +106,7 @@ const Index = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [now, setNow] = useState(() => new Date());
   const [homeScene, setHomeScene] = useState<HomeScene>('bike');
+  const [showEmptyHouseholdRecoveryHint, setShowEmptyHouseholdRecoveryHint] = useState(false);
   const lastSyncedConfigRef = useRef<string | null>(null);
   const shouldSyncFirstConfigRef = useRef(false);
 
@@ -115,6 +116,7 @@ const Index = () => {
     setActiveChildId(null);
     setSetupComplete(false);
     setHomeScene('bike');
+    setShowEmptyHouseholdRecoveryHint(false);
     setView('setup');
     setNow(new Date());
   }, []);
@@ -122,6 +124,7 @@ const Index = () => {
   const restartSetup = useCallback(() => {
     setActiveChildId(null);
     setSetupComplete(false);
+    setShowEmptyHouseholdRecoveryHint(false);
     setView('setup');
     setNow(new Date());
   }, []);
@@ -142,6 +145,7 @@ const Index = () => {
         setActiveChildId(null);
         setSetupComplete(false);
         setHomeScene('bike');
+        setShowEmptyHouseholdRecoveryHint(false);
         setView('account');
         lastSyncedConfigRef.current = null;
         shouldSyncFirstConfigRef.current = false;
@@ -172,6 +176,7 @@ const Index = () => {
             setChildren(storedState.children);
             setHomeScene(storedState.homeScene);
             setSetupComplete(storedState.setupComplete);
+            setShowEmptyHouseholdRecoveryHint(false);
             setView('import');
             setIsReady(true);
           }
@@ -195,6 +200,7 @@ const Index = () => {
         if (isMounted) {
           setSetupComplete(storedState.setupComplete);
           setHomeScene(storedState.homeScene);
+          setShowEmptyHouseholdRecoveryHint(false);
           setView(storedState.setupComplete ? 'home' : 'setup');
           setIsReady(true);
         }
@@ -207,6 +213,7 @@ const Index = () => {
         setChildren(cloudState.children);
         setHomeScene(cloudState.homeScene);
         setSetupComplete(cloudState.children.length > 0);
+        setShowEmptyHouseholdRecoveryHint(cloudState.children.length === 0);
         setView(cloudState.children.length > 0 ? 'home' : 'setup');
         if (cloudState.children.length > 0) {
           lastSyncedConfigRef.current = serializeHouseholdConfig({
@@ -227,6 +234,7 @@ const Index = () => {
         setActiveChildId(null);
         setSetupComplete(false);
         setHomeScene('bike');
+        setShowEmptyHouseholdRecoveryHint(authStatus === 'signed_in' && householdStatus === 'ready');
         setView(authStatus === 'signed_in' && householdStatus !== 'error' ? 'setup' : 'account');
         shouldSyncFirstConfigRef.current = authStatus === 'signed_in' && householdStatus !== 'error';
         setIsReady(true);
@@ -391,6 +399,7 @@ const Index = () => {
           setChildren(createSetupChildren());
           setSetupComplete(false);
           setHomeScene('bike');
+          setShowEmptyHouseholdRecoveryHint(false);
           setView('setup');
           setImportError(null);
           shouldSyncFirstConfigRef.current = true;
@@ -403,9 +412,11 @@ const Index = () => {
     return (
       <InitialSetup
         children={children}
+        showEmptyHouseholdRecoveryHint={showEmptyHouseholdRecoveryHint}
         onComplete={(configuredChildren) => {
           setChildren(configuredChildren);
           setSetupComplete(true);
+          setShowEmptyHouseholdRecoveryHint(false);
           setView('home');
         }}
       />

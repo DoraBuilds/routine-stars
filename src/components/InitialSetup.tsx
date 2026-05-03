@@ -9,6 +9,7 @@ import { ANIMAL_AVATARS } from './animal-avatars';
 interface InitialSetupProps {
   children: Child[];
   onComplete: (children: Child[]) => void;
+  showEmptyHouseholdRecoveryHint?: boolean;
 }
 
 type SelectionState = Record<string, Record<RoutineType, string[]>>;
@@ -72,7 +73,11 @@ const buildRoutineTasks = (childId: string, routine: RoutineType, selectedTitles
       completed: false,
     }));
 
-export const InitialSetup = ({ children, onComplete }: InitialSetupProps) => {
+export const InitialSetup = ({
+  children,
+  onComplete,
+  showEmptyHouseholdRecoveryHint = false,
+}: InitialSetupProps) => {
   const [draftChildren, setDraftChildren] = useState(children);
   const [selectionState, setSelectionState] = useState<SelectionState>(() => buildSelectionState(children));
   const [activeChildId, setActiveChildId] = useState<string | null>(children[0]?.id ?? null);
@@ -181,6 +186,25 @@ export const InitialSetup = ({ children, onComplete }: InitialSetupProps) => {
             Start with each child&apos;s profile, then switch to routines when you&apos;re ready to choose tasks.
           </p>
         </header>
+
+        {showEmptyHouseholdRecoveryHint && draftChildren.length === 0 && (
+          <section className="mx-auto mt-8 max-w-4xl rounded-[30px] border border-amber-300/60 bg-amber-50/90 p-5 text-left shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-200/70 text-amber-700">
+                <Clock3 size={22} />
+              </div>
+              <div>
+                <p className="text-sm font-black uppercase tracking-[0.24em] text-amber-700">Already had routines?</p>
+                <h2 className="mt-2 text-2xl font-bold text-foreground">This account is signed in, but this browser looks brand new.</h2>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                  If your kids and routines were created somewhere else, go back to that exact browser, laptop profile,
+                  or old tab and sign in there once. Routine Stars can only import the saved family setup from the place
+                  where it was originally stored.
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
 
         <div className="mt-10 grid gap-8 xl:grid-cols-[320px_minmax(0,1fr)]">
           <aside className="rounded-[32px] border border-border bg-card p-6 shadow-card">
