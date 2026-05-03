@@ -13,7 +13,7 @@ const getSuggestedHouseholdName = (user: User) => {
   return `${normalized}'s Family`;
 };
 
-const toBootstrapErrorMessage = (error: unknown) => {
+const getBootstrapErrorMessage = (error: unknown) => {
   const message =
     error instanceof Error
       ? error.message
@@ -21,12 +21,16 @@ const toBootstrapErrorMessage = (error: unknown) => {
         ? String(error.message)
         : '';
 
+  const normalized = message.toLowerCase();
+
   if (
-    message.includes('bootstrap_household') ||
-    message.includes('households') ||
-    message.includes('household_members')
+    normalized.includes('bootstrap_household') ||
+    normalized.includes('households') ||
+    normalized.includes('household_members') ||
+    normalized.includes('relation') ||
+    normalized.includes('schema cache')
   ) {
-    return 'Could not prepare the family household in Supabase. The cloud household schema may not be deployed yet.';
+    return 'Could not prepare the family household in Supabase. The shared household schema appears to be missing in the live Supabase project. Apply the household SQL migration, then try again.';
   }
 
   return message || 'Could not prepare the family household in Supabase.';
@@ -51,6 +55,6 @@ export const ensureHousehold = async (user: User): Promise<HouseholdRecord> => {
       userId: user.id,
     });
   } catch (error) {
-    throw new Error(toBootstrapErrorMessage(error));
+    throw new Error(getBootstrapErrorMessage(error));
   }
 };

@@ -102,12 +102,15 @@ export const AccountSettingsCard = () => {
               {householdStatus === 'ready'
                 ? 'Your parent account is connected to the family space in Supabase.'
                 : householdStatus === 'error'
-                  ? 'We hit a problem while setting up the family space. You can try again here.'
+                  ? 'We hit a problem while setting up the family space. If the live Supabase project is missing the household schema, retry will keep failing until that database setup is applied.'
                   : 'We are preparing the first synced family space for this parent account.'}
             </p>
             {householdStatus === 'error' && (
               <div className="mt-4 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3">
                 <p className="text-sm text-destructive">{error ?? 'The family space is not ready yet.'}</p>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  After the Supabase household schema is applied, return here and choose <span className="font-semibold text-foreground">Try again</span>.
+                </p>
                 <button
                   type="button"
                   onClick={() => void retryHousehold()}
