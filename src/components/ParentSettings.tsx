@@ -399,15 +399,15 @@ export const ParentSettings = ({
 
           <div className="mt-8 rounded-[24px] border border-border bg-background p-4">
             <p className="text-xs font-black uppercase tracking-[0.22em] text-muted-foreground">
-              {isSignedIn ? 'Account status' : 'Local-only setup'}
+              {isSignedIn ? 'Account status' : 'Sign-in required'}
             </p>
             <p className="mt-3 text-base font-bold text-foreground">
-              {isSignedIn ? 'Parent account connected' : 'Kids and routines on this device'}
+              {isSignedIn ? 'Parent account connected' : 'Parent account not connected'}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               {isSignedIn
                 ? 'This browser is signed in. You can manage sync from the Parents section.'
-                : 'You can edit kids and routines locally right now. Open Parents to sign in when you want cloud sync across devices.'}
+                : 'Sign in from the Parents section to load and manage the household saved to this account.'}
             </p>
 
             {isSignedIn && (

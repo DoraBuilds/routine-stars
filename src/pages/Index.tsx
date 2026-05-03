@@ -126,7 +126,7 @@ const Index = () => {
     setNow(new Date());
   }, []);
 
-  // Load from localStorage once auth has settled so startup can be account-aware.
+  // Startup is auth-first: signed-out users always land on account entry.
   useEffect(() => {
     if (authStatus === 'loading' || (authStatus === 'signed_in' && householdStatus === 'loading')) {
       return;
@@ -135,6 +135,20 @@ const Index = () => {
     let isMounted = true;
 
     const bootstrap = async () => {
+      if (authStatus === 'signed_out' || authStatus === 'unavailable') {
+        if (!isMounted) return;
+
+        setChildren(createSetupChildren());
+        setActiveChildId(null);
+        setSetupComplete(false);
+        setHomeScene('bike');
+        setView('account');
+        lastSyncedConfigRef.current = null;
+        shouldSyncFirstConfigRef.current = false;
+        setIsReady(true);
+        return;
+      }
+
       const storedState = loadLocalAppState();
       let cloudState: Awaited<ReturnType<typeof loadCloudHouseholdState>> | null = null;
 
@@ -181,13 +195,7 @@ const Index = () => {
         if (isMounted) {
           setSetupComplete(storedState.setupComplete);
           setHomeScene(storedState.homeScene);
-          setView(
-            storedState.setupComplete
-              ? 'home'
-              : storedState.children.length > 0 || authStatus === 'signed_in'
-                ? 'setup'
-                : 'account'
-          );
+          setView(storedState.setupComplete ? 'home' : 'setup');
           setIsReady(true);
         }
         return;
@@ -216,10 +224,11 @@ const Index = () => {
 
       if (isMounted) {
         setChildren(createSetupChildren());
+        setActiveChildId(null);
         setSetupComplete(false);
         setHomeScene('bike');
-        setView(authStatus === 'signed_in' ? 'setup' : 'account');
-        shouldSyncFirstConfigRef.current = authStatus === 'signed_in';
+        setView(authStatus === 'signed_in' && householdStatus !== 'error' ? 'setup' : 'account');
+        shouldSyncFirstConfigRef.current = authStatus === 'signed_in' && householdStatus !== 'error';
         setIsReady(true);
       }
     };
@@ -288,7 +297,7 @@ const Index = () => {
 
   // Persist
   useEffect(() => {
-    if (!isReady) return;
+    if (!isReady || authStatus !== 'signed_in') return;
 
     try {
       saveLocalAppState({
@@ -300,7 +309,7 @@ const Index = () => {
     } catch (error) {
       console.warn('Could not save app state to local storage.', error);
     }
-  }, [children, homeScene, isReady, setupComplete]);
+  }, [authStatus, children, homeScene, isReady, setupComplete]);
 
   const toggleTask = useCallback(
     (taskId: string) => {
@@ -336,7 +345,7 @@ const Index = () => {
   }
 
   if (view === 'account') {
-    return <AccountEntryScreen onContinueLocalSetup={() => setView('setup')} />;
+    return <AccountEntryScreen />;
   }
 
   if (view === 'import') {

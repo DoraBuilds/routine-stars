@@ -153,16 +153,9 @@ vi.mock("@/components/InitialSetup", () => ({
 }));
 
 vi.mock("@/components/AccountEntryScreen", () => ({
-  AccountEntryScreen: ({
-    onContinueLocalSetup,
-  }: {
-    onContinueLocalSetup: () => void;
-  }) => (
+  AccountEntryScreen: () => (
     <div>
       <div data-testid="account-entry-screen">account-entry</div>
-      <button type="button" onClick={onContinueLocalSetup}>
-        continue-local-setup
-      </button>
     </div>
   ),
 }));
@@ -227,6 +220,32 @@ describe("Index", () => {
   });
 
   it("resets completed tasks when stored data is from a previous day", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [
+        {
+          id: "1",
+          name: "Lily",
+          morning: [
+            { id: "m1", title: "Make bed", icon: "bed", completed: true },
+            { id: "m2", title: "Brush teeth", icon: "brush", completed: false },
+          ],
+          evening: [],
+        },
+      ],
+    });
     localStorage.setItem(
       "routine_stars_data",
       JSON.stringify(createStoredState(true, yesterday()))
@@ -234,13 +253,39 @@ describe("Index", () => {
 
     render(<Index />);
 
-    fireEvent.click(screen.getByRole("button", { name: "select-first-child" }));
+    fireEvent.click(await screen.findByRole("button", { name: "select-first-child" }));
 
     expect(await screen.findByTestId("active-child")).toHaveTextContent("Lily");
     expect(screen.getByTestId("first-task-completed")).toHaveTextContent("false");
   });
 
   it("persists task toggles back to localStorage for the current day", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [
+        {
+          id: "1",
+          name: "Lily",
+          morning: [
+            { id: "m1", title: "Make bed", icon: "bed", completed: false },
+            { id: "m2", title: "Brush teeth", icon: "brush", completed: false },
+          ],
+          evening: [],
+        },
+      ],
+    });
     localStorage.setItem(
       "routine_stars_data",
       JSON.stringify(createStoredState(false, today()))
@@ -248,7 +293,7 @@ describe("Index", () => {
 
     render(<Index />);
 
-    fireEvent.click(screen.getByRole("button", { name: "select-first-child" }));
+    fireEvent.click(await screen.findByRole("button", { name: "select-first-child" }));
     fireEvent.click(screen.getByRole("button", { name: "toggle-first-task" }));
 
     await waitFor(() => {
@@ -261,7 +306,19 @@ describe("Index", () => {
     expect(stored.children[0].morning[0].completed).toBe(true);
   });
 
-  it("opens the due routine for the active child view", () => {
+  it("opens the due routine for the active child view", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
     localStorage.setItem(
       "routine_stars_data",
       JSON.stringify({
@@ -284,10 +341,25 @@ describe("Index", () => {
         ],
       })
     );
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [
+        {
+          id: "1",
+          name: "Lily",
+          morning: [{ id: "m1", title: "Make bed", icon: "bed", completed: false }],
+          evening: [{ id: "e1", title: "Go to bed", icon: "moon-star", completed: false }],
+          schedule: {
+            morning: { start: "00:00", end: "00:01" },
+            evening: { start: "00:02", end: "23:59" },
+          },
+        },
+      ],
+    });
 
     render(<Index />);
 
-    fireEvent.click(screen.getByRole("button", { name: "select-first-child" }));
+    fireEvent.click(await screen.findByRole("button", { name: "select-first-child" }));
 
     expect(screen.getByTestId("active-routine")).toHaveTextContent("evening");
   });
@@ -298,12 +370,20 @@ describe("Index", () => {
     expect(await screen.findByTestId("account-entry-screen")).toBeInTheDocument();
   });
 
-  it("lets a parent continue into local-only setup from the account entry flow", async () => {
+  it("keeps signed-out users on the account entry flow even when stale local data exists", async () => {
+    localStorage.setItem(
+      "routine_stars_data",
+      JSON.stringify({
+        ...createStoredState(false, today()),
+        setupComplete: true,
+        homeScene: "school",
+      })
+    );
+
     render(<Index />);
 
-    fireEvent.click(await screen.findByRole("button", { name: "continue-local-setup" }));
-
-    expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("0");
+    expect(await screen.findByTestId("account-entry-screen")).toBeInTheDocument();
+    expect(screen.queryByTestId("child-count")).toBeNull();
   });
 
   it("opens setup immediately on a fresh device when the parent is already signed in", async () => {
@@ -500,6 +580,8 @@ describe("Index", () => {
   });
 
   it("re-opens setup when saved data is marked incomplete", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
     localStorage.setItem(
       "routine_stars_data",
       JSON.stringify({
@@ -514,6 +596,8 @@ describe("Index", () => {
   });
 
   it("hydrates legacy unversioned local data", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
     localStorage.setItem(
       "routine_stars_data",
       JSON.stringify(createStoredState(false, today()))
@@ -527,9 +611,10 @@ describe("Index", () => {
   });
 
   it("completes first-run setup and persists the configured routines", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
     render(<Index />);
 
-    fireEvent.click(await screen.findByRole("button", { name: "continue-local-setup" }));
     fireEvent.click(await screen.findByRole("button", { name: "finish-setup" }));
 
     expect(await screen.findByTestId("child-count")).toHaveTextContent("1");
@@ -541,6 +626,8 @@ describe("Index", () => {
   });
 
   it("lets a parent clear app data from Parent Settings", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
     localStorage.setItem(
       "routine_stars_data",
       JSON.stringify({
@@ -552,7 +639,7 @@ describe("Index", () => {
 
     render(<Index />);
 
-    fireEvent.click(screen.getByRole("button", { name: "open-settings" }));
+    fireEvent.click(await screen.findByRole("button", { name: "open-settings" }));
     fireEvent.click(screen.getByRole("button", { name: "reset-app-data" }));
 
     expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("0");
@@ -564,6 +651,8 @@ describe("Index", () => {
   });
 
   it("lets a parent restart setup without manual localStorage edits", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
     localStorage.setItem(
       "routine_stars_data",
       JSON.stringify({
@@ -574,7 +663,7 @@ describe("Index", () => {
 
     render(<Index />);
 
-    fireEvent.click(screen.getByRole("button", { name: "open-settings" }));
+    fireEvent.click(await screen.findByRole("button", { name: "open-settings" }));
     fireEvent.click(screen.getByRole("button", { name: "restart-setup" }));
 
     expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("1");

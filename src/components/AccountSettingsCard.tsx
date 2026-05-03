@@ -43,7 +43,7 @@ export const AccountSettingsCard = () => {
         <div>
           <h3 className="text-2xl font-bold text-foreground">Parent Account</h3>
           <p className="text-sm text-muted-foreground">
-            Sign in to prepare household sync without interrupting the child flow on a shared device.
+            Sign in to load and manage the household saved to this account.
           </p>
         </div>
       </div>
@@ -60,7 +60,7 @@ export const AccountSettingsCard = () => {
                 Add <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> to enable real parent sign in.
               </p>
               <p className="mt-2 text-sm text-muted-foreground">
-                The shared-device child experience will keep working locally until those keys are in place.
+                Routine Stars needs these keys before account-based household access can work.
               </p>
             </div>
           </div>
@@ -74,7 +74,7 @@ export const AccountSettingsCard = () => {
             </div>
             <p className="mt-4 text-lg font-bold text-foreground">{user.email}</p>
             <p className="mt-2 text-sm text-muted-foreground">
-              This shared device can keep showing child profiles while the parent account handles sync and setup.
+              This browser is connected to the household saved under this parent account.
             </p>
             <button
               type="button"
@@ -165,7 +165,7 @@ export const AccountSettingsCard = () => {
 
           <p className="mt-4 text-sm text-muted-foreground">
             {mode === 'signin'
-              ? 'We will email a sign-in link to this address so the shared device can connect safely.'
+              ? 'We will email a sign-in link to this address so this device can open the household saved to your account.'
               : 'We will email a one-time sign-up link. After you confirm it, the household bootstrap will run automatically.'}
           </p>
 
