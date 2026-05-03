@@ -264,6 +264,7 @@ export const ParentSettings = ({
   onBack,
 }: ParentSettingsProps) => {
   const { status: authStatus, signOut } = useAuth();
+  const isSignedIn = authStatus === 'signed_in';
   const [confirmReset, setConfirmReset] = useState(false);
   const [modal, setModal] = useState<{
     childId: string;
@@ -329,7 +330,7 @@ export const ParentSettings = ({
     icon: typeof Users;
   }> = [
     { key: 'kids', label: 'Kids', description: `${children.length} profile${children.length === 1 ? '' : 's'}`, icon: Users },
-    { key: 'parents', label: 'Parents', description: 'Account access', icon: UserRound },
+    { key: 'parents', label: 'Parents', description: isSignedIn ? 'Account connected' : 'Sign in for sync', icon: UserRound },
     { key: 'household', label: 'Household setup', description: 'Scenes and family home', icon: House },
     { key: 'admin', label: 'Admin', description: 'Reset and restart', icon: Shield },
     { key: 'billing', label: 'Billing', description: 'Coming soon', icon: CreditCard },
@@ -396,19 +397,32 @@ export const ParentSettings = ({
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              if (authStatus === 'signed_in') {
-                void signOut();
-              }
-            }}
-            disabled={authStatus !== 'signed_in'}
-            className="mt-8 flex w-full items-center justify-center gap-2 rounded-full border border-border px-4 py-3 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <LogOut size={16} />
-            Logout
-          </button>
+          <div className="mt-8 rounded-[24px] border border-border bg-background p-4">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-muted-foreground">
+              {isSignedIn ? 'Account status' : 'Local-only setup'}
+            </p>
+            <p className="mt-3 text-base font-bold text-foreground">
+              {isSignedIn ? 'Parent account connected' : 'Kids and routines on this device'}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {isSignedIn
+                ? 'This browser is signed in. You can manage sync from the Parents section.'
+                : 'You can edit kids and routines locally right now. Open Parents to sign in when you want cloud sync across devices.'}
+            </p>
+
+            {isSignedIn && (
+              <button
+                type="button"
+                onClick={() => {
+                  void signOut();
+                }}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-border px-4 py-3 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+              >
+                <LogOut size={16} />
+                Logout
+              </button>
+            )}
+          </div>
         </aside>
 
         <div className="space-y-8">
