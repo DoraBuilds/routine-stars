@@ -13,6 +13,25 @@ const getSuggestedHouseholdName = (user: User) => {
   return `${normalized}'s Family`;
 };
 
+const toBootstrapErrorMessage = (error: unknown) => {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === 'object' && error !== null && 'message' in error
+        ? String(error.message)
+        : '';
+
+  if (
+    message.includes('bootstrap_household') ||
+    message.includes('households') ||
+    message.includes('household_members')
+  ) {
+    return 'Could not prepare the family household in Supabase. The cloud household schema may not be deployed yet.';
+  }
+
+  return message || 'Could not prepare the family household in Supabase.';
+};
+
 export const ensureHousehold = async (user: User): Promise<HouseholdRecord> => {
   const supabase = getSupabaseClient();
   if (!supabase) {
@@ -25,8 +44,13 @@ export const ensureHousehold = async (user: User): Promise<HouseholdRecord> => {
     return currentHousehold;
   }
 
-  return repository.createInitialHousehold({
-    householdName: getSuggestedHouseholdName(user),
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
-  });
+  try {
+    return await repository.createInitialHousehold({
+      householdName: getSuggestedHouseholdName(user),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+      userId: user.id,
+    });
+  } catch (error) {
+    throw new Error(toBootstrapErrorMessage(error));
+  }
 };
