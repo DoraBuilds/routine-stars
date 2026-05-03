@@ -217,11 +217,11 @@ describe("ParentSettings", () => {
     expect(readState()).toHaveLength(2);
   });
 
-  it("explains local-only editing when the parent account is not signed in", () => {
+  it("explains sign-in requirements when the parent account is not connected", () => {
     render(<Harness />);
 
-    expect(screen.getByText(/local-only setup/i)).toBeInTheDocument();
-    expect(screen.getByText(/you can edit kids and routines locally right now/i)).toBeInTheDocument();
+    expect(screen.getByText(/sign-in required/i)).toBeInTheDocument();
+    expect(screen.getByText(/sign in from the parents section/i)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^logout$/i })).toBeNull();
     expect(screen.getByRole("button", { name: /parents/i })).toHaveTextContent("Sign in for sync");
   });
