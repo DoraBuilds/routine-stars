@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { ChildSelector } from '@/components/ChildSelector';
 import { AccountEntryScreen } from '@/components/AccountEntryScreen';
 import { ExistingFamilyRecoveryScreen } from '@/components/ExistingFamilyRecoveryScreen';
+import { HouseholdLoadErrorScreen } from '@/components/HouseholdLoadErrorScreen';
 import { ImportFamilySetupScreen } from '@/components/ImportFamilySetupScreen';
 import { InitialSetup } from '@/components/InitialSetup';
 import { RoutineView } from '@/components/RoutineView';
@@ -105,9 +106,11 @@ const Index = () => {
   const [setupComplete, setSetupComplete] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
+  const [bootstrapError, setBootstrapError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [now, setNow] = useState(() => new Date());
   const [homeScene, setHomeScene] = useState<HomeScene>('bike');
+  const [bootstrapAttempt, setBootstrapAttempt] = useState(0);
   const lastSyncedConfigRef = useRef<string | null>(null);
   const shouldSyncFirstConfigRef = useRef(false);
   const skipLocalPersistenceRef = useRef(false);
@@ -153,6 +156,7 @@ const Index = () => {
       if (authStatus === 'signed_out' || authStatus === 'unavailable') {
         if (!isMounted) return;
 
+        setBootstrapError(null);
         setChildren(createSetupChildren());
         setActiveChildId(null);
         setSetupComplete(false);
@@ -167,17 +171,21 @@ const Index = () => {
 
       const storedState = loadLocalAppState();
       let cloudState: Awaited<ReturnType<typeof loadCloudHouseholdState>> | null = null;
+      let cloudLoadError: string | null = null;
 
       if (authStatus === 'signed_in' && householdStatus === 'ready' && household) {
         try {
           cloudState = await loadCloudHouseholdState(household);
         } catch (error) {
           console.warn('Could not load cloud household state.', error);
+          cloudLoadError =
+            error instanceof Error ? error.message : 'Could not load this household from the cloud right now.';
         }
       }
 
       if (storedState) {
         if (
+          !cloudLoadError &&
           authStatus === 'signed_in' &&
           householdStatus === 'ready' &&
           household &&
@@ -209,6 +217,7 @@ const Index = () => {
         }
 
         if (isMounted) {
+          setBootstrapError(null);
           setSetupComplete(storedState.setupComplete);
           setHomeScene(storedState.homeScene);
           setView(storedState.setupComplete ? 'home' : 'setup');
@@ -220,6 +229,7 @@ const Index = () => {
       if (cloudState) {
         if (!isMounted) return;
 
+        setBootstrapError(null);
         setChildren(cloudState.children);
         setHomeScene(cloudState.homeScene);
         setSetupComplete(cloudState.children.length > 0);
@@ -238,7 +248,21 @@ const Index = () => {
         return;
       }
 
+      if (cloudLoadError && authStatus === 'signed_in' && householdStatus === 'ready' && household) {
+        if (!isMounted) return;
+
+        setActiveChildId(null);
+        setChildren(createSetupChildren());
+        setSetupComplete(false);
+        setHomeScene('bike');
+        setBootstrapError(cloudLoadError);
+        setView('bootstrap-error');
+        setIsReady(true);
+        return;
+      }
+
       if (isMounted) {
+        setBootstrapError(null);
         setChildren(createSetupChildren());
         setActiveChildId(null);
         setSetupComplete(false);
@@ -260,7 +284,7 @@ const Index = () => {
     return () => {
       isMounted = false;
     };
-  }, [authStatus, household, householdStatus]);
+  }, [authStatus, bootstrapAttempt, household, householdStatus]);
 
   const householdConfigSignature = useMemo(
     () => serializeHouseholdConfig({ children, homeScene, setupComplete }),
@@ -374,6 +398,19 @@ const Index = () => {
     return <AccountEntryScreen />;
   }
 
+  if (view === 'bootstrap-error') {
+    return (
+      <HouseholdLoadErrorScreen
+        error={bootstrapError ?? 'Could not load this household right now.'}
+        onRetry={() => {
+          setBootstrapError(null);
+          setIsReady(false);
+          setBootstrapAttempt((count) => count + 1);
+        }}
+      />
+    );
+  }
+
   if (view === 'import') {
     return (
       <ImportFamilySetupScreen
@@ -414,6 +451,7 @@ const Index = () => {
         }}
         onStartFresh={() => {
           clearLocalAppState();
+          setActiveChildId(null);
           setChildren(createSetupChildren());
           setSetupComplete(false);
           setHomeScene('bike');
