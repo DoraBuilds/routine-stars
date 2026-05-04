@@ -1,9 +1,12 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { act, render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import AuthCallback from '@/pages/AuthCallback';
 
 const navigate = vi.fn();
+const { finalizeSupabaseAuthFromUrl } = vi.hoisted(() => ({
+  finalizeSupabaseAuthFromUrl: vi.fn(),
+}));
 
 const authState = {
   configured: true,
@@ -25,12 +28,23 @@ vi.mock('@/lib/auth/use-auth', () => ({
   useAuth: () => authState,
 }));
 
+vi.mock('@/lib/supabase/client', () => ({
+  finalizeSupabaseAuthFromUrl,
+}));
+
 describe('AuthCallback', () => {
-  it('shows a finishing sign-in state while auth is settling', () => {
+  beforeEach(() => {
+    vi.useRealTimers();
+    navigate.mockReset();
+    finalizeSupabaseAuthFromUrl.mockReset();
+    finalizeSupabaseAuthFromUrl.mockResolvedValue({ handled: false, error: null });
     authState.status = 'loading';
     authState.householdStatus = 'idle';
     authState.error = null;
+    authState.clearError.mockReset();
+  });
 
+  it('shows a finishing sign-in state while auth is settling', () => {
     render(
       <MemoryRouter initialEntries={['/auth/callback']}>
         <Routes>
@@ -59,4 +73,38 @@ describe('AuthCallback', () => {
     expect(screen.getByText(/we signed you in, but could not open the family space yet/i)).toBeInTheDocument();
     expect(screen.getByText(/could not prepare the family household/i)).toBeInTheDocument();
   });
+
+  it('shows an auth-link problem when callback finalization fails', async () => {
+    finalizeSupabaseAuthFromUrl.mockResolvedValue({ handled: true, error: 'Magic link expired.' });
+
+    render(
+      <MemoryRouter initialEntries={['/auth/callback']}>
+        <Routes>
+          <Route path="/auth/callback" element={<AuthCallback />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText(/this sign-in link did not finish cleanly/i)).toBeInTheDocument();
+    expect(screen.getByText(/magic link expired/i)).toBeInTheDocument();
+  });
+
+  it('shows a timeout recovery state instead of waiting forever', async () => {
+    vi.useFakeTimers();
+
+    render(
+      <MemoryRouter initialEntries={['/auth/callback']}>
+        <Routes>
+          <Route path="/auth/callback" element={<AuthCallback />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(8000);
+    });
+
+    expect(screen.getByText(/this device did not finish connecting/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /refresh and try again/i })).toBeInTheDocument();
+  }, 10000);
 });

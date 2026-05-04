@@ -17,6 +17,75 @@ export const getSupabaseEmailRedirectUrl = () => {
   return new URL('auth/callback', window.location.origin + (import.meta.env.BASE_URL || '/')).toString();
 };
 
+const isSupportedOtpType = (value: string | null) =>
+  value === 'signup' ||
+  value === 'invite' ||
+  value === 'magiclink' ||
+  value === 'recovery' ||
+  value === 'email' ||
+  value === 'email_change' ||
+  value === 'sms' ||
+  value === 'phone_change';
+
+export const finalizeSupabaseAuthFromUrl = async (url = window.location.href) => {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    return { handled: false, error: 'Supabase is not configured yet.' };
+  }
+
+  const parsedUrl = new URL(url);
+  const hashParams = new URLSearchParams(parsedUrl.hash.startsWith('#') ? parsedUrl.hash.slice(1) : parsedUrl.hash);
+  const code = parsedUrl.searchParams.get('code');
+  const tokenHash = parsedUrl.searchParams.get('token_hash');
+  const otpType = parsedUrl.searchParams.get('type');
+  const accessToken = hashParams.get('access_token');
+  const refreshToken = hashParams.get('refresh_token');
+
+  try {
+    if (code) {
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      if (error) {
+        return { handled: true, error: error.message };
+      }
+
+      return { handled: true, error: null };
+    }
+
+    if (tokenHash && isSupportedOtpType(otpType)) {
+      const { error } = await supabase.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: otpType,
+      } as never);
+
+      if (error) {
+        return { handled: true, error: error.message };
+      }
+
+      return { handled: true, error: null };
+    }
+
+    if (accessToken && refreshToken) {
+      const { error } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+
+      if (error) {
+        return { handled: true, error: error.message };
+      }
+
+      return { handled: true, error: null };
+    }
+
+    return { handled: false, error: null };
+  } catch (error) {
+    return {
+      handled: true,
+      error: error instanceof Error ? error.message : 'This sign-in link did not finish cleanly.',
+    };
+  }
+};
+
 export const getSupabaseClient = () => {
   if (!isConfigured) {
     return null;
