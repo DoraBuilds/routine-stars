@@ -285,7 +285,7 @@ describe("Index", () => {
     authState.signOut.mockReset();
   });
 
-  it("resets completed tasks when stored data is from a previous day", async () => {
+  it("prefers cloud progress when local storage is from a previous day", async () => {
     authState.status = "signed_in";
     authState.user = { id: "user-1", email: "parent@example.com" };
     authState.householdStatus = "ready";
@@ -322,7 +322,7 @@ describe("Index", () => {
     fireEvent.click(await screen.findByRole("button", { name: "select-first-child" }));
 
     expect(await screen.findByTestId("active-child")).toHaveTextContent("Lily");
-    expect(screen.getByTestId("first-task-completed")).toHaveTextContent("false");
+    expect(screen.getByTestId("first-task-completed")).toHaveTextContent("true");
   });
 
   it("persists task toggles back to localStorage for the current day", async () => {
