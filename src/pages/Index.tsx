@@ -9,6 +9,7 @@ import { ParentSettings } from '@/components/ParentSettings';
 import { useAuth } from '@/lib/auth/use-auth';
 import { loadCloudHouseholdState } from '@/lib/data/cloud-household-state';
 import { saveHouseholdConfigToCloud } from '@/lib/data/cloud-household-write';
+import { deleteCloudHousehold } from '@/lib/data/delete-cloud-household';
 import { importLocalFamilyToCloud } from '@/lib/data/local-to-cloud-import';
 import type { AppView, Child, HomeScene, RoutineType } from '@/lib/types';
 import {
@@ -109,16 +110,29 @@ const Index = () => {
   const [homeScene, setHomeScene] = useState<HomeScene>('bike');
   const lastSyncedConfigRef = useRef<string | null>(null);
   const shouldSyncFirstConfigRef = useRef(false);
+  const skipLocalPersistenceRef = useRef(false);
 
-  const resetToFreshSetup = useCallback(() => {
+  const clearLocalAndState = useCallback((nextView: AppView) => {
+    skipLocalPersistenceRef.current = true;
     clearLocalAppState();
     setChildren(createSetupChildren());
     setActiveChildId(null);
     setSetupComplete(false);
     setHomeScene('bike');
-    setView('setup');
+    setView(nextView);
     setNow(new Date());
   }, []);
+
+  const resetToFreshSetup = useCallback(async () => {
+    if (authStatus === 'signed_in' && householdStatus === 'ready' && household) {
+      await deleteCloudHousehold(household);
+      clearLocalAndState('account');
+      await signOut();
+      return;
+    }
+
+    clearLocalAndState('setup');
+  }, [authStatus, clearLocalAndState, household, householdStatus, signOut]);
 
   const restartSetup = useCallback(() => {
     setActiveChildId(null);
@@ -146,6 +160,7 @@ const Index = () => {
         setView('account');
         lastSyncedConfigRef.current = null;
         shouldSyncFirstConfigRef.current = false;
+        skipLocalPersistenceRef.current = false;
         setIsReady(true);
         return;
       }
@@ -305,6 +320,10 @@ const Index = () => {
   // Persist
   useEffect(() => {
     if (!isReady || authStatus !== 'signed_in') return;
+
+    if (skipLocalPersistenceRef.current) {
+      return;
+    }
 
     try {
       saveLocalAppState({

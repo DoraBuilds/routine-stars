@@ -20,7 +20,7 @@ interface ParentSettingsProps {
   onChange: (children: Child[]) => void;
   onHomeSceneChange: (scene: HomeScene) => void;
   onRestartSetup: () => void;
-  onResetAppData: () => void;
+  onResetAppData: () => Promise<void> | void;
   onBack: () => void;
 }
 
@@ -266,6 +266,7 @@ export const ParentSettings = ({
   const { status: authStatus, signOut } = useAuth();
   const isSignedIn = authStatus === 'signed_in';
   const [confirmReset, setConfirmReset] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [modal, setModal] = useState<{
     childId: string;
     routine: RoutineType;
@@ -799,25 +800,39 @@ export const ParentSettings = ({
                 <div className="rounded-[28px] border border-destructive/20 bg-destructive/5 p-5">
                   <h4 className="text-lg font-bold text-foreground">Reset app data</h4>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Remove all saved children, routines, schedules, and progress from this browser and return to a fresh start.
+                    {isSignedIn
+                      ? 'Permanently delete the signed-in household, all child profiles, routines, schedules, and progress from Supabase and this browser.'
+                      : 'Remove all saved children, routines, schedules, and progress from this browser and return to a fresh start.'}
                   </p>
                   {confirmReset ? (
                     <div className="mt-5 space-y-3">
                       <p className="text-sm font-medium text-destructive">
-                        This clears everything saved in this browser. Are you sure?
+                        {isSignedIn
+                          ? 'This permanently deletes the signed-in household everywhere and clears this browser. Are you sure?'
+                          : 'This clears everything saved in this browser. Are you sure?'}
                       </p>
                       <div className="flex flex-wrap gap-3">
                         <button
                           type="button"
-                          onClick={onResetAppData}
-                          className="rounded-full bg-destructive px-4 py-2 text-sm font-bold text-destructive-foreground transition-transform active:translate-y-0.5"
+                          disabled={isResetting}
+                          onClick={async () => {
+                            setIsResetting(true);
+                            try {
+                              await onResetAppData();
+                            } finally {
+                              setIsResetting(false);
+                              setConfirmReset(false);
+                            }
+                          }}
+                          className="rounded-full bg-destructive px-4 py-2 text-sm font-bold text-destructive-foreground transition-transform active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                          Yes, reset everything
+                          {isResetting ? 'Deleting everything…' : 'Yes, reset everything'}
                         </button>
                         <button
                           type="button"
+                          disabled={isResetting}
                           onClick={() => setConfirmReset(false)}
-                          className="rounded-full border border-border px-4 py-2 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                          className="rounded-full border border-border px-4 py-2 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           Cancel
                         </button>
@@ -826,8 +841,9 @@ export const ParentSettings = ({
                   ) : (
                     <button
                       type="button"
+                      disabled={isResetting}
                       onClick={() => setConfirmReset(true)}
-                      className="mt-5 rounded-full bg-destructive px-4 py-2 text-sm font-bold text-destructive-foreground transition-transform active:translate-y-0.5"
+                      className="mt-5 rounded-full bg-destructive px-4 py-2 text-sm font-bold text-destructive-foreground transition-transform active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       Reset everything
                     </button>

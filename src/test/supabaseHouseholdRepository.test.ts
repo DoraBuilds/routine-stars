@@ -127,4 +127,26 @@ describe('SupabaseHouseholdRepository', () => {
       })
     ).rejects.toEqual({ message: 'Not authenticated' });
   });
+
+  it('deletes the household row by id', async () => {
+    const deleteEq = vi.fn().mockResolvedValue({ error: null });
+    const repository = new SupabaseHouseholdRepository(
+      createSupabaseClient(
+        {
+          data: null,
+          error: null,
+        },
+        {
+          households: {
+            delete: vi.fn(() => ({
+              eq: deleteEq,
+            })),
+          },
+        }
+      )
+    );
+
+    await expect(repository.remove('house-1')).resolves.toBeUndefined();
+    expect(deleteEq).toHaveBeenCalledWith('id', 'house-1');
+  });
 });

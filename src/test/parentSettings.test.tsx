@@ -1,7 +1,7 @@
 import { createElement, useState } from "react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { ParentSettings } from "@/components/ParentSettings";
 import type { Child, HomeScene } from "@/lib/types";
 
@@ -193,7 +193,7 @@ describe("ParentSettings", () => {
     expect(screen.getByRole("button", { name: /^reset everything$/i })).toBeInTheDocument();
   });
 
-  it("requires confirmation before resetting all app data", () => {
+  it("requires confirmation before resetting all app data", async () => {
     render(<Harness />);
 
     fireEvent.click(screen.getByRole("button", { name: /admin/i }));
@@ -202,9 +202,28 @@ describe("ParentSettings", () => {
     expect(screen.getByText(/this clears everything saved in this browser/i)).toBeInTheDocument();
     expect(screen.getByTestId("reset-count")).toHaveTextContent("0");
 
-    fireEvent.click(screen.getByRole("button", { name: /yes, reset everything/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /yes, reset everything/i }));
+    });
 
     expect(screen.getByTestId("reset-count")).toHaveTextContent("1");
+  });
+
+  it("warns signed-in parents that reset deletes the cloud household too", () => {
+    authState.status = "signed_in";
+
+    render(<Harness />);
+
+    fireEvent.click(screen.getByRole("button", { name: /admin/i }));
+    expect(
+      screen.getByText(/permanently delete the signed-in household, all child profiles, routines, schedules, and progress/i)
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /^reset everything$/i }));
+
+    expect(
+      screen.getByText(/this permanently deletes the signed-in household everywhere and clears this browser/i)
+    ).toBeInTheDocument();
   });
 
   it("fires restart setup without clearing the current children immediately", () => {
