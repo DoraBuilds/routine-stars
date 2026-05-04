@@ -126,4 +126,15 @@ export class SupabaseHouseholdRepository implements HouseholdRepository {
 
     return mapHousehold(data);
   }
+
+  async remove(householdId: string) {
+    const { error } = await this.supabase
+      .from(HOUSEHOLDS_TABLE)
+      .delete()
+      .eq('id', householdId);
+
+    if (error) {
+      throw error;
+    }
+  }
 }

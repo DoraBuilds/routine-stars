@@ -26,6 +26,9 @@ const { importLocalFamilyToCloud } = vi.hoisted(() => ({
 const { saveHouseholdConfigToCloud } = vi.hoisted(() => ({
   saveHouseholdConfigToCloud: vi.fn(),
 }));
+const { deleteCloudHousehold } = vi.hoisted(() => ({
+  deleteCloudHousehold: vi.fn(),
+}));
 
 vi.mock("@/lib/auth/use-auth", () => ({
   useAuth: () => authState,
@@ -39,6 +42,9 @@ vi.mock("@/lib/data/local-to-cloud-import", () => ({
 }));
 vi.mock("@/lib/data/cloud-household-write", () => ({
   saveHouseholdConfigToCloud,
+}));
+vi.mock("@/lib/data/delete-cloud-household", () => ({
+  deleteCloudHousehold,
 }));
 
 const today = () => new Date().toDateString();
@@ -233,6 +239,7 @@ describe("Index", () => {
     loadCloudHouseholdState.mockReset();
     importLocalFamilyToCloud.mockReset();
     saveHouseholdConfigToCloud.mockReset();
+    deleteCloudHousehold.mockReset();
     authState.clearError.mockReset();
     authState.sendEmailLink.mockReset();
     authState.retryHousehold.mockReset();
@@ -697,6 +704,28 @@ describe("Index", () => {
   it("lets a parent clear app data from Parent Settings", async () => {
     authState.status = "signed_in";
     authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    deleteCloudHousehold.mockResolvedValue(undefined);
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [
+        {
+          id: "1",
+          name: "Lily",
+          morning: [{ id: "m1", title: "Make bed", icon: "bed", completed: false }],
+          evening: [{ id: "e1", title: "Go to bed", icon: "moon-star", completed: false }],
+        },
+      ],
+    });
     localStorage.setItem(
       "routine_stars_data",
       JSON.stringify({
@@ -711,12 +740,13 @@ describe("Index", () => {
     fireEvent.click(await screen.findByRole("button", { name: "open-settings" }));
     fireEvent.click(screen.getByRole("button", { name: "reset-app-data" }));
 
-    expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("0");
+    await waitFor(() => {
+      expect(deleteCloudHousehold).toHaveBeenCalledWith(authState.household);
+      expect(authState.signOut).toHaveBeenCalledTimes(1);
+    });
 
-    const stored = JSON.parse(localStorage.getItem("routine_stars_data") ?? "{}");
-    expect(stored.setupComplete).toBe(false);
-    expect(stored.children).toEqual([]);
-    expect(stored.homeScene).toBe("bike");
+    expect(localStorage.getItem("routine_stars_data")).toBeNull();
+    expect(await screen.findByTestId("account-entry-screen")).toBeInTheDocument();
   });
 
   it("lets a parent restart setup without manual localStorage edits", async () => {
