@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Moon, Plus, Sparkles, Sun, UserRound } from 'lucide-react';
+import { Check, Clock3, Moon, Plus, Sparkles, Sun, UserRound } from 'lucide-react';
 import type { Child, RoutineType, Task } from '@/lib/types';
 import { AGE_BUCKETS, groupTasksByAge, TASK_CATALOG } from '@/lib/types';
 import { TaskIcon } from './TaskIcon';
