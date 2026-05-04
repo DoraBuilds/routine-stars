@@ -127,12 +127,15 @@ vi.mock("@/components/InitialSetup", () => ({
   InitialSetup: ({
     children,
     onComplete,
+    showEmptyHouseholdRecoveryHint,
   }: {
     children: Child[];
     onComplete: (children: Child[]) => void;
+    showEmptyHouseholdRecoveryHint?: boolean;
   }) => (
     <div>
       <div data-testid="setup-child-count">{children.length}</div>
+      <div data-testid="setup-recovery-hint">{String(Boolean(showEmptyHouseholdRecoveryHint))}</div>
       <button
         type="button"
         onClick={() =>
@@ -393,6 +396,7 @@ describe("Index", () => {
     render(<Index />);
 
     expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("0");
+    expect(screen.getByTestId("setup-recovery-hint")).toHaveTextContent("false");
   });
 
   it("hydrates cloud household data on a fresh signed-in device", async () => {
@@ -577,6 +581,31 @@ describe("Index", () => {
     fireEvent.click(await screen.findByRole("button", { name: "start-fresh-instead" }));
 
     expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("0");
+    expect(screen.getByTestId("setup-recovery-hint")).toHaveTextContent("false");
+  });
+
+  it("shows a recovery hint when a signed-in household is empty in this browser context", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [],
+    });
+
+    render(<Index />);
+
+    expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("0");
+    expect(screen.getByTestId("setup-recovery-hint")).toHaveTextContent("true");
   });
 
   it("re-opens setup when saved data is marked incomplete", async () => {
