@@ -521,7 +521,7 @@ describe("Index", () => {
     expect(screen.queryByTestId("household-load-error-screen")).not.toBeInTheDocument();
   });
 
-  it("shows a retryable bootstrap error instead of setup when signed-in cloud loading fails with no local cache", async () => {
+  it("shows the recovery screen after retry when signed-in cloud loading fails and no local family data exists", async () => {
     authState.status = "signed_in";
     authState.user = { id: "user-1", email: "parent@example.com" };
     authState.householdStatus = "ready";
@@ -548,7 +548,8 @@ describe("Index", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "retry-household-load" }));
 
-    expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("0");
+    expect(await screen.findByTestId("existing-family-recovery-screen")).toBeInTheDocument();
+    expect(screen.queryByTestId("setup-child-count")).not.toBeInTheDocument();
   });
 
   it("prefers cloud household state over stale local cache for signed-in households", async () => {
@@ -812,6 +813,40 @@ describe("Index", () => {
     render(<Index />);
 
     expect(await screen.findByTestId("existing-family-recovery-screen")).toBeInTheDocument();
+  });
+
+  it("shows the recovery screen instead of setup when a signed-in browser only has an empty local shell", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [],
+    });
+    localStorage.setItem(
+      "routine_stars_data",
+      JSON.stringify({
+        version: CURRENT_LOCAL_APP_STATE_VERSION,
+        children: [],
+        homeScene: "bike",
+        lastReset: today(),
+        setupComplete: false,
+      })
+    );
+
+    render(<Index />);
+
+    expect(await screen.findByTestId("existing-family-recovery-screen")).toBeInTheDocument();
+    expect(screen.queryByTestId("setup-child-count")).toBeNull();
   });
 
   it("lets a parent intentionally continue into fresh setup from the recovery screen", async () => {
