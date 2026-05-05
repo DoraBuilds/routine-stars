@@ -980,7 +980,7 @@ describe("Index", () => {
     render(<Index />);
 
     fireEvent.click(await screen.findByRole("button", { name: "open-settings" }));
-    fireEvent.click(screen.getByRole("button", { name: "reset-app-data" }));
+    fireEvent.click(await screen.findByRole("button", { name: "reset-app-data" }));
 
     await waitFor(() => {
       expect(deleteCloudHousehold).toHaveBeenCalledWith(authState.household);

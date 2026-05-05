@@ -1,12 +1,9 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { lazy, Suspense, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { ChildSelector } from '@/components/ChildSelector';
 import { AccountEntryScreen } from '@/components/AccountEntryScreen';
 import { ExistingFamilyRecoveryScreen } from '@/components/ExistingFamilyRecoveryScreen';
 import { HouseholdLoadErrorScreen } from '@/components/HouseholdLoadErrorScreen';
 import { ImportFamilySetupScreen } from '@/components/ImportFamilySetupScreen';
-import { InitialSetup } from '@/components/InitialSetup';
-import { RoutineView } from '@/components/RoutineView';
-import { ParentSettings } from '@/components/ParentSettings';
 import { useAuth } from '@/lib/auth/use-auth';
 import { loadCloudHouseholdState } from '@/lib/data/cloud-household-state';
 import { saveHouseholdConfigToCloud } from '@/lib/data/cloud-household-write';
@@ -20,6 +17,10 @@ import {
   loadLocalAppState,
   saveLocalAppState,
 } from '@/lib/storage/local-app-state';
+
+const InitialSetup = lazy(() => import('@/components/InitialSetup').then((module) => ({ default: module.InitialSetup })));
+const RoutineView = lazy(() => import('@/components/RoutineView').then((module) => ({ default: module.RoutineView })));
+const ParentSettings = lazy(() => import('@/components/ParentSettings').then((module) => ({ default: module.ParentSettings })));
 
 const parseTime = (value: string) => {
   const [hours, minutes] = value.split(':').map(Number);
@@ -101,6 +102,16 @@ const serializeHouseholdConfig = (input: {
     homeScene: input.homeScene,
     setupComplete: input.setupComplete,
   });
+
+const ViewLoadingFallback = ({ title = 'Loading next step' }: { title?: string }) => (
+  <div className="flex min-h-svh items-center justify-center px-5 py-10">
+    <div className="w-full max-w-lg rounded-[32px] border border-border bg-card p-8 text-center shadow-card">
+      <p className="text-sm font-black uppercase tracking-[0.22em] text-primary">Routine Stars</p>
+      <h1 className="mt-4 text-3xl font-bold text-foreground">{title}</h1>
+      <p className="mt-3 text-sm text-muted-foreground">This should only take a moment.</p>
+    </div>
+  </div>
+);
 
 const Index = () => {
   const { status: authStatus, householdStatus, household, signOut } = useAuth();
@@ -581,40 +592,46 @@ const Index = () => {
 
   if (view === 'setup') {
     return (
-      <InitialSetup
-        children={children}
-        onChange={setChildren}
-        onComplete={(configuredChildren) => {
-          setChildren(configuredChildren);
-          setSetupComplete(true);
-          setView('home');
-        }}
-      />
+      <Suspense fallback={<ViewLoadingFallback title="Opening setup" />}>
+        <InitialSetup
+          children={children}
+          onChange={setChildren}
+          onComplete={(configuredChildren) => {
+            setChildren(configuredChildren);
+            setSetupComplete(true);
+            setView('home');
+          }}
+        />
+      </Suspense>
     );
   }
 
   if (view === 'routine' && activeChild) {
     return (
-      <RoutineView
-        child={activeChild}
-        routine={activeRoutine}
-        onToggleTask={toggleTask}
-        onBack={() => setView('home')}
-      />
+      <Suspense fallback={<ViewLoadingFallback title="Opening routine" />}>
+        <RoutineView
+          child={activeChild}
+          routine={activeRoutine}
+          onToggleTask={toggleTask}
+          onBack={() => setView('home')}
+        />
+      </Suspense>
     );
   }
 
   if (view === 'parent') {
     return (
-      <ParentSettings
-        children={children}
-        homeScene={homeScene}
-        onChange={setChildren}
-        onHomeSceneChange={setHomeScene}
-        onRestartSetup={restartSetup}
-        onResetAppData={resetToFreshSetup}
-        onBack={() => setView('home')}
-      />
+      <Suspense fallback={<ViewLoadingFallback title="Opening parent settings" />}>
+        <ParentSettings
+          children={children}
+          homeScene={homeScene}
+          onChange={setChildren}
+          onHomeSceneChange={setHomeScene}
+          onRestartSetup={restartSetup}
+          onResetAppData={resetToFreshSetup}
+          onBack={() => setView('home')}
+        />
+      </Suspense>
     );
   }
 
