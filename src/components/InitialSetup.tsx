@@ -8,6 +8,7 @@ import { ANIMAL_AVATARS } from './animal-avatars';
 
 interface InitialSetupProps {
   children: Child[];
+  onChange?: (children: Child[]) => void;
   onComplete: (children: Child[]) => void;
 }
 
@@ -72,7 +73,7 @@ const buildRoutineTasks = (childId: string, routine: RoutineType, selectedTitles
       completed: false,
     }));
 
-export const InitialSetup = ({ children, onComplete }: InitialSetupProps) => {
+export const InitialSetup = ({ children, onChange, onComplete }: InitialSetupProps) => {
   const [draftChildren, setDraftChildren] = useState(children);
   const [selectionState, setSelectionState] = useState<SelectionState>(() => buildSelectionState(children));
   const [activeChildId, setActiveChildId] = useState<string | null>(children[0]?.id ?? null);
@@ -156,14 +157,22 @@ export const InitialSetup = ({ children, onComplete }: InitialSetupProps) => {
     });
   };
 
-  const handleComplete = () => {
-    const configuredChildren = draftChildren.map((child) => ({
+  const configuredChildren = useMemo(
+    () =>
+      draftChildren.map((child) => ({
       ...child,
       name: child.name.trim() || 'Child',
       morning: buildRoutineTasks(child.id, 'morning', selectionState[child.id]?.morning ?? []),
       evening: buildRoutineTasks(child.id, 'evening', selectionState[child.id]?.evening ?? []),
-    }));
+    })),
+    [draftChildren, selectionState]
+  );
 
+  useEffect(() => {
+    onChange?.(configuredChildren);
+  }, [configuredChildren, onChange]);
+
+  const handleComplete = () => {
     onComplete(configuredChildren);
   };
 

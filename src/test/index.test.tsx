@@ -146,13 +146,30 @@ vi.mock("@/components/ParentSettings", () => ({
 vi.mock("@/components/InitialSetup", () => ({
   InitialSetup: ({
     children,
+    onChange,
     onComplete,
   }: {
     children: Child[];
+    onChange?: (children: Child[]) => void;
     onComplete: (children: Child[]) => void;
   }) => (
     <div>
       <div data-testid="setup-child-count">{children.length}</div>
+      <button
+        type="button"
+        onClick={() =>
+          onChange?.([
+            {
+              id: "draft-1",
+              name: "Elie",
+              morning: [{ id: "m1", title: "Brush teeth", icon: "tooth", completed: false }],
+              evening: [{ id: "e1", title: "Put on pajamas", icon: "shirt", completed: false }],
+            },
+          ])
+        }
+      >
+        sync-draft-child
+      </button>
       <button
         type="button"
         onClick={() =>
@@ -271,6 +288,7 @@ describe("Index", () => {
     loadCloudHouseholdState.mockReset();
     importLocalFamilyToCloud.mockReset();
     saveHouseholdConfigToCloud.mockReset();
+    saveHouseholdConfigToCloud.mockResolvedValue(undefined);
     deleteCloudHousehold.mockReset();
     deleteCloudHousehold.mockReset();
     getSupabaseClient.mockReset();
@@ -707,6 +725,46 @@ describe("Index", () => {
       expect(saveHouseholdConfigToCloud).toHaveBeenCalledWith(
         expect.objectContaining({
           household: authState.household,
+          removeMissingChildren: true,
+        })
+      );
+    });
+  });
+
+  it("syncs signed-in draft child creation to cloud before setup is completed", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [],
+    });
+    saveHouseholdConfigToCloud.mockResolvedValue(undefined);
+
+    render(<Index />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "recovery-start-fresh" }));
+    fireEvent.click(await screen.findByRole("button", { name: "sync-draft-child" }));
+
+    await waitFor(() => {
+      expect(saveHouseholdConfigToCloud).toHaveBeenCalledWith(
+        expect.objectContaining({
+          household: authState.household,
+          children: [
+            expect.objectContaining({
+              id: "draft-1",
+              name: "Elie",
+            }),
+          ],
           removeMissingChildren: true,
         })
       );
