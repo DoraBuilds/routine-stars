@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth/use-auth';
 import { finalizeSupabaseAuthFromUrl } from '@/lib/supabase/client';
 
-const CALLBACK_TIMEOUT_MS = 8000;
+const CALLBACK_TIMEOUT_MS = 20000;
 
 const AuthCallback = () => {
   const navigate = useNavigate();

@@ -313,7 +313,7 @@ const Index = () => {
   );
 
   useEffect(() => {
-    if (!isReady || authStatus !== 'signed_in' || householdStatus !== 'ready' || !household || !setupComplete) {
+    if (!isReady || authStatus !== 'signed_in' || householdStatus !== 'ready' || !household) {
       lastSyncedConfigRef.current = null;
       return;
     }
@@ -332,12 +332,14 @@ const Index = () => {
     shouldSyncFirstConfigRef.current = false;
     lastSyncedConfigRef.current = householdConfigSignature;
 
-    void saveHouseholdConfigToCloud({
-      household,
-      children,
-      homeScene,
-      removeMissingChildren: true,
-    }).catch((error) => {
+    void Promise.resolve(
+      saveHouseholdConfigToCloud({
+        household,
+        children,
+        homeScene,
+        removeMissingChildren: true,
+      })
+    ).catch((error) => {
       console.warn('Could not sync household configuration to cloud.', error);
     });
   }, [authStatus, children, homeScene, household, householdConfigSignature, householdStatus, isReady, setupComplete]);
@@ -581,6 +583,7 @@ const Index = () => {
     return (
       <InitialSetup
         children={children}
+        onChange={setChildren}
         onComplete={(configuredChildren) => {
           setChildren(configuredChildren);
           setSetupComplete(true);
