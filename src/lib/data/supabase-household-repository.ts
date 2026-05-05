@@ -43,6 +43,8 @@ export class SupabaseHouseholdRepository implements HouseholdRepository {
     const { data, error } = await this.supabase
       .from(HOUSEHOLDS_TABLE)
       .select('*')
+      .order('updated_at', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 

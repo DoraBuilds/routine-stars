@@ -8,6 +8,52 @@ const createSupabaseClient = (rpcResult: { data: unknown; error: unknown }, tabl
   }) as never;
 
 describe('SupabaseHouseholdRepository', () => {
+  it('prefers the most recently updated household when more than one is visible', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({
+      data: {
+        id: 'house-new',
+        name: "Dora's Family",
+        timezone: 'Europe/Madrid',
+        home_scene: 'kite',
+        created_by_user_id: 'user-1',
+        created_at: '2026-05-05T12:00:00Z',
+        updated_at: '2026-05-05T13:00:00Z',
+      },
+      error: null,
+    });
+    const limit = vi.fn(() => ({
+      maybeSingle,
+    }));
+    const orderCreatedAt = vi.fn(() => ({
+      limit,
+    }));
+    const orderUpdatedAt = vi.fn(() => ({
+      order: orderCreatedAt,
+    }));
+
+    const repository = new SupabaseHouseholdRepository({
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          order: orderUpdatedAt,
+        })),
+      })),
+    } as never);
+
+    await expect(repository.getCurrentHousehold()).resolves.toEqual({
+      id: 'house-new',
+      name: "Dora's Family",
+      timezone: 'Europe/Madrid',
+      homeScene: 'kite',
+      createdByUserId: 'user-1',
+      createdAt: '2026-05-05T12:00:00Z',
+      updatedAt: '2026-05-05T13:00:00Z',
+    });
+
+    expect(orderUpdatedAt).toHaveBeenCalledWith('updated_at', { ascending: false });
+    expect(orderCreatedAt).toHaveBeenCalledWith('created_at', { ascending: false });
+    expect(limit).toHaveBeenCalledWith(1);
+  });
+
   it('returns the RPC household when bootstrap_household succeeds', async () => {
     const repository = new SupabaseHouseholdRepository(
       createSupabaseClient(
