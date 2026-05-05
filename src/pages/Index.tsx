@@ -223,6 +223,26 @@ const Index = () => {
           return;
         }
 
+        if (
+          !cloudLoadError &&
+          authStatus === 'signed_in' &&
+          householdStatus === 'ready' &&
+          household &&
+          storedState.children.length === 0 &&
+          (cloudState?.children.length ?? 0) === 0
+        ) {
+          if (isMounted) {
+            setBootstrapError(null);
+            setChildren(createSetupChildren());
+            setActiveChildId(null);
+            setSetupComplete(false);
+            setHomeScene(storedState.homeScene);
+            setView('recovery');
+            setIsReady(true);
+          }
+          return;
+        }
+
         const today = new Date().toDateString();
         if (storedState.lastReset !== today) {
           const reset = storedState.children.map((c: Child) => ({
