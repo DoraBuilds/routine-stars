@@ -89,6 +89,26 @@ describe('AuthCallback', () => {
     expect(screen.getByText(/magic link expired/i)).toBeInTheDocument();
   });
 
+  it('uses device-neutral copy while a slow callback is still in progress', () => {
+    vi.useFakeTimers();
+
+    render(
+      <MemoryRouter initialEntries={['/auth/callback']}>
+        <Routes>
+          <Route path="/auth/callback" element={<AuthCallback />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(20000);
+    });
+
+    expect(screen.getByText(/still connecting/i)).toBeInTheDocument();
+    expect(screen.getByText(/we're still opening your family account/i)).toBeInTheDocument();
+    expect(screen.queryByText(/this ipad is still opening your family account/i)).not.toBeInTheDocument();
+  });
+
   it('shows a slower in-progress state before eventually showing timeout recovery', async () => {
     vi.useFakeTimers();
 
@@ -111,7 +131,7 @@ describe('AuthCallback', () => {
     });
 
     expect(screen.getByText(/still connecting/i)).toBeInTheDocument();
-    expect(screen.getByText(/this ipad is still opening your family account/i)).toBeInTheDocument();
+    expect(screen.getByText(/we're still opening your family account/i)).toBeInTheDocument();
     expect(screen.queryByText(/this device did not finish connecting/i)).not.toBeInTheDocument();
 
     act(() => {

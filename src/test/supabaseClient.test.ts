@@ -66,4 +66,17 @@ describe('supabase client helpers', () => {
     });
     expect(setSession).toHaveBeenCalledWith({ access_token: 'token', refresh_token: 'refresh' });
   });
+
+  it('surfaces expired-link errors directly from callback query params', async () => {
+    const { finalizeSupabaseAuthFromUrl } = await import('@/lib/supabase/client');
+
+    await expect(
+      finalizeSupabaseAuthFromUrl(
+        'https://example.com/auth/callback?error=access_denied&error_code=otp_expired&error_description=OTP+expired'
+      )
+    ).resolves.toEqual({
+      handled: true,
+      error: 'This sign-in link has expired. Please request a new one.',
+    });
+  });
 });
