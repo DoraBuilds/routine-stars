@@ -470,13 +470,27 @@ describe("Index", () => {
     expect(screen.queryByTestId("child-count")).toBeNull();
   });
 
-  it("opens setup immediately on a fresh device when the parent is already signed in", async () => {
+  it("shows recovery first on a fresh signed-in device with an empty household", async () => {
     authState.status = "signed_in";
     authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [],
+    });
 
     render(<Index />);
 
-    expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("0");
+    expect(await screen.findByTestId("existing-family-recovery-screen")).toBeInTheDocument();
   });
 
   it("hydrates cloud household data on a fresh signed-in device", async () => {
@@ -804,6 +818,37 @@ describe("Index", () => {
     expect(await screen.findByTestId("import-family-setup-screen")).toBeInTheDocument();
   });
 
+  it("does not jump into empty setup while a signed-in household is still idle", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "idle";
+    authState.household = null;
+
+    const view = render(<Index />);
+
+    expect(screen.queryByTestId("setup-child-count")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("existing-family-recovery-screen")).not.toBeInTheDocument();
+
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [],
+    });
+
+    view.rerender(<Index />);
+
+    expect(await screen.findByTestId("existing-family-recovery-screen")).toBeInTheDocument();
+  });
+
   it("lets a parent start fresh instead of importing existing local setup", async () => {
     authState.status = "signed_in";
     authState.user = { id: "user-1", email: "parent@example.com" };
@@ -964,9 +1009,23 @@ describe("Index", () => {
     expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("0");
   });
 
-  it("re-opens setup when saved data is marked incomplete", async () => {
+  it("routes to import when saved local family data is incomplete but cloud is empty", async () => {
     authState.status = "signed_in";
     authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [],
+    });
     localStorage.setItem(
       "routine_stars_data",
       JSON.stringify({
@@ -977,12 +1036,26 @@ describe("Index", () => {
 
     render(<Index />);
 
-    expect(await screen.findByTestId("setup-child-count")).toHaveTextContent("1");
+    expect(await screen.findByTestId("import-family-setup-screen")).toBeInTheDocument();
   });
 
   it("hydrates legacy unversioned local data", async () => {
     authState.status = "signed_in";
     authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [],
+    });
     localStorage.setItem(
       "routine_stars_data",
       JSON.stringify(createStoredState(false, today()))
@@ -990,16 +1063,29 @@ describe("Index", () => {
 
     render(<Index />);
 
-    fireEvent.click(screen.getByRole("button", { name: "select-first-child" }));
-
-    expect(await screen.findByTestId("active-child")).toHaveTextContent("Lily");
+    expect(await screen.findByTestId("import-family-setup-screen")).toBeInTheDocument();
   });
 
   it("completes first-run setup and persists the configured routines", async () => {
     authState.status = "signed_in";
     authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [],
+    });
     render(<Index />);
 
+    fireEvent.click(await screen.findByRole("button", { name: "recovery-start-fresh" }));
     fireEvent.click(await screen.findByRole("button", { name: "finish-setup" }));
 
     expect(await screen.findByTestId("child-count")).toHaveTextContent("1");
@@ -1061,6 +1147,27 @@ describe("Index", () => {
   it("lets a parent restart setup without manual localStorage edits", async () => {
     authState.status = "signed_in";
     authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [
+        {
+          id: "1",
+          name: "Lily",
+          morning: [{ id: "m1", title: "Make bed", icon: "bed", completed: false }],
+          evening: [{ id: "e1", title: "Go to bed", icon: "moon-star", completed: false }],
+        },
+      ],
+    });
     localStorage.setItem(
       "routine_stars_data",
       JSON.stringify({

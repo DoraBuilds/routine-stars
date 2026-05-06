@@ -178,7 +178,10 @@ const Index = () => {
 
   // Startup is auth-first: signed-out users always land on account entry.
   useEffect(() => {
-    if (authStatus === 'loading' || (authStatus === 'signed_in' && householdStatus === 'loading')) {
+    if (
+      authStatus === 'loading' ||
+      (authStatus === 'signed_in' && (householdStatus === 'idle' || householdStatus === 'loading'))
+    ) {
       return;
     }
 
