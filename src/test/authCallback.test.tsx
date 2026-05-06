@@ -89,7 +89,7 @@ describe('AuthCallback', () => {
     expect(screen.getByText(/magic link expired/i)).toBeInTheDocument();
   });
 
-  it('waits longer before showing a timeout recovery state', async () => {
+  it('shows a slower in-progress state before eventually showing timeout recovery', async () => {
     vi.useFakeTimers();
 
     render(
@@ -108,6 +108,14 @@ describe('AuthCallback', () => {
 
     act(() => {
       vi.advanceTimersByTime(1000);
+    });
+
+    expect(screen.getByText(/still connecting/i)).toBeInTheDocument();
+    expect(screen.getByText(/this ipad is still opening your family account/i)).toBeInTheDocument();
+    expect(screen.queryByText(/this device did not finish connecting/i)).not.toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(40000);
     });
 
     expect(screen.getByText(/this device did not finish connecting/i)).toBeInTheDocument();

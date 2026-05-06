@@ -4,12 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth/use-auth';
 import { finalizeSupabaseAuthFromUrl } from '@/lib/supabase/client';
 
-const CALLBACK_TIMEOUT_MS = 20000;
+const CALLBACK_SLOW_MS = 20000;
+const CALLBACK_FAILURE_MS = 60000;
 
 const AuthCallback = () => {
   const navigate = useNavigate();
   const { configured, status, householdStatus, error, clearError } = useAuth();
   const [callbackError, setCallbackError] = useState<string | null>(null);
+  const [takingLongerThanExpected, setTakingLongerThanExpected] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
@@ -45,11 +47,18 @@ const AuthCallback = () => {
       return;
     }
 
-    const timer = window.setTimeout(() => {
-      setTimedOut(true);
-    }, CALLBACK_TIMEOUT_MS);
+    const slowTimer = window.setTimeout(() => {
+      setTakingLongerThanExpected(true);
+    }, CALLBACK_SLOW_MS);
 
-    return () => window.clearTimeout(timer);
+    const failureTimer = window.setTimeout(() => {
+      setTimedOut(true);
+    }, CALLBACK_FAILURE_MS);
+
+    return () => {
+      window.clearTimeout(slowTimer);
+      window.clearTimeout(failureTimer);
+    };
   }, [callbackError, configured, householdStatus, status]);
 
   const resolvedError = callbackError ?? error;
@@ -110,6 +119,17 @@ const AuthCallback = () => {
                 Back to sign in
               </button>
             </div>
+          </>
+        ) : takingLongerThanExpected ? (
+          <>
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <LoaderCircle size={28} className="animate-spin" />
+            </div>
+            <p className="mt-5 text-sm font-black uppercase tracking-[0.22em] text-primary">Still connecting</p>
+            <h1 className="mt-4 text-3xl font-bold text-foreground">This iPad is still opening your family account</h1>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Safari can take a little longer here. If this screen stays for more than a minute, then we&apos;ll show recovery options.
+            </p>
           </>
         ) : (
           <>
