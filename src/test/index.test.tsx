@@ -124,10 +124,14 @@ vi.mock("@/components/ParentSettings", () => ({
     onBack,
     onRestartSetup,
     onResetAppData,
+    cloudConfigSyncError,
+    onRetryCloudConfigSync,
   }: {
     onBack: () => void;
     onRestartSetup: () => void;
     onResetAppData: () => void;
+    cloudConfigSyncError?: string | null;
+    onRetryCloudConfigSync?: () => void;
   }) => (
     <div>
       <button type="button" onClick={onBack}>
@@ -139,6 +143,10 @@ vi.mock("@/components/ParentSettings", () => ({
       <button type="button" onClick={onResetAppData}>
         reset-app-data
       </button>
+      <div data-testid="parent-cloud-sync-error">{cloudConfigSyncError ?? ""}</div>
+      <button type="button" onClick={onRetryCloudConfigSync}>
+        retry-parent-cloud-sync
+      </button>
     </div>
   ),
 }));
@@ -146,15 +154,23 @@ vi.mock("@/components/ParentSettings", () => ({
 vi.mock("@/components/InitialSetup", () => ({
   InitialSetup: ({
     children,
+    cloudSyncError,
+    onRetryCloudSync,
     onChange,
     onComplete,
   }: {
     children: Child[];
+    cloudSyncError?: string | null;
+    onRetryCloudSync?: () => void;
     onChange?: (children: Child[]) => void;
     onComplete: (children: Child[]) => void;
   }) => (
     <div>
       <div data-testid="setup-child-count">{children.length}</div>
+      <div data-testid="setup-cloud-sync-error">{cloudSyncError ?? ""}</div>
+      <button type="button" onClick={onRetryCloudSync}>
+        retry-setup-cloud-sync
+      </button>
       <button
         type="button"
         onClick={() =>
@@ -783,6 +799,75 @@ describe("Index", () => {
           removeMissingChildren: true,
         })
       );
+    });
+  });
+
+  it("does not treat a failed cloud config write as already synced", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [],
+    });
+    saveHouseholdConfigToCloud
+      .mockRejectedValueOnce(new Error("Row-level security blocked child_profiles insert"))
+      .mockResolvedValueOnce(undefined);
+
+    render(<Index />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "recovery-start-fresh" }));
+    fireEvent.click(await screen.findByRole("button", { name: "sync-draft-child" }));
+
+    await waitFor(() => {
+      expect(saveHouseholdConfigToCloud.mock.calls.length).toBeGreaterThan(1);
+    });
+
+    expect(
+      saveHouseholdConfigToCloud.mock.calls.some(
+        ([input]) =>
+          input.children?.some((child: { name?: string }) => child.name === "Elie")
+      )
+    ).toBe(true);
+
+    expect(screen.getByRole("button", { name: "retry-setup-cloud-sync" })).toBeInTheDocument();
+  });
+
+  it("lets a parent manually retry household setup cloud sync from setup", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [],
+    });
+    saveHouseholdConfigToCloud.mockResolvedValue(undefined);
+
+    render(<Index />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "recovery-start-fresh" }));
+    fireEvent.click(screen.getByRole("button", { name: "retry-setup-cloud-sync" }));
+
+    await waitFor(() => {
+      expect(saveHouseholdConfigToCloud).toHaveBeenCalled();
     });
   });
 
