@@ -18,6 +18,19 @@ const shouldFallbackToDirectBootstrap = (error: unknown) => {
   );
 };
 
+const isDuplicateHouseholdError = (error: unknown) => {
+  const message =
+    typeof error === 'object' && error !== null && 'message' in error
+      ? String(error.message).toLowerCase()
+      : '';
+  const code =
+    typeof error === 'object' && error !== null && 'code' in error
+      ? String(error.code)
+      : '';
+
+  return code === '23505' || message.includes('duplicate key') || message.includes('unique constraint');
+};
+
 const mapHousehold = (row: Record<string, unknown>): HouseholdRecord => ({
   id: String(row.id),
   name: String(row.name),
@@ -65,6 +78,13 @@ export class SupabaseHouseholdRepository implements HouseholdRepository {
       return mapHousehold(data);
     }
 
+    if (error && isDuplicateHouseholdError(error)) {
+      const existingHousehold = await this.getCurrentHousehold();
+      if (existingHousehold) {
+        return existingHousehold;
+      }
+    }
+
     if (error && !shouldFallbackToDirectBootstrap(error)) {
       throw error;
     }
@@ -80,6 +100,13 @@ export class SupabaseHouseholdRepository implements HouseholdRepository {
       .single();
 
     if (householdError) {
+      if (isDuplicateHouseholdError(householdError)) {
+        const existingHousehold = await this.getCurrentHousehold();
+        if (existingHousehold) {
+          return existingHousehold;
+        }
+      }
+
       throw householdError;
     }
 
@@ -94,6 +121,13 @@ export class SupabaseHouseholdRepository implements HouseholdRepository {
       });
 
     if (membershipError) {
+      if (isDuplicateHouseholdError(membershipError)) {
+        const existingHousehold = await this.getCurrentHousehold();
+        if (existingHousehold) {
+          return existingHousehold;
+        }
+      }
+
       throw membershipError;
     }
 

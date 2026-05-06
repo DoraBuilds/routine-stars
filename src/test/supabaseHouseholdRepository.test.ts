@@ -174,6 +174,64 @@ describe('SupabaseHouseholdRepository', () => {
     ).rejects.toEqual({ message: 'Not authenticated' });
   });
 
+  it('returns the existing household when bootstrap collides with a duplicate-account create', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({
+      data: {
+        id: 'house-existing',
+        name: "Dora's Family",
+        timezone: 'Europe/Madrid',
+        home_scene: 'bike',
+        created_by_user_id: 'user-1',
+        created_at: '2026-05-06T12:00:00Z',
+        updated_at: '2026-05-06T12:05:00Z',
+      },
+      error: null,
+    });
+    const limit = vi.fn(() => ({
+      maybeSingle,
+    }));
+    const orderCreatedAt = vi.fn(() => ({
+      limit,
+    }));
+    const orderUpdatedAt = vi.fn(() => ({
+      order: orderCreatedAt,
+    }));
+
+    const repository = new SupabaseHouseholdRepository({
+      rpc: vi.fn().mockResolvedValue({
+        data: null,
+        error: { message: 'duplicate key value violates unique constraint', code: '23505' },
+      }),
+      from: vi.fn((table: string) => {
+        if (table === 'households') {
+          return {
+            select: vi.fn(() => ({
+              order: orderUpdatedAt,
+            })),
+          };
+        }
+
+        throw new Error(`Unexpected table ${table}`);
+      }),
+    } as never);
+
+    await expect(
+      repository.createInitialHousehold({
+        householdName: "Dora's Family",
+        timezone: 'Europe/Madrid',
+        userId: 'user-1',
+      })
+    ).resolves.toEqual({
+      id: 'house-existing',
+      name: "Dora's Family",
+      timezone: 'Europe/Madrid',
+      homeScene: 'bike',
+      createdByUserId: 'user-1',
+      createdAt: '2026-05-06T12:00:00Z',
+      updatedAt: '2026-05-06T12:05:00Z',
+    });
+  });
+
   it('deletes the household row by id', async () => {
     const deleteEq = vi.fn().mockResolvedValue({ error: null });
     const repository = new SupabaseHouseholdRepository(
