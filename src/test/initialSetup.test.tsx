@@ -38,4 +38,23 @@ describe("InitialSetup", () => {
     expect(screen.getByRole("button", { name: /morning/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /evening/i })).toBeInTheDocument();
   });
+
+  it("shows a sign-out escape hatch when setup is opened while signed in", () => {
+    const onSignOut = vi.fn();
+
+    render(
+      <InitialSetup
+        children={initialChildren}
+        signedInEmail="parent@example.com"
+        onSignOut={onSignOut}
+        onComplete={() => {}}
+      />
+    );
+
+    expect(screen.getByText(/parent@example.com/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /sign out/i }));
+
+    expect(onSignOut).toHaveBeenCalledTimes(1);
+  });
 });

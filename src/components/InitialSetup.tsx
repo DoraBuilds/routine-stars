@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Clock3, Moon, Plus, Sparkles, Sun, UserRound } from 'lucide-react';
+import { Check, Clock3, LogOut, Moon, Plus, Sparkles, Sun, UserRound } from 'lucide-react';
 import type { Child, RoutineType, Task } from '@/lib/types';
 import { AGE_BUCKETS, groupTasksByAge, TASK_CATALOG } from '@/lib/types';
 import { TaskIcon } from './TaskIcon';
@@ -8,6 +8,8 @@ import { ANIMAL_AVATARS } from './animal-avatars';
 
 interface InitialSetupProps {
   children: Child[];
+  signedInEmail?: string | null;
+  onSignOut?: () => void;
   onChange?: (children: Child[]) => void;
   onComplete: (children: Child[]) => void;
 }
@@ -73,7 +75,7 @@ const buildRoutineTasks = (childId: string, routine: RoutineType, selectedTitles
       completed: false,
     }));
 
-export const InitialSetup = ({ children, onChange, onComplete }: InitialSetupProps) => {
+export const InitialSetup = ({ children, signedInEmail, onSignOut, onChange, onComplete }: InitialSetupProps) => {
   const [draftChildren, setDraftChildren] = useState(children);
   const [selectionState, setSelectionState] = useState<SelectionState>(() => buildSelectionState(children));
   const [activeChildId, setActiveChildId] = useState<string | null>(children[0]?.id ?? null);
@@ -183,6 +185,25 @@ export const InitialSetup = ({ children, onChange, onComplete }: InitialSetupPro
       <div className="absolute right-8 top-16 -z-10 h-32 w-32 rounded-full bg-success/15 blur-2xl" />
 
       <div className="mx-auto max-w-6xl">
+        {signedInEmail && onSignOut ? (
+          <div className="mb-5 flex justify-center md:justify-end">
+            <div className="inline-flex flex-wrap items-center justify-center gap-3 rounded-full border border-border bg-card/90 px-4 py-3 shadow-card">
+              <div className="text-center md:text-left">
+                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-muted-foreground">Signed in</p>
+                <p className="text-sm font-bold text-foreground">{signedInEmail}</p>
+              </div>
+              <button
+                type="button"
+                onClick={onSignOut}
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+              >
+                <LogOut size={16} />
+                Sign out
+              </button>
+            </div>
+          </div>
+        ) : null}
+
         <header className="mx-auto max-w-3xl text-center">
           <p className="text-sm font-black uppercase tracking-[0.32em] text-primary">Parent Setup</p>
           <h1 className="mt-4 text-4xl font-bold text-foreground md:text-5xl">Set up your children first</h1>
