@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Reorder } from 'framer-motion';
 import {
   Sun, Moon, Trash2, Plus, GripVertical, UserPlus, ArrowLeft, X, Check, Shuffle, Clock3, Palette, ChevronDown,
-  Users, House, Shield, CreditCard, LogOut, UserRound,
+  Users, House, Shield, CreditCard, LogOut, RefreshCw, UserRound,
 } from 'lucide-react';
 import { TaskIcon } from './TaskIcon';
 import { TaskSuggestionPicker } from './TaskSuggestionPicker';
@@ -17,6 +17,8 @@ import type { TaskCatalogItem } from '@/lib/task-catalog';
 interface ParentSettingsProps {
   children: Child[];
   homeScene: HomeScene;
+  cloudConfigSyncError?: string | null;
+  onRetryCloudConfigSync?: () => void;
   onChange: (children: Child[]) => void;
   onHomeSceneChange: (scene: HomeScene) => void;
   onRestartSetup: () => void;
@@ -257,6 +259,8 @@ const HOME_SCENE_OPTIONS: { key: HomeScene; label: string; preview: string; desc
 export const ParentSettings = ({
   children,
   homeScene,
+  cloudConfigSyncError,
+  onRetryCloudConfigSync,
   onChange,
   onHomeSceneChange,
   onRestartSetup,
@@ -424,6 +428,24 @@ export const ParentSettings = ({
               </button>
             )}
           </div>
+
+          {cloudConfigSyncError ? (
+            <div className="mt-8 rounded-[24px] border border-destructive/20 bg-destructive/5 p-4">
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-destructive">Cloud sync needs attention</p>
+              <p className="mt-3 text-base font-bold text-foreground">This family setup has not saved to the cloud yet</p>
+              <p className="mt-1 text-sm text-muted-foreground">{cloudConfigSyncError}</p>
+              {onRetryCloudConfigSync ? (
+                <button
+                  type="button"
+                  onClick={onRetryCloudConfigSync}
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full border border-destructive/20 bg-background px-4 py-3 text-sm font-bold text-foreground transition-colors hover:border-destructive/40 hover:text-destructive"
+                >
+                  <RefreshCw size={16} />
+                  Retry cloud save
+                </button>
+              ) : null}
+            </div>
+          ) : null}
         </aside>
 
         <div className="space-y-8">

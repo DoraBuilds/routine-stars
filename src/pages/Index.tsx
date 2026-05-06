@@ -122,11 +122,14 @@ const Index = () => {
   const [isReady, setIsReady] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const [bootstrapError, setBootstrapError] = useState<string | null>(null);
+  const [cloudConfigSyncError, setCloudConfigSyncError] = useState<string | null>(null);
+  const [cloudConfigSyncRetryTick, setCloudConfigSyncRetryTick] = useState(0);
   const [isImporting, setIsImporting] = useState(false);
   const [now, setNow] = useState(() => new Date());
   const [homeScene, setHomeScene] = useState<HomeScene>('bike');
   const [bootstrapAttempt, setBootstrapAttempt] = useState(0);
   const lastSyncedConfigRef = useRef<string | null>(null);
+  const configSyncInFlightRef = useRef<string | null>(null);
   const shouldSyncFirstConfigRef = useRef(false);
   const skipLocalPersistenceRef = useRef(false);
   const currentSessionSetupRef = useRef<{
@@ -192,6 +195,7 @@ const Index = () => {
         if (!isMounted) return;
 
         setBootstrapError(null);
+        setCloudConfigSyncError(null);
         setChildren(createSetupChildren());
         setActiveChildId(null);
         setSetupComplete(false);
@@ -242,6 +246,7 @@ const Index = () => {
               homeScene: cloudState.homeScene,
               setupComplete: cloudState.children.length > 0,
             });
+            configSyncInFlightRef.current = null;
             shouldSyncFirstConfigRef.current = false;
             setIsReady(true);
           }
@@ -260,6 +265,7 @@ const Index = () => {
             setChildren(recoverableLocalState.children);
             setHomeScene(recoverableLocalState.homeScene);
             setSetupComplete(recoverableLocalState.setupComplete);
+            setCloudConfigSyncError(null);
             setView('import');
             setIsReady(true);
           }
@@ -280,6 +286,7 @@ const Index = () => {
             setActiveChildId(null);
             setSetupComplete(false);
             setHomeScene(recoverableLocalState.homeScene);
+            setCloudConfigSyncError(null);
             setView('recovery');
             setIsReady(true);
           }
@@ -302,6 +309,7 @@ const Index = () => {
 
         if (isMounted) {
           setBootstrapError(null);
+          setCloudConfigSyncError(null);
           setSetupComplete(recoverableLocalState.setupComplete);
           setHomeScene(recoverableLocalState.homeScene);
           setView(recoverableLocalState.setupComplete ? 'home' : 'setup');
@@ -314,6 +322,7 @@ const Index = () => {
         if (!isMounted) return;
 
         setBootstrapError(null);
+        setCloudConfigSyncError(null);
         setChildren(cloudState.children);
         setHomeScene(cloudState.homeScene);
         setSetupComplete(cloudState.children.length > 0);
@@ -324,6 +333,7 @@ const Index = () => {
             homeScene: cloudState.homeScene,
             setupComplete: true,
           });
+          configSyncInFlightRef.current = null;
           shouldSyncFirstConfigRef.current = false;
         } else if (authStatus === 'signed_in') {
           shouldSyncFirstConfigRef.current = true;
@@ -340,6 +350,7 @@ const Index = () => {
         setSetupComplete(false);
         setHomeScene('bike');
         setBootstrapError(cloudLoadError);
+        setCloudConfigSyncError(null);
         setView('bootstrap-error');
         setIsReady(true);
         return;
@@ -347,6 +358,7 @@ const Index = () => {
 
       if (isMounted) {
         setBootstrapError(null);
+        setCloudConfigSyncError(null);
         setChildren(createSetupChildren());
         setActiveChildId(null);
         setSetupComplete(false);
@@ -392,8 +404,12 @@ const Index = () => {
       return;
     }
 
+    if (configSyncInFlightRef.current === householdConfigSignature) {
+      return;
+    }
+
     shouldSyncFirstConfigRef.current = false;
-    lastSyncedConfigRef.current = householdConfigSignature;
+    configSyncInFlightRef.current = householdConfigSignature;
 
     void Promise.resolve(
       saveHouseholdConfigToCloud({
@@ -402,10 +418,30 @@ const Index = () => {
         homeScene,
         removeMissingChildren: true,
       })
-    ).catch((error) => {
-      console.warn('Could not sync household configuration to cloud.', error);
-    });
-  }, [authStatus, children, homeScene, household, householdConfigSignature, householdStatus, isReady, setupComplete]);
+    )
+      .then(() => {
+        lastSyncedConfigRef.current = householdConfigSignature;
+        configSyncInFlightRef.current = null;
+        setCloudConfigSyncError(null);
+      })
+      .catch((error) => {
+        configSyncInFlightRef.current = null;
+        setCloudConfigSyncError(
+          error instanceof Error ? error.message : 'Could not save this family setup to the cloud yet.'
+        );
+        console.warn('Could not sync household configuration to cloud.', error);
+      });
+  }, [
+    authStatus,
+    children,
+    cloudConfigSyncRetryTick,
+    homeScene,
+    household,
+    householdConfigSignature,
+    householdStatus,
+    isReady,
+    setupComplete,
+  ]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -595,11 +631,13 @@ const Index = () => {
               setHomeScene(cloudState.homeScene);
               setSetupComplete(cloudState.children.length > 0);
               setView(cloudState.children.length > 0 ? 'home' : 'setup');
+              setCloudConfigSyncError(null);
               lastSyncedConfigRef.current = serializeHouseholdConfig({
                 children: cloudState.children,
                 homeScene: cloudState.homeScene,
                 setupComplete: cloudState.children.length > 0,
               });
+              configSyncInFlightRef.current = null;
               shouldSyncFirstConfigRef.current = false;
             })
             .catch((error) => {
@@ -617,6 +655,7 @@ const Index = () => {
           setChildren(createSetupChildren());
           setSetupComplete(false);
           setHomeScene('bike');
+          setCloudConfigSyncError(null);
           setView('setup');
           setImportError(null);
           shouldSyncFirstConfigRef.current = true;
@@ -649,9 +688,19 @@ const Index = () => {
           children={children}
           signedInEmail={authStatus === 'signed_in' ? user?.email ?? null : null}
           onSignOut={authStatus === 'signed_in' ? () => void signOut() : undefined}
+          cloudSyncError={cloudConfigSyncError}
+          onRetryCloudSync={
+            authStatus === 'signed_in'
+              ? () => {
+                  setCloudConfigSyncError(null);
+                  setCloudConfigSyncRetryTick((count) => count + 1);
+                }
+              : undefined
+          }
           onChange={setChildren}
           onComplete={(configuredChildren) => {
             setChildren(configuredChildren);
+            setCloudConfigSyncError(null);
             setSetupComplete(true);
             setView('home');
           }}
@@ -679,6 +728,11 @@ const Index = () => {
         <ParentSettings
           children={children}
           homeScene={homeScene}
+          cloudConfigSyncError={cloudConfigSyncError}
+          onRetryCloudConfigSync={() => {
+            setCloudConfigSyncError(null);
+            setCloudConfigSyncRetryTick((count) => count + 1);
+          }}
           onChange={setChildren}
           onHomeSceneChange={setHomeScene}
           onRestartSetup={restartSetup}

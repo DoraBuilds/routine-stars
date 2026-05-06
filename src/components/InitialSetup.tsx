@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Clock3, LogOut, Moon, Plus, Sparkles, Sun, UserRound } from 'lucide-react';
+import { AlertCircle, Check, Clock3, LogOut, Moon, Plus, RefreshCw, Sparkles, Sun, UserRound } from 'lucide-react';
 import type { Child, RoutineType, Task } from '@/lib/types';
 import { AGE_BUCKETS, groupTasksByAge, TASK_CATALOG } from '@/lib/types';
 import { TaskIcon } from './TaskIcon';
@@ -10,6 +10,8 @@ interface InitialSetupProps {
   children: Child[];
   signedInEmail?: string | null;
   onSignOut?: () => void;
+  cloudSyncError?: string | null;
+  onRetryCloudSync?: () => void;
   onChange?: (children: Child[]) => void;
   onComplete: (children: Child[]) => void;
 }
@@ -75,7 +77,15 @@ const buildRoutineTasks = (childId: string, routine: RoutineType, selectedTitles
       completed: false,
     }));
 
-export const InitialSetup = ({ children, signedInEmail, onSignOut, onChange, onComplete }: InitialSetupProps) => {
+export const InitialSetup = ({
+  children,
+  signedInEmail,
+  onSignOut,
+  cloudSyncError,
+  onRetryCloudSync,
+  onChange,
+  onComplete,
+}: InitialSetupProps) => {
   const [draftChildren, setDraftChildren] = useState(children);
   const [selectionState, setSelectionState] = useState<SelectionState>(() => buildSelectionState(children));
   const [activeChildId, setActiveChildId] = useState<string | null>(children[0]?.id ?? null);
@@ -203,6 +213,34 @@ export const InitialSetup = ({ children, signedInEmail, onSignOut, onChange, onC
             </div>
           </div>
         ) : null}
+
+        {cloudSyncError && (
+          <div className="mb-5 rounded-[28px] border border-destructive/20 bg-destructive/5 px-5 py-4 text-left shadow-sm">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 rounded-full bg-destructive/10 p-2 text-destructive">
+                  <AlertCircle size={18} />
+                </div>
+                <div>
+                  <p className="text-sm font-black uppercase tracking-[0.22em] text-destructive">Cloud sync needs attention</p>
+                  <p className="mt-1 text-sm text-destructive/90">
+                    {cloudSyncError}
+                  </p>
+                </div>
+              </div>
+              {onRetryCloudSync ? (
+                <button
+                  type="button"
+                  onClick={onRetryCloudSync}
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-destructive/20 bg-background px-4 py-2 text-sm font-bold text-foreground transition-colors hover:border-destructive/40 hover:text-destructive"
+                >
+                  <RefreshCw size={16} />
+                  Retry cloud save
+                </button>
+              ) : null}
+            </div>
+          </div>
+        )}
 
         <header className="mx-auto max-w-3xl text-center">
           <p className="text-sm font-black uppercase tracking-[0.32em] text-primary">Parent Setup</p>
