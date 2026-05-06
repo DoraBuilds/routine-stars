@@ -114,7 +114,7 @@ const ViewLoadingFallback = ({ title = 'Loading next step' }: { title?: string }
 );
 
 const Index = () => {
-  const { status: authStatus, householdStatus, household, signOut } = useAuth();
+  const { status: authStatus, householdStatus, household, signOut, user } = useAuth();
   const [view, setView] = useState<AppView>('setup');
   const [children, setChildren] = useState<Child[]>(createSetupChildren);
   const [activeChildId, setActiveChildId] = useState<string | null>(null);
@@ -595,6 +595,8 @@ const Index = () => {
       <Suspense fallback={<ViewLoadingFallback title="Opening setup" />}>
         <InitialSetup
           children={children}
+          signedInEmail={authStatus === 'signed_in' ? user?.email ?? null : null}
+          onSignOut={authStatus === 'signed_in' ? () => void signOut() : undefined}
           onChange={setChildren}
           onComplete={(configuredChildren) => {
             setChildren(configuredChildren);
