@@ -129,6 +129,23 @@ const Index = () => {
   const lastSyncedConfigRef = useRef<string | null>(null);
   const shouldSyncFirstConfigRef = useRef(false);
   const skipLocalPersistenceRef = useRef(false);
+  const currentSessionSetupRef = useRef<{
+    children: Child[];
+    homeScene: HomeScene;
+    setupComplete: boolean;
+  }>({
+    children: createSetupChildren(),
+    homeScene: 'bike',
+    setupComplete: false,
+  });
+
+  useEffect(() => {
+    currentSessionSetupRef.current = {
+      children,
+      homeScene,
+      setupComplete,
+    };
+  }, [children, homeScene, setupComplete]);
 
   const clearLocalAndState = useCallback((nextView: AppView) => {
     skipLocalPersistenceRef.current = true;
@@ -185,6 +202,18 @@ const Index = () => {
       }
 
       const storedState = loadLocalAppState();
+      const currentSessionSetup = currentSessionSetupRef.current;
+      const recoverableLocalState =
+        storedState ??
+        (currentSessionSetup.children.length > 0
+          ? {
+              version: 1,
+              children: currentSessionSetup.children,
+              homeScene: currentSessionSetup.homeScene,
+              lastReset: new Date().toDateString(),
+              setupComplete: currentSessionSetup.setupComplete,
+            }
+          : null);
       let cloudState: Awaited<ReturnType<typeof loadCloudHouseholdState>> | null = null;
       let cloudLoadError: string | null = null;
 
@@ -198,7 +227,7 @@ const Index = () => {
         }
       }
 
-      if (storedState) {
+      if (recoverableLocalState) {
         if (authStatus === 'signed_in' && householdStatus === 'ready' && household && cloudState?.children.length) {
           if (isMounted) {
             setChildren(cloudState.children);
@@ -221,13 +250,13 @@ const Index = () => {
           authStatus === 'signed_in' &&
           householdStatus === 'ready' &&
           household &&
-          storedState.children.length > 0 &&
+          recoverableLocalState.children.length > 0 &&
           (cloudState?.children.length ?? 0) === 0
         ) {
           if (isMounted) {
-            setChildren(storedState.children);
-            setHomeScene(storedState.homeScene);
-            setSetupComplete(storedState.setupComplete);
+            setChildren(recoverableLocalState.children);
+            setHomeScene(recoverableLocalState.homeScene);
+            setSetupComplete(recoverableLocalState.setupComplete);
             setView('import');
             setIsReady(true);
           }
@@ -239,7 +268,7 @@ const Index = () => {
           authStatus === 'signed_in' &&
           householdStatus === 'ready' &&
           household &&
-          storedState.children.length === 0 &&
+          recoverableLocalState.children.length === 0 &&
           (cloudState?.children.length ?? 0) === 0
         ) {
           if (isMounted) {
@@ -247,7 +276,7 @@ const Index = () => {
             setChildren(createSetupChildren());
             setActiveChildId(null);
             setSetupComplete(false);
-            setHomeScene(storedState.homeScene);
+            setHomeScene(recoverableLocalState.homeScene);
             setView('recovery');
             setIsReady(true);
           }
@@ -255,8 +284,8 @@ const Index = () => {
         }
 
         const today = new Date().toDateString();
-        if (storedState.lastReset !== today) {
-          const reset = storedState.children.map((c: Child) => ({
+        if (recoverableLocalState.lastReset !== today) {
+          const reset = recoverableLocalState.children.map((c: Child) => ({
             ...c,
             morning: c.morning.map((t: Child['morning'][0]) => ({ ...t, completed: false })),
             evening: c.evening.map((t: Child['evening'][0]) => ({ ...t, completed: false })),
@@ -265,14 +294,14 @@ const Index = () => {
             setChildren(reset);
           }
         } else if (isMounted) {
-          setChildren(storedState.children);
+          setChildren(recoverableLocalState.children);
         }
 
         if (isMounted) {
           setBootstrapError(null);
-          setSetupComplete(storedState.setupComplete);
-          setHomeScene(storedState.homeScene);
-          setView(storedState.setupComplete ? 'home' : 'setup');
+          setSetupComplete(recoverableLocalState.setupComplete);
+          setHomeScene(recoverableLocalState.homeScene);
+          setView(recoverableLocalState.setupComplete ? 'home' : 'setup');
           setIsReady(true);
         }
         return;

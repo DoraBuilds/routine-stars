@@ -772,6 +772,38 @@ describe("Index", () => {
     });
   });
 
+  it("routes back to import when the current signed-in setup has in-memory children but cloud is still empty", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [],
+    });
+
+    const view = render(<Index />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "recovery-start-fresh" }));
+    fireEvent.click(await screen.findByRole("button", { name: "sync-draft-child" }));
+
+    authState.householdStatus = "loading";
+    view.rerender(<Index />);
+
+    authState.householdStatus = "ready";
+    view.rerender(<Index />);
+
+    expect(await screen.findByTestId("import-family-setup-screen")).toBeInTheDocument();
+  });
+
   it("lets a parent start fresh instead of importing existing local setup", async () => {
     authState.status = "signed_in";
     authState.user = { id: "user-1", email: "parent@example.com" };

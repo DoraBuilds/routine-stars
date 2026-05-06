@@ -126,9 +126,9 @@ const AuthCallback = () => {
               <LoaderCircle size={28} className="animate-spin" />
             </div>
             <p className="mt-5 text-sm font-black uppercase tracking-[0.22em] text-primary">Still connecting</p>
-            <h1 className="mt-4 text-3xl font-bold text-foreground">This iPad is still opening your family account</h1>
+            <h1 className="mt-4 text-3xl font-bold text-foreground">We&apos;re still opening your family account</h1>
             <p className="mt-3 text-sm text-muted-foreground">
-              Safari can take a little longer here. If this screen stays for more than a minute, then we&apos;ll show recovery options.
+              This can take a little longer on some browsers. If this screen stays for more than a minute, we&apos;ll show recovery options.
             </p>
           </>
         ) : (

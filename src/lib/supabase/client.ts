@@ -27,6 +27,26 @@ const isSupportedOtpType = (value: string | null) =>
   value === 'sms' ||
   value === 'phone_change';
 
+const describeAuthLinkError = (parsedUrl: URL) => {
+  const errorCode = parsedUrl.searchParams.get('error_code');
+  const errorDescription = parsedUrl.searchParams.get('error_description');
+  const fallbackError = parsedUrl.searchParams.get('error');
+
+  if (errorCode === 'otp_expired') {
+    return 'This sign-in link has expired. Please request a new one.';
+  }
+
+  if (errorDescription) {
+    return decodeURIComponent(errorDescription.replace(/\+/g, ' '));
+  }
+
+  if (fallbackError === 'access_denied') {
+    return 'This sign-in link could not be used. Please request a new one.';
+  }
+
+  return fallbackError;
+};
+
 export const finalizeSupabaseAuthFromUrl = async (url = window.location.href) => {
   const supabase = getSupabaseClient();
   if (!supabase) {
@@ -40,8 +60,13 @@ export const finalizeSupabaseAuthFromUrl = async (url = window.location.href) =>
   const otpType = parsedUrl.searchParams.get('type');
   const accessToken = hashParams.get('access_token');
   const refreshToken = hashParams.get('refresh_token');
+  const authLinkError = describeAuthLinkError(parsedUrl);
 
   try {
+    if (authLinkError) {
+      return { handled: true, error: authLinkError };
+    }
+
     if (code) {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
       if (error) {
