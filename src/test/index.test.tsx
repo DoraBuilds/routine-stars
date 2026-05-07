@@ -154,12 +154,14 @@ vi.mock("@/components/ParentSettings", () => ({
 vi.mock("@/components/InitialSetup", () => ({
   InitialSetup: ({
     children,
+    cloudSyncStatus,
     cloudSyncError,
     onRetryCloudSync,
     onChange,
     onComplete,
   }: {
     children: Child[];
+    cloudSyncStatus?: string;
     cloudSyncError?: string | null;
     onRetryCloudSync?: () => void;
     onChange?: (children: Child[]) => void;
@@ -167,6 +169,7 @@ vi.mock("@/components/InitialSetup", () => ({
   }) => (
     <div>
       <div data-testid="setup-child-count">{children.length}</div>
+      <div data-testid="setup-cloud-sync-status">{cloudSyncStatus ?? ""}</div>
       <div data-testid="setup-cloud-sync-error">{cloudSyncError ?? ""}</div>
       <button type="button" onClick={onRetryCloudSync}>
         retry-setup-cloud-sync
@@ -840,6 +843,37 @@ describe("Index", () => {
     ).toBe(true);
 
     expect(screen.getByRole("button", { name: "retry-setup-cloud-sync" })).toBeInTheDocument();
+  });
+
+  it("shows a cloud sync error when a save succeeds locally but cannot be verified from cloud", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "house-1",
+      name: "Routine Stars Family",
+      timezone: "Europe/Madrid",
+      homeScene: "kite",
+      createdByUserId: "user-1",
+      createdAt: "2026-04-20T10:00:00Z",
+      updatedAt: "2026-04-20T10:00:00Z",
+    };
+    loadCloudHouseholdState.mockResolvedValue({
+      homeScene: "kite",
+      children: [],
+    });
+    saveHouseholdConfigToCloud.mockResolvedValue(undefined);
+
+    render(<Index />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "recovery-start-fresh" }));
+    fireEvent.click(await screen.findByRole("button", { name: "sync-draft-child" }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("setup-cloud-sync-error")).toHaveTextContent(
+        "We could not verify that this family setup reached the cloud yet. Please retry cloud save."
+      );
+    });
   });
 
   it("lets a parent manually retry household setup cloud sync from setup", async () => {
