@@ -10,6 +10,7 @@ interface InitialSetupProps {
   children: Child[];
   signedInEmail?: string | null;
   onSignOut?: () => void;
+  cloudSyncStatus?: 'idle' | 'saving' | 'saved' | 'error';
   cloudSyncError?: string | null;
   onRetryCloudSync?: () => void;
   onChange?: (children: Child[]) => void;
@@ -81,6 +82,7 @@ export const InitialSetup = ({
   children,
   signedInEmail,
   onSignOut,
+  cloudSyncStatus = 'idle',
   cloudSyncError,
   onRetryCloudSync,
   onChange,
@@ -241,6 +243,32 @@ export const InitialSetup = ({
             </div>
           </div>
         )}
+
+        {!cloudSyncError && cloudSyncStatus !== 'idle' ? (
+          <div className="mb-5 rounded-[28px] border border-border bg-card/80 px-5 py-4 text-left shadow-sm">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-start gap-3">
+                <div
+                  className={`mt-0.5 rounded-full p-2 ${
+                    cloudSyncStatus === 'saved'
+                      ? 'bg-success/10 text-success'
+                      : 'bg-primary/10 text-primary'
+                  }`}
+                >
+                  {cloudSyncStatus === 'saved' ? <Check size={18} /> : <RefreshCw size={18} className="animate-spin" />}
+                </div>
+                <div>
+                  <p className="text-sm font-black uppercase tracking-[0.22em] text-muted-foreground">Cloud sync</p>
+                  <p className="mt-1 text-sm text-foreground" data-testid="setup-cloud-sync-status">
+                    {cloudSyncStatus === 'saving'
+                      ? 'Saving this family setup to the cloud...'
+                      : 'This family setup is saved to the cloud.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         <header className="mx-auto max-w-3xl text-center">
           <p className="text-sm font-black uppercase tracking-[0.32em] text-primary">Parent Setup</p>
