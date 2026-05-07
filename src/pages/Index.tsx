@@ -432,6 +432,21 @@ const Index = () => {
           homeScene: nextState.homeScene,
           removeMissingChildren: true,
         });
+
+        const verifiedCloudState = await loadCloudHouseholdState(household);
+        const expectedChildIds = [...nextState.children.map((child) => child.id)].sort();
+        const actualChildIds = [...verifiedCloudState.children.map((child) => child.id)].sort();
+        const childrenVerified =
+          expectedChildIds.length === actualChildIds.length &&
+          expectedChildIds.every((childId, index) => childId === actualChildIds[index]);
+        const homeSceneVerified = verifiedCloudState.homeScene === nextState.homeScene;
+
+        if (!childrenVerified || !homeSceneVerified) {
+          throw new Error(
+            'We could not verify that this family setup reached the cloud yet. Please retry cloud save.'
+          );
+        }
+
         lastSyncedConfigRef.current = nextSignature;
         setCloudConfigSyncStatus('saved');
         setCloudConfigSyncError(null);
