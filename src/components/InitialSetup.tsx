@@ -78,6 +78,14 @@ const buildRoutineTasks = (childId: string, routine: RoutineType, selectedTitles
       completed: false,
     }));
 
+const buildConfiguredChildren = (draftChildren: Child[], selectionState: SelectionState) =>
+  draftChildren.map((child) => ({
+    ...child,
+    name: child.name.trim() || 'Child',
+    morning: buildRoutineTasks(child.id, 'morning', selectionState[child.id]?.morning ?? []),
+    evening: buildRoutineTasks(child.id, 'evening', selectionState[child.id]?.evening ?? []),
+  }));
+
 export const InitialSetup = ({
   children,
   signedInEmail,
@@ -93,6 +101,11 @@ export const InitialSetup = ({
   const [activeChildId, setActiveChildId] = useState<string | null>(children[0]?.id ?? null);
   const [activeTab, setActiveTab] = useState<SetupTab>('profile');
   const [activeRoutine, setActiveRoutine] = useState<RoutineType>('morning');
+
+  useEffect(() => {
+    setDraftChildren(children);
+    setSelectionState(buildSelectionState(children));
+  }, [children]);
 
   useEffect(() => {
     if (draftChildren.length === 0) {
@@ -118,73 +131,78 @@ export const InitialSetup = ({
     [draftChildren, selectionState]
   );
 
+  const emitConfiguredChildren = (
+    nextDraftChildren: Child[],
+    nextSelectionState: SelectionState
+  ) => {
+    onChange?.(buildConfiguredChildren(nextDraftChildren, nextSelectionState));
+  };
+
   const updateChild = (id: string, updater: (child: Child) => Child) => {
-    setDraftChildren((current) => current.map((child) => (child.id === id ? updater(child) : child)));
+    setDraftChildren((current) => {
+      const nextDraftChildren = current.map((child) => (child.id === id ? updater(child) : child));
+      emitConfiguredChildren(nextDraftChildren, selectionState);
+      return nextDraftChildren;
+    });
   };
 
   const addChild = () => {
     const nextChild = createChildDraft(draftChildren.length + 1);
-    setDraftChildren((current) => [...current, nextChild]);
-    setSelectionState((current) => ensureChildSelection(current, nextChild.id));
+    const nextDraftChildren = [...draftChildren, nextChild];
+    const nextSelectionState = ensureChildSelection(selectionState, nextChild.id);
+    setDraftChildren(nextDraftChildren);
+    setSelectionState(nextSelectionState);
+    emitConfiguredChildren(nextDraftChildren, nextSelectionState);
     setActiveChildId(nextChild.id);
     setActiveTab('profile');
   };
 
   const removeChild = (childId: string) => {
-    setDraftChildren((current) => current.filter((child) => child.id !== childId));
-    setSelectionState((current) => {
-      const next = { ...current };
-      delete next[childId];
-      return next;
-    });
+    const nextDraftChildren = draftChildren.filter((child) => child.id !== childId);
+    const nextSelectionState = { ...selectionState };
+    delete nextSelectionState[childId];
+    setDraftChildren(nextDraftChildren);
+    setSelectionState(nextSelectionState);
+    emitConfiguredChildren(nextDraftChildren, nextSelectionState);
   };
 
   const toggleTask = (childId: string, routine: RoutineType, title: string) => {
-    setSelectionState((current) => {
-      const resolved = ensureChildSelection(current, childId);
-      const selected = resolved[childId][routine];
-      const nextSelected = selected.includes(title)
-        ? selected.filter((item) => item !== title)
-        : [...selected, title];
+    const resolved = ensureChildSelection(selectionState, childId);
+    const selected = resolved[childId][routine];
+    const nextSelected = selected.includes(title)
+      ? selected.filter((item) => item !== title)
+      : [...selected, title];
 
-      return {
-        ...resolved,
-        [childId]: {
-          ...resolved[childId],
-          [routine]: nextSelected,
-        },
-      };
-    });
+    const nextSelectionState = {
+      ...resolved,
+      [childId]: {
+        ...resolved[childId],
+        [routine]: nextSelected,
+      },
+    };
+
+    setSelectionState(nextSelectionState);
+    emitConfiguredChildren(draftChildren, nextSelectionState);
   };
 
   const applyCommonTasks = (childId: string, routine: RoutineType) => {
-    setSelectionState((current) => {
-      const resolved = ensureChildSelection(current, childId);
+    const resolved = ensureChildSelection(selectionState, childId);
+    const nextSelectionState = {
+      ...resolved,
+      [childId]: {
+        ...resolved[childId],
+        [routine]: TASK_CATALOG[routine].filter((task) => task.featured).map((task) => task.title),
+      },
+    };
 
-      return {
-        ...resolved,
-        [childId]: {
-          ...resolved[childId],
-          [routine]: TASK_CATALOG[routine].filter((task) => task.featured).map((task) => task.title),
-        },
-      };
-    });
+    setSelectionState(nextSelectionState);
+    emitConfiguredChildren(draftChildren, nextSelectionState);
   };
 
   const configuredChildren = useMemo(
-    () =>
-      draftChildren.map((child) => ({
-      ...child,
-      name: child.name.trim() || 'Child',
-      morning: buildRoutineTasks(child.id, 'morning', selectionState[child.id]?.morning ?? []),
-      evening: buildRoutineTasks(child.id, 'evening', selectionState[child.id]?.evening ?? []),
-    })),
+    () => buildConfiguredChildren(draftChildren, selectionState),
     [draftChildren, selectionState]
   );
-
-  useEffect(() => {
-    onChange?.(configuredChildren);
-  }, [configuredChildren, onChange]);
 
   const handleComplete = () => {
     onComplete(configuredChildren);
@@ -244,7 +262,7 @@ export const InitialSetup = ({
           </div>
         )}
 
-        {!cloudSyncError && cloudSyncStatus !== 'idle' ? (
+        {!cloudSyncError ? (
           <div className="mb-5 rounded-[28px] border border-border bg-card/80 px-5 py-4 text-left shadow-sm">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="flex items-start gap-3">
@@ -252,17 +270,33 @@ export const InitialSetup = ({
                   className={`mt-0.5 rounded-full p-2 ${
                     cloudSyncStatus === 'saved'
                       ? 'bg-success/10 text-success'
-                      : 'bg-primary/10 text-primary'
+                      : cloudSyncStatus === 'error'
+                        ? 'bg-destructive/10 text-destructive'
+                        : cloudSyncStatus === 'saving'
+                          ? 'bg-primary/10 text-primary'
+                          : 'bg-muted text-muted-foreground'
                   }`}
                 >
-                  {cloudSyncStatus === 'saved' ? <Check size={18} /> : <RefreshCw size={18} className="animate-spin" />}
+                  {cloudSyncStatus === 'saved' ? (
+                    <Check size={18} />
+                  ) : cloudSyncStatus === 'saving' ? (
+                    <RefreshCw size={18} className="animate-spin" />
+                  ) : cloudSyncStatus === 'error' ? (
+                    <AlertCircle size={18} />
+                  ) : (
+                    <Clock3 size={18} />
+                  )}
                 </div>
                 <div>
                   <p className="text-sm font-black uppercase tracking-[0.22em] text-muted-foreground">Cloud sync</p>
                   <p className="mt-1 text-sm text-foreground" data-testid="setup-cloud-sync-status">
                     {cloudSyncStatus === 'saving'
                       ? 'Saving this family setup to the cloud...'
-                      : 'This family setup is saved to the cloud.'}
+                      : cloudSyncStatus === 'saved'
+                        ? 'This family setup is saved to the cloud.'
+                        : cloudSyncStatus === 'error'
+                          ? 'Cloud sync hit a problem. You can retry this save.'
+                          : 'Signed in and waiting for your first cloud save.'}
                   </p>
                 </div>
               </div>
