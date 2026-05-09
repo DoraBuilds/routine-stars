@@ -168,4 +168,34 @@ describe('saveHouseholdConfigToCloud', () => {
 
     expect(removeChildProfile).toHaveBeenCalledWith('child-stale');
   });
+
+  it('annotates the failing cloud save step when child profile upsert fails', async () => {
+    upsertChildProfile.mockRejectedValueOnce(new Error('new row violates row-level security policy'));
+
+    await expect(
+      saveHouseholdConfigToCloud({
+        household: {
+          id: 'house-1',
+          name: 'Routine Stars Family',
+          timezone: 'Europe/Madrid',
+          homeScene: 'bike',
+          createdByUserId: 'user-1',
+          createdAt: '2026-04-20T10:00:00Z',
+          updatedAt: '2026-04-20T10:00:00Z',
+        },
+        homeScene: 'school',
+        children: [
+          {
+            id: 'child-1',
+            name: 'Mila',
+            morning: [],
+            evening: [],
+          },
+        ],
+        removeMissingChildren: true,
+      })
+    ).rejects.toThrow(
+      'Upserting child profile "Mila". Failed: new row violates row-level security policy'
+    );
+  });
 });
