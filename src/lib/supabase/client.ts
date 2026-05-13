@@ -14,7 +14,7 @@ export const getSupabaseEmailRedirectUrl = () => {
     return undefined;
   }
 
-  return new URL(import.meta.env.BASE_URL || '/', window.location.origin).toString();
+  return new URL('auth/callback', window.location.origin + (import.meta.env.BASE_URL || '/')).toString();
 };
 
 export const getSupabaseClient = () => {
@@ -25,6 +25,9 @@ export const getSupabaseClient = () => {
   if (!supabaseClient) {
     supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
+        // Magic-link sign-in is most reliable with PKCE in SPAs; the callback
+        // route will explicitly exchange the `code` for a session.
+        flowType: 'pkce',
         persistSession: true,
         autoRefreshToken: true,
       },
