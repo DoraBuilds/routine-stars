@@ -518,7 +518,7 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
-    const refreshFromCloudIfSafe = async () => {
+    const refreshFromCloudIfSafe = async (options?: { reason?: string }) => {
       // Always keep time-based UI fresh.
       setNow(new Date());
 
@@ -568,20 +568,81 @@ const Index = () => {
         lastSyncedConfigRef.current = nextSignature;
       } catch (error) {
         // Keep running with existing local state; cloud refresh can fail temporarily.
-        console.warn('Could not refresh cloud household state.', error);
+        console.warn('Could not refresh cloud household state.', options?.reason ?? 'unknown', error);
       }
     };
 
     const onFocus = () => {
-      void refreshFromCloudIfSafe();
+      // iOS Safari is inconsistent about focus events; we listen to multiple signals.
+      if (document.visibilityState && document.visibilityState !== 'visible') {
+        return;
+      }
+      void refreshFromCloudIfSafe({ reason: 'focus' });
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState && document.visibilityState !== 'visible') {
+        return;
+      }
+      void refreshFromCloudIfSafe({ reason: 'visibilitychange' });
+    };
+
+    const onPageShow = () => {
+      void refreshFromCloudIfSafe({ reason: 'pageshow' });
     };
 
     window.addEventListener('focus', onFocus);
-    document.addEventListener('visibilitychange', onFocus);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('pageshow', onPageShow);
+
+    // Background polling + realtime subscriptions are valuable in production, but they
+    // create long-lived timers/sockets that make unit tests flaky unless every test
+    // unmounts. We disable them under Vitest and rely on focus/pageshow refresh tests instead.
+    const enableBackgroundSync = !import.meta.env.VITEST;
+
+    const pollId = enableBackgroundSync
+      ? window.setInterval(() => {
+          void refreshFromCloudIfSafe({ reason: 'poll' });
+        }, 15_000)
+      : null;
+
+    const supabase = enableBackgroundSync ? getSupabaseClient() : null;
+    const canUseRealtime = Boolean(supabase && typeof (supabase as any).channel === 'function');
+    const channel =
+      canUseRealtime && authStatus === 'signed_in' && householdStatus === 'ready' && household
+        ? supabase
+            .channel(`household:${household.id}`)
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public', table: 'households', filter: `id=eq.${household.id}` },
+              () => void refreshFromCloudIfSafe({ reason: 'realtime:households' })
+            )
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public', table: 'child_profiles', filter: `household_id=eq.${household.id}` },
+              () => void refreshFromCloudIfSafe({ reason: 'realtime:child_profiles' })
+            )
+            // Routines and tasks don't include household_id, so we can't filter cheaply.
+            // MVP approach: listen and refresh on any routine/task change; scoped channels keep this manageable.
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'routines' }, () =>
+              void refreshFromCloudIfSafe({ reason: 'realtime:routines' })
+            )
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'routine_tasks' }, () =>
+              void refreshFromCloudIfSafe({ reason: 'realtime:routine_tasks' })
+            )
+            .subscribe()
+        : null;
 
     return () => {
       window.removeEventListener('focus', onFocus);
-      document.removeEventListener('visibilitychange', onFocus);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('pageshow', onPageShow);
+      if (pollId) {
+        window.clearInterval(pollId);
+      }
+      if (channel && supabase && typeof (supabase as any).removeChannel === 'function') {
+        supabase.removeChannel(channel);
+      }
     };
   }, [
     authStatus,
