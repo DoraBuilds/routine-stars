@@ -1,9 +1,42 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AccountSettingsCard } from '@/components/AccountSettingsCard';
 
+// Radix AlertDialog uses portals + focus-locking that can be flaky in JSDOM.
+// For this unit test, we only care that the delete action exists and calls the hook.
+vi.mock('@/components/ui/alert-dialog', () => {
+  const passthrough =
+    (Tag: keyof JSX.IntrinsicElements = 'div') =>
+    ({ children, asChild: _asChild, ...props }: any) =>
+      React.createElement(Tag, props, children);
+
+  const AlertDialog = passthrough('div');
+  const AlertDialogTrigger = passthrough('div');
+  const AlertDialogContent = passthrough('div');
+  const AlertDialogHeader = passthrough('div');
+  const AlertDialogTitle = passthrough('div');
+  const AlertDialogDescription = passthrough('div');
+  const AlertDialogFooter = passthrough('div');
+  const AlertDialogCancel = passthrough('button');
+  const AlertDialogAction = passthrough('button');
+
+  return {
+    AlertDialog,
+    AlertDialogTrigger,
+    AlertDialogContent,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogCancel,
+    AlertDialogAction,
+  };
+});
+
 const sendEmailLink = vi.fn();
 const signOut = vi.fn();
+const deleteAccount = vi.fn();
 const clearError = vi.fn();
 const retryHousehold = vi.fn();
 const authState = {
@@ -17,6 +50,7 @@ const authState = {
   sendEmailLink,
   retryHousehold,
   signOut,
+  deleteAccount,
 };
 
 vi.mock('@/lib/auth/use-auth', () => ({
@@ -27,6 +61,7 @@ describe('AccountSettingsCard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     sendEmailLink.mockResolvedValue(true);
+    deleteAccount.mockResolvedValue(true);
     authState.configured = true;
     authState.status = 'signed_out';
     authState.user = null;
@@ -76,5 +111,22 @@ describe('AccountSettingsCard', () => {
     expect(screen.getByText(/shared household schema appears to be missing/i)).toBeInTheDocument();
     expect(screen.getByText(/after the supabase household schema is applied/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
+  });
+
+  it('offers account deletion when signed in', async () => {
+    authState.status = 'signed_in';
+    authState.user = { email: 'parent@example.com' };
+    authState.householdStatus = 'ready';
+    authState.household = { id: 'household-1', name: 'Test Family', timezone: 'UTC', created_by_user_id: 'user-1' };
+
+    render(<AccountSettingsCard />);
+
+    const deleteButtons = screen.getAllByRole('button', { name: /^delete account$/i });
+    expect(deleteButtons.length).toBeGreaterThanOrEqual(2);
+    fireEvent.click(deleteButtons[1]);
+
+    await waitFor(() => {
+      expect(deleteAccount).toHaveBeenCalledTimes(1);
+    });
   });
 });

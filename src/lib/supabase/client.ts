@@ -9,6 +9,8 @@ let supabaseClient: SupabaseClient | null = null;
 
 export const isSupabaseConfigured = () => isConfigured;
 
+export const getSupabaseProjectUrl = () => supabaseUrl;
+
 export const getSupabaseEmailRedirectUrl = () => {
   if (typeof window === 'undefined') {
     return undefined;
