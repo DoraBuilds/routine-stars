@@ -474,10 +474,6 @@ const Index = () => {
       return;
     }
 
-    if (view === 'setup') {
-      return;
-    }
-
     if (lastSyncedConfigRef.current === null) {
       if (!shouldSyncFirstConfigRef.current) {
         lastSyncedConfigRef.current = householdConfigSignature;
