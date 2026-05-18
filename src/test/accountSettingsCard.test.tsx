@@ -40,7 +40,9 @@ describe('AccountSettingsCard', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /create account/i }));
 
-    expect(screen.getByRole('button', { name: /email me a sign-up link/i })).toBeInTheDocument();
+    const createButtons = screen.getAllByRole('button', { name: /^create account$/i });
+    expect(createButtons.length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText(/parent name/i)).toBeInTheDocument();
     expect(screen.queryByPlaceholderText(/at least 6 characters/i)).toBeNull();
   });
 
@@ -48,13 +50,14 @@ describe('AccountSettingsCard', () => {
     render(<AccountSettingsCard />);
 
     fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+    fireEvent.change(screen.getByPlaceholderText(/e\.g\. dora/i), { target: { value: 'Dora' } });
     fireEvent.change(screen.getByPlaceholderText(/parent@example.com/i), {
       target: { value: 'parent@example.com' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /email me a sign-up link/i }));
+    fireEvent.click(screen.getAllByRole('button', { name: /^create account$/i })[1]);
 
     await waitFor(() => {
-      expect(sendEmailLink).toHaveBeenCalledWith('parent@example.com', 'signup');
+      expect(sendEmailLink).toHaveBeenCalledWith('parent@example.com', 'signup', { parentName: 'Dora' });
     });
 
     expect(screen.getByText(/check your email/i)).toBeInTheDocument();

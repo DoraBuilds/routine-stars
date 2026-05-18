@@ -4,6 +4,14 @@ import type { HouseholdRecord } from '@/lib/data/models';
 import { getSupabaseClient } from '@/lib/supabase/client';
 
 const getSuggestedHouseholdName = (user: User) => {
+  const parentName = (user.user_metadata && (user.user_metadata as Record<string, unknown>).parent_name)
+    ? String((user.user_metadata as Record<string, unknown>).parent_name).trim()
+    : '';
+  if (parentName) {
+    const normalized = parentName.charAt(0).toUpperCase() + parentName.slice(1);
+    return `${normalized}'s Family`;
+  }
+
   const emailName = user.email?.split('@')[0]?.trim();
   if (!emailName) {
     return 'My Family';
