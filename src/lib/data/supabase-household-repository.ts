@@ -61,19 +61,8 @@ export class SupabaseHouseholdRepository implements HouseholdRepository {
   }
 
   async createInitialHousehold(input: { householdName: string; timezone: string; userId: string }) {
-    const { data, error } = await this.supabase.rpc('bootstrap_household', {
-      p_name: input.householdName,
-      p_timezone: input.timezone,
-    });
-
-    if (!error && data) {
-      return mapHousehold(data);
-    }
-
-    if (error && !shouldFallbackToDirectBootstrap(error)) {
-      throw error;
-    }
-
+    // Prefer direct inserts first for speed and debuggability. The RPC path is a
+    // legacy bootstrap option and can be slower on cold starts.
     const { data: householdRow, error: householdError } = await this.supabase
       .from(HOUSEHOLDS_TABLE)
       .insert({
@@ -85,6 +74,22 @@ export class SupabaseHouseholdRepository implements HouseholdRepository {
       .single();
 
     if (householdError) {
+      // If direct inserts fail due to missing tables/policies, try the bootstrap RPC.
+      if (shouldFallbackToDirectBootstrap(householdError)) {
+        const { data, error } = await this.supabase.rpc('bootstrap_household', {
+          p_name: input.householdName,
+          p_timezone: input.timezone,
+        });
+
+        if (!error && data) {
+          return mapHousehold(data);
+        }
+
+        if (error) {
+          throw error;
+        }
+      }
+
       throw householdError;
     }
 
@@ -98,11 +103,31 @@ export class SupabaseHouseholdRepository implements HouseholdRepository {
         role: 'owner',
       });
 
-    if (membershipError) {
-      throw membershipError;
+    if (!membershipError) {
+      return household;
     }
 
-    return household;
+    // Best-effort cleanup: avoid leaving an orphan household row behind.
+    await this.supabase.from(HOUSEHOLDS_TABLE).delete().eq('id', household.id);
+
+    // If membership insert failed with a bootstrap-style error, fall back to the RPC
+    // (when present) which can create membership atomically.
+    if (shouldFallbackToDirectBootstrap(membershipError)) {
+      const { data, error } = await this.supabase.rpc('bootstrap_household', {
+        p_name: input.householdName,
+        p_timezone: input.timezone,
+      });
+
+      if (!error && data) {
+        return mapHousehold(data);
+      }
+
+      if (error) {
+        throw error;
+      }
+    }
+
+    throw membershipError;
   }
 
   async listMembers(householdId: string) {
