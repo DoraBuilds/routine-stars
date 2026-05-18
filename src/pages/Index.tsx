@@ -464,7 +464,7 @@ const Index = () => {
         }
       }
     },
-    [authStatus, household, householdStatus, isReady]
+    [authStatus, household, householdStatus, isReady, view]
   );
 
   useEffect(() => {

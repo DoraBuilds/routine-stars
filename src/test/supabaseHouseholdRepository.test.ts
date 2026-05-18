@@ -155,7 +155,22 @@ describe('SupabaseHouseholdRepository', () => {
     });
   });
 
-  it('does not fall back when the RPC fails for a non-bootstrap reason', async () => {
+  it('does not fall back to RPC when membership insert fails for a non-bootstrap reason', async () => {
+    const householdRow = {
+      id: 'house-3',
+      name: "Dora's Family",
+      timezone: 'Europe/Madrid',
+      home_scene: 'bike',
+      created_by_user_id: 'user-1',
+      created_at: '2026-05-03T12:00:00Z',
+      updated_at: '2026-05-03T12:00:00Z',
+    };
+
+    const single = vi.fn().mockResolvedValue({ data: householdRow, error: null });
+    const householdInsert = vi.fn(() => ({ select: vi.fn(() => ({ single })) }));
+    const cleanupEq = vi.fn().mockResolvedValue({ error: null });
+    const householdDelete = vi.fn(() => ({ eq: cleanupEq }));
+
     const repository = new SupabaseHouseholdRepository(
       createSupabaseClient(
         {
@@ -164,10 +179,11 @@ describe('SupabaseHouseholdRepository', () => {
         },
         {
           households: {
-            insert: vi.fn(),
+            insert: householdInsert,
+            delete: householdDelete,
           },
           household_members: {
-            insert: vi.fn(),
+            insert: vi.fn().mockResolvedValue({ error: { message: 'Not authenticated' } }),
           },
         }
       )
@@ -179,7 +195,7 @@ describe('SupabaseHouseholdRepository', () => {
         timezone: 'Europe/Madrid',
         userId: 'user-1',
       })
-    ).rejects.toEqual({ message: 'Not authenticated' });
+    ).rejects.toMatchObject({ message: 'Not authenticated' });
   });
 
   it('deletes the household row by id', async () => {

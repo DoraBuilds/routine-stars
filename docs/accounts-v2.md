@@ -190,6 +190,11 @@ Why RPC:
 - It guarantees determinism (always the same household)
 - It avoids clients needing to piece together multiple writes under RLS
 
+Implementation note (current code):
+- The client attempts a direct-create path first (insert household + insert owner membership) for speed and debuggability.
+- If that fails due to missing function/table/policy errors, it falls back to the RPC (when present).
+- Long-term, we should prefer an atomic RPC so we never risk partial states.
+
 ---
 
 ## Data Ownership + RLS Model
@@ -237,8 +242,12 @@ Accounts v2 resolves this with a strict sync contract.
      - schedules (if separate)
    - write the snapshot into local cache with a `cloud_synced_at` timestamp
 2. **On any user edit:**
-   - write to Supabase first (or write-through with optimistic UI)
-   - on success, update local cache
+   - write-through with optimistic UI:
+     - update UI immediately
+     - persist to Supabase in the background
+   - if the household is still bootstrapping (common right after sign-in):
+     - queue the latest desired household config
+     - flush it automatically as soon as the household is ready
    - on failure, show error + retry (do not silently keep local-only edits as if saved)
 3. **While app is open:**
    - keep device updated via one of:
@@ -246,6 +255,9 @@ Accounts v2 resolves this with a strict sync contract.
      - polling every N seconds as a fallback
 4. **On return from background / tab refocus:**
    - do a quick “cloud refresh” (lightweight re-fetch of updated rows)
+
+Important UX rule:
+- Cloud refresh should run on both the **Home** view and the signed-in **Setup** view, so a brand-new device can “catch up” without a manual reload.
 
 ### Conflict rules (MVP)
 

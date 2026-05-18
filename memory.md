@@ -12,6 +12,7 @@ This file captures durable project decisions so future work stays aligned.
 - Goal: parent accounts with **email-only** sign in for MVP, and **cross-device sync** (iPad + laptop see the same household).
 - Supabase is the backend: Auth + Postgres + RLS.
 - Supabase auth storage must be safe on iPad Safari (Private mode can break `localStorage` writes); fall back to in-memory auth storage when needed.
+- Local app cache storage must be safe on iPad Safari too; use a safe storage wrapper that falls back to in-memory when `localStorage` rejects writes.
 - Canonical data model: **cloud is source of truth** for household configuration.
   - Local storage is an offline/cache layer and must never become a competing source of truth.
 - Deterministic household selection is required (no random “pick 1 household” queries).
@@ -37,6 +38,11 @@ This file captures durable project decisions so future work stays aligned.
 1. Make “create child / edit routines” reliably save to Supabase during setup.
 2. Make sync automatic across devices (realtime/polling + safe conflict rules).
 3. Implement in-app account deletion via a secure server-side action (Edge Function), not client-side service keys.
+
+## Sync Implementation Notes (Current)
+
+- Cloud config saves are queued while `householdStatus` is still bootstrapping; the latest desired config flushes automatically as soon as the household is ready.
+- Cloud refresh runs on both `home` and signed-in `setup` views (polling + realtime + focus/pageshow/visibility signals), so a new device can catch up without manual refresh.
 
 ## Account Deletion (Implemented)
 
