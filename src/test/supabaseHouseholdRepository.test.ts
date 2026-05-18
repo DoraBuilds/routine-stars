@@ -63,6 +63,14 @@ describe('SupabaseHouseholdRepository', () => {
   });
 
   it('returns the RPC household when bootstrap_household succeeds', async () => {
+    // Repository tries direct inserts first; force that path to fail with a bootstrap-style
+    // error so it falls back to the RPC result.
+    const single = vi.fn().mockResolvedValue({
+      data: null,
+      error: { message: 'Could not find the function public.bootstrap_household' },
+    });
+    const householdInsert = vi.fn(() => ({ select: vi.fn(() => ({ single })) }));
+
     const repository = new SupabaseHouseholdRepository(
       createSupabaseClient(
         {
@@ -77,7 +85,11 @@ describe('SupabaseHouseholdRepository', () => {
           },
           error: null,
         },
-        {}
+        {
+          households: {
+            insert: householdInsert,
+          },
+        }
       )
     );
 
