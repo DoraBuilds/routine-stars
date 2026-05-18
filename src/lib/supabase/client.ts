@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createSupabaseAuthStorage } from './storage';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -75,6 +76,8 @@ export const finalizeSupabaseAuthFromUrl = async (url = window.location.href) =>
         return { handled: true, error: error.message };
       }
 
+      // Clear auth params from the URL for privacy and to avoid re-processing on refresh.
+      window.history.replaceState({}, document.title, parsedUrl.pathname);
       return { handled: true, error: null };
     }
 
@@ -88,6 +91,7 @@ export const finalizeSupabaseAuthFromUrl = async (url = window.location.href) =>
         return { handled: true, error: error.message };
       }
 
+      window.history.replaceState({}, document.title, parsedUrl.pathname);
       return { handled: true, error: null };
     }
 
@@ -101,6 +105,7 @@ export const finalizeSupabaseAuthFromUrl = async (url = window.location.href) =>
         return { handled: true, error: error.message };
       }
 
+      window.history.replaceState({}, document.title, parsedUrl.pathname);
       return { handled: true, error: null };
     }
 
@@ -123,6 +128,7 @@ export const getSupabaseClient = () => {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
+        storage: createSupabaseAuthStorage(),
       },
     });
   }

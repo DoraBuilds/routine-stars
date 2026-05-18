@@ -139,6 +139,10 @@ Acceptance criteria:
 - returning to the app should not take “~1 minute” to recognize a session
 - session restore should complete in a couple seconds on normal networks
 
+Implementation note:
+- Some environments (notably iOS Safari Private mode / embedded webviews) expose `localStorage` but throw on writes.
+  - The Supabase client must use a **safe auth storage** backend that falls back to in-memory storage when `localStorage` is not writable, so the callback flow cannot get stuck.
+
 ---
 
 ## Deterministic Household (One Household Per Parent)
@@ -406,4 +410,3 @@ Capacitor smoke tests (manual initially):
 4. Implement in-app deletion via Edge Function.
 5. Add test coverage for determinism + sync convergence.
 6. Add production deep link domain + association files for iOS/Android.
-

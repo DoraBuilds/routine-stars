@@ -1,4 +1,5 @@
 import type { Child, HomeScene } from '@/lib/types';
+import { getSafeStorage } from './safe-storage';
 
 export const LOCAL_APP_STATE_STORAGE_KEY = 'routine_stars_data';
 export const CURRENT_LOCAL_APP_STATE_VERSION = 1;
@@ -38,7 +39,8 @@ const normalizeLocalAppState = (value: unknown): LocalAppState | null => {
 };
 
 export const loadLocalAppState = (): LocalAppState | null => {
-  const saved = localStorage.getItem(LOCAL_APP_STATE_STORAGE_KEY);
+  const storage = getSafeStorage('__routine_stars_local_app_state_test__');
+  const saved = storage.getItem(LOCAL_APP_STATE_STORAGE_KEY);
   if (!saved) return null;
 
   try {
@@ -54,9 +56,11 @@ export const saveLocalAppState = (state: Omit<LocalAppState, 'version'>) => {
     ...state,
   };
 
-  localStorage.setItem(LOCAL_APP_STATE_STORAGE_KEY, JSON.stringify(payload));
+  const storage = getSafeStorage('__routine_stars_local_app_state_test__');
+  storage.setItem(LOCAL_APP_STATE_STORAGE_KEY, JSON.stringify(payload));
 };
 
 export const clearLocalAppState = () => {
-  localStorage.removeItem(LOCAL_APP_STATE_STORAGE_KEY);
+  const storage = getSafeStorage('__routine_stars_local_app_state_test__');
+  storage.removeItem(LOCAL_APP_STATE_STORAGE_KEY);
 };

@@ -42,6 +42,7 @@ export const AccountSettingsCard = () => {
   const trimmedParentName = useMemo(() => parentName.trim(), [parentName]);
 
   const primaryLabel = isCreateMode ? 'Create account' : 'Send sign-in link';
+  const submitLabel = isSubmitting ? 'Sending…' : emailSentTo ? 'Email sent' : primaryLabel;
   const canSubmit =
     !isSubmitting &&
     status !== 'loading' &&
@@ -310,7 +311,7 @@ export const AccountSettingsCard = () => {
             className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-button transition-transform active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSubmitting || status === 'loading' ? <LoaderCircle size={16} className="animate-spin" /> : <LogIn size={16} />}
-            {emailSentTo ? 'Email sent' : primaryLabel}
+            {submitLabel}
           </button>
 
           {emailSentTo && (

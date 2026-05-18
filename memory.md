@@ -5,16 +5,24 @@ This file captures durable project decisions so future work stays aligned.
 ## Binding Doc
 
 - Accounts v2 contract lives in `docs/accounts-v2.md` (email-only auth, deterministic household, sync rules, App Store account requirements).
+- Store submission checklist (accounts only): `docs/app-store-account-readiness.md`.
 
 ## Accounts (Ship-Blocking)
 
 - Goal: parent accounts with **email-only** sign in for MVP, and **cross-device sync** (iPad + laptop see the same household).
 - Supabase is the backend: Auth + Postgres + RLS.
+- Supabase auth storage must be safe on iPad Safari (Private mode can break `localStorage` writes); fall back to in-memory auth storage when needed.
 - Canonical data model: **cloud is source of truth** for household configuration.
   - Local storage is an offline/cache layer and must never become a competing source of truth.
 - Deterministic household selection is required (no random “pick 1 household” queries).
   - Prevent multiple households per parent going forward (DB guard + RPC behavior).
 - Account deletion must be available in-app, and must not require any Supabase dashboard access.
+
+## Key URLs (Current)
+
+- Supabase project ref: `yftabzdnrdfiwpuhjwgv` (`https://yftabzdnrdfiwpuhjwgv.supabase.co`).
+- Web app: `https://dorabuilds.github.io/routine-stars/`
+- Web auth callback: `https://dorabuilds.github.io/routine-stars/auth/callback`
 
 ## App Store Requirements (Account-Related)
 
