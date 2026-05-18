@@ -51,7 +51,7 @@ export const ensureHousehold = async (user: User): Promise<HouseholdRecord> => {
   }
 
   const repository = new SupabaseHouseholdRepository(supabase);
-  const currentHousehold = await repository.getCurrentHousehold();
+  const currentHousehold = await repository.getCurrentHousehold(user.id);
   if (currentHousehold) {
     return currentHousehold;
   }
