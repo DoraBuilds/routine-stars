@@ -381,6 +381,9 @@ describe("Index", () => {
     });
   });
 
+  // Background polling is disabled under Vitest to keep tests stable; focus/pageshow
+  // refresh is still covered in the test suite.
+
   it("prefers cloud progress when local storage is from a previous day", async () => {
     authState.status = "signed_in";
     authState.user = { id: "user-1", email: "parent@example.com" };
