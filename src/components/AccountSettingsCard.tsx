@@ -1,6 +1,17 @@
 import { useMemo, useState } from 'react';
-import { CheckCircle2, Cloud, CloudOff, LoaderCircle, LogIn, LogOut, Mail, RefreshCcw, ShieldCheck, UserRound, UserRoundPlus } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Cloud, CloudOff, LoaderCircle, LogIn, LogOut, Mail, RefreshCcw, ShieldCheck, Trash2, UserRound, UserRoundPlus } from 'lucide-react';
 import { useAuth } from '@/lib/auth/use-auth';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 type AuthMode = 'signin' | 'signup';
 
@@ -16,11 +27,13 @@ export const AccountSettingsCard = () => {
     sendEmailLink,
     retryHousehold,
     signOut,
+    deleteAccount,
   } = useAuth();
   const [mode, setMode] = useState<AuthMode>('signin');
   const [parentName, setParentName] = useState('');
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [emailSentTo, setEmailSentTo] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -53,6 +66,19 @@ export const AccountSettingsCard = () => {
       setEmailSentTo(trimmedEmail);
     }
     setIsSubmitting(false);
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    clearError();
+    const ok = await deleteAccount();
+    if (ok) {
+      setEmail('');
+      setParentName('');
+      setEmailSentTo(null);
+      setMode('signin');
+    }
+    setIsDeleting(false);
   };
 
   return (
@@ -105,6 +131,47 @@ export const AccountSettingsCard = () => {
               <LogOut size={16} />
               Sign out
             </button>
+
+            <div className="mt-6 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-4">
+              <div className="flex items-center gap-2 text-destructive">
+                <AlertTriangle size={16} />
+                <p className="text-xs font-black uppercase tracking-[0.22em]">Danger zone</p>
+              </div>
+              <p className="mt-3 text-sm font-semibold text-foreground">Delete parent account</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                This permanently deletes the parent account and the synced household data. This cannot be undone.
+              </p>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <button
+                    type="button"
+                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full border border-destructive/30 bg-background px-4 py-2.5 text-sm font-bold text-destructive transition-colors hover:border-destructive/50"
+                  >
+                    <Trash2 size={16} />
+                    Delete account
+                  </button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete this parent account?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently remove your parent login and the synced family space. You will need to create a new account to use Routine Stars again.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => void handleDeleteAccount()}
+                      disabled={isDeleting}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {isDeleting ? <LoaderCircle size={16} className="mr-2 inline animate-spin" /> : null}
+                      Delete account
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </div>
 
           <div className="rounded-[28px] border border-border bg-background p-5">

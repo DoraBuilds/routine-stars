@@ -1,8 +1,14 @@
 import { createContext, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import type { HouseholdRecord } from '@/lib/data/models';
+import { clearLocalAppState } from '@/lib/storage/local-app-state';
 import { ensureHousehold } from './household-bootstrap';
-import { getSupabaseClient, getSupabaseEmailRedirectUrl, isSupabaseConfigured } from '@/lib/supabase/client';
+import {
+  getSupabaseClient,
+  getSupabaseEmailRedirectUrl,
+  getSupabaseProjectUrl,
+  isSupabaseConfigured,
+} from '@/lib/supabase/client';
 
 type AuthStatus = 'unavailable' | 'loading' | 'signed_out' | 'signed_in';
 type HouseholdStatus = 'idle' | 'loading' | 'ready' | 'error';
@@ -18,6 +24,7 @@ export interface AuthContextValue {
   sendEmailLink: (email: string, mode: AuthLinkMode, options?: { parentName?: string }) => Promise<boolean>;
   retryHousehold: () => Promise<void>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<boolean>;
   clearError: () => void;
   configured: boolean;
 }
@@ -151,7 +158,63 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         if (signOutError) {
           setError(signOutError.message);
         } else {
+          clearLocalAppState();
           setError(null);
+        }
+      },
+      deleteAccount: async () => {
+        const supabase = getSupabaseClient();
+        if (!supabase) {
+          setError('Supabase is not configured yet.');
+          return false;
+        }
+
+        const {
+          data: { session: activeSession },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
+        if (sessionError) {
+          setError(sessionError.message);
+          return false;
+        }
+
+        const accessToken = activeSession?.access_token;
+        if (!accessToken) {
+          setError('You need to be signed in to delete this account.');
+          return false;
+        }
+
+        try {
+          const baseUrl = getSupabaseProjectUrl();
+          if (!baseUrl) {
+            setError('Supabase is not configured yet.');
+            return false;
+          }
+
+          const response = await fetch(new URL('functions/v1/delete-account', baseUrl).toString(), {
+            method: 'POST',
+            headers: {
+              authorization: `Bearer ${accessToken}`,
+              'content-type': 'application/json',
+            },
+            body: JSON.stringify({}),
+          });
+
+          if (!response.ok) {
+            const message = await response.text().catch(() => '');
+            setError(message.trim() || 'Could not delete the account. Please try again.');
+            return false;
+          }
+
+          // Clear device-local data even if sign-out errors, so the app resets cleanly.
+          clearLocalAppState();
+          await supabase.auth.signOut();
+          setError(null);
+          return true;
+        } catch (deleteError) {
+          setError(deleteError instanceof Error ? deleteError.message : 'Could not delete the account. Please try again.');
+          return false;
         }
       },
     }),
