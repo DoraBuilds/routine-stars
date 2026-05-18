@@ -15,7 +15,7 @@ export interface AuthContextValue {
   householdStatus: HouseholdStatus;
   household: HouseholdRecord | null;
   error: string | null;
-  sendEmailLink: (email: string, mode: AuthLinkMode) => Promise<boolean>;
+  sendEmailLink: (email: string, mode: AuthLinkMode, options?: { parentName?: string }) => Promise<boolean>;
   retryHousehold: () => Promise<void>;
   signOut: () => Promise<void>;
   clearError: () => void;
@@ -111,7 +111,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       household,
       error,
       clearError: () => setError(null),
-      sendEmailLink: async (email, mode) => {
+      sendEmailLink: async (email, mode, options) => {
         const supabase = getSupabaseClient();
         if (!supabase) {
           setError('Supabase is not configured yet.');
@@ -123,6 +123,11 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           options: {
             emailRedirectTo: getSupabaseEmailRedirectUrl(),
             shouldCreateUser: mode === 'signup',
+            // For new signups, keep a friendly parent name on the user metadata so
+            // we can name the first household without guessing from the email.
+            ...(mode === 'signup' && options?.parentName
+              ? { data: { parent_name: options.parentName.trim() } }
+              : {}),
           },
         });
 

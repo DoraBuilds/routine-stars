@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { CheckCircle2, Cloud, CloudOff, LoaderCircle, LogIn, LogOut, Mail, RefreshCcw, ShieldCheck, UserRoundPlus } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { CheckCircle2, Cloud, CloudOff, LoaderCircle, LogIn, LogOut, Mail, RefreshCcw, ShieldCheck, UserRound, UserRoundPlus } from 'lucide-react';
 import { useAuth } from '@/lib/auth/use-auth';
 
 type AuthMode = 'signin' | 'signup';
@@ -18,16 +18,37 @@ export const AccountSettingsCard = () => {
     signOut,
   } = useAuth();
   const [mode, setMode] = useState<AuthMode>('signin');
+  const [parentName, setParentName] = useState('');
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailSentTo, setEmailSentTo] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const isCreateMode = mode === 'signup';
+  const trimmedEmail = useMemo(() => email.trim(), [email]);
+  const trimmedParentName = useMemo(() => parentName.trim(), [parentName]);
+
+  const primaryLabel = isCreateMode ? 'Create account' : 'Send sign-in link';
+  const canSubmit =
+    !isSubmitting &&
+    status !== 'loading' &&
+    Boolean(trimmedEmail) &&
+    (!isCreateMode || Boolean(trimmedParentName)) &&
+    !emailSentTo;
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     clearError();
+    setValidationError(null);
     setEmailSentTo(null);
-    const trimmedEmail = email.trim();
-    const ok = await sendEmailLink(trimmedEmail, mode);
+
+    if (isCreateMode && !trimmedParentName) {
+      setValidationError('Please enter the parent name before creating the account.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    const ok = await sendEmailLink(trimmedEmail, mode, isCreateMode ? { parentName: trimmedParentName } : undefined);
     if (ok) {
       setEmailSentTo(trimmedEmail);
     }
@@ -135,6 +156,7 @@ export const AccountSettingsCard = () => {
                 type="button"
                 onClick={() => {
                   clearError();
+                  setValidationError(null);
                   setEmailSentTo(null);
                   setMode(value);
                 }}
@@ -148,6 +170,23 @@ export const AccountSettingsCard = () => {
           </div>
 
           <div className="mt-5">
+            {isCreateMode && (
+              <label className="block text-sm font-semibold text-muted-foreground">
+                Parent name
+                <div className="mt-2 flex items-center gap-3 rounded-2xl bg-muted px-4 py-3">
+                  <UserRound size={18} className="text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={parentName}
+                    onChange={(event) => setParentName(event.target.value)}
+                    className="w-full bg-transparent text-base font-medium text-foreground outline-none"
+                    placeholder="e.g. Dora"
+                    autoComplete="name"
+                  />
+                </div>
+              </label>
+            )}
+
             <label className="text-sm font-semibold text-muted-foreground">
               Parent email
               <div className="mt-2 flex items-center gap-3 rounded-2xl bg-muted px-4 py-3">
@@ -158,6 +197,7 @@ export const AccountSettingsCard = () => {
                   onChange={(event) => setEmail(event.target.value)}
                   className="w-full bg-transparent text-base font-medium text-foreground outline-none"
                   placeholder="parent@example.com"
+                  autoComplete="email"
                 />
               </div>
             </label>
@@ -184,6 +224,12 @@ export const AccountSettingsCard = () => {
             </div>
           )}
 
+          {validationError && (
+            <div className="mt-4 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+              {validationError}
+            </div>
+          )}
+
           {error && (
             <div className="mt-4 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
               {error}
@@ -193,12 +239,25 @@ export const AccountSettingsCard = () => {
           <button
             type="button"
             onClick={() => void handleSubmit()}
-            disabled={isSubmitting || !email.trim() || status === 'loading'}
+            disabled={!canSubmit}
             className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-button transition-transform active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSubmitting || status === 'loading' ? <LoaderCircle size={16} className="animate-spin" /> : <LogIn size={16} />}
-            {mode === 'signin' ? 'Email me a sign-in link' : 'Email me a sign-up link'}
+            {emailSentTo ? 'Email sent' : primaryLabel}
           </button>
+
+          {emailSentTo && (
+            <button
+              type="button"
+              onClick={() => {
+                setEmailSentTo(null);
+                void handleSubmit();
+              }}
+              className="mt-3 inline-flex w-full items-center justify-center rounded-full border border-border bg-background px-5 py-3 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+            >
+              Resend email link
+            </button>
+          )}
         </div>
       )}
     </section>

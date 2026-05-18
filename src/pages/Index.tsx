@@ -518,16 +518,80 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
-    const syncNow = () => setNow(new Date());
+    const refreshFromCloudIfSafe = async () => {
+      // Always keep time-based UI fresh.
+      setNow(new Date());
 
-    window.addEventListener('focus', syncNow);
-    document.addEventListener('visibilitychange', syncNow);
+      // Pull remote updates when:
+      // - signed in with a ready household
+      // - we're not currently editing setup/import flows
+      // - local state has no unsynced changes (so we won't clobber local edits)
+      if (
+        !isReady ||
+        authStatus !== 'signed_in' ||
+        householdStatus !== 'ready' ||
+        !household ||
+        view !== 'home'
+      ) {
+        return;
+      }
+
+      if (cloudConfigSyncStatus === 'saving' || configSyncInFlightRef.current) {
+        return;
+      }
+
+      // If local diverged from last known synced signature, do not overwrite it.
+      if (lastSyncedConfigRef.current && lastSyncedConfigRef.current !== householdConfigSignature) {
+        return;
+      }
+
+      try {
+        const cloudState = await loadCloudHouseholdState(household);
+        const nextSetupComplete = cloudState.children.length > 0;
+        const nextSignature = serializeHouseholdConfig({
+          children: cloudState.children,
+          homeScene: cloudState.homeScene,
+          setupComplete: nextSetupComplete,
+        });
+
+        // No change, nothing to do.
+        if (lastSyncedConfigRef.current === nextSignature) {
+          return;
+        }
+
+        setChildren(cloudState.children);
+        setHomeScene(cloudState.homeScene);
+        setSetupComplete(nextSetupComplete);
+        setView(nextSetupComplete ? 'home' : 'setup');
+        setCloudConfigSyncStatus(nextSetupComplete ? 'saved' : 'idle');
+        setCloudConfigSyncError(null);
+        lastSyncedConfigRef.current = nextSignature;
+      } catch (error) {
+        // Keep running with existing local state; cloud refresh can fail temporarily.
+        console.warn('Could not refresh cloud household state.', error);
+      }
+    };
+
+    const onFocus = () => {
+      void refreshFromCloudIfSafe();
+    };
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onFocus);
 
     return () => {
-      window.removeEventListener('focus', syncNow);
-      document.removeEventListener('visibilitychange', syncNow);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onFocus);
     };
-  }, []);
+  }, [
+    authStatus,
+    cloudConfigSyncStatus,
+    household,
+    householdConfigSignature,
+    householdStatus,
+    isReady,
+    view,
+  ]);
 
   // Persist
   useEffect(() => {
