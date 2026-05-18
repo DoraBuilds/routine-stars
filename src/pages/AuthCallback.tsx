@@ -37,13 +37,16 @@ const AuthCallback = () => {
       return;
     }
 
-    if (status === 'signed_in' && householdStatus !== 'loading') {
+    // The callback route should finish quickly: once auth succeeds, route the user
+    // into the app and let the main UI show any ongoing cloud bootstrap state.
+    // If the bootstrap failed, keep the user here with a clear recovery path.
+    if (status === 'signed_in' && householdStatus !== 'error') {
       navigate('/', { replace: true });
     }
   }, [configured, householdStatus, navigate, status]);
 
   useEffect(() => {
-    if (!configured || callbackError || (status === 'signed_in' && householdStatus !== 'loading')) {
+    if (!configured || callbackError || status === 'signed_in') {
       return;
     }
 
