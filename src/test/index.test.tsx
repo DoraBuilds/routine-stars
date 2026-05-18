@@ -322,6 +322,65 @@ describe("Index", () => {
     authState.signOut.mockReset();
   });
 
+  it("refreshes the signed-in home view from cloud on focus when there are no local unsynced changes", async () => {
+    authState.status = "signed_in";
+    authState.user = { id: "user-1", email: "parent@example.com" };
+    authState.householdStatus = "ready";
+    authState.household = {
+      id: "household-1",
+      name: "Test Family",
+      timezone: "UTC",
+      homeScene: "bike",
+      createdByUserId: "user-1",
+      createdAt: "now",
+      updatedAt: "now",
+    };
+
+    const firstCloudChildren: Child[] = [
+      {
+        id: "child-1",
+        name: "Child 1",
+        morning: [],
+        evening: [],
+        avatarSeed: "child-1",
+      } as Child,
+      {
+        id: "child-2",
+        name: "Child 2",
+        morning: [],
+        evening: [],
+        avatarSeed: "child-2",
+      } as Child,
+    ];
+
+    const secondCloudChildren: Child[] = [
+      ...firstCloudChildren,
+      {
+        id: "child-3",
+        name: "Child 3",
+        morning: [],
+        evening: [],
+        avatarSeed: "child-3",
+      } as Child,
+    ];
+
+    loadCloudHouseholdState.mockResolvedValueOnce({ homeScene: "bike", children: firstCloudChildren });
+    loadCloudHouseholdState.mockResolvedValueOnce({ homeScene: "bike", children: secondCloudChildren });
+
+    render(<Index />);
+
+    // Initial bootstrap should render home with 2 children.
+    await waitFor(() => {
+      expect(screen.getByTestId("child-count").textContent).toBe("2");
+    });
+
+    fireEvent.focus(window);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("child-count").textContent).toBe("3");
+    });
+  });
+
   it("prefers cloud progress when local storage is from a previous day", async () => {
     authState.status = "signed_in";
     authState.user = { id: "user-1", email: "parent@example.com" };
