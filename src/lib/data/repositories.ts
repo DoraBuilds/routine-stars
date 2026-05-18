@@ -10,7 +10,7 @@ import type {
 } from './models';
 
 export interface HouseholdRepository {
-  getCurrentHousehold(): Promise<HouseholdRecord | null>;
+  getCurrentHousehold(userId: string): Promise<HouseholdRecord | null>;
   createInitialHousehold(input: {
     householdName: string;
     timezone: string;

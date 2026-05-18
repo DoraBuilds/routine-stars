@@ -39,12 +39,16 @@ const mapMember = (row: Record<string, unknown>): HouseholdMemberRecord => ({
 export class SupabaseHouseholdRepository implements HouseholdRepository {
   constructor(private readonly supabase: SupabaseClient) {}
 
-  async getCurrentHousehold() {
+  async getCurrentHousehold(userId: string) {
+    // IMPORTANT: a parent account should resolve to one stable household.
+    // If multiple households exist (due to earlier bugs or tests), we pick the
+    // oldest owner membership to avoid randomly switching households across devices.
     const { data, error } = await this.supabase
-      .from(HOUSEHOLDS_TABLE)
-      .select('*')
-      .order('updated_at', { ascending: false })
-      .order('created_at', { ascending: false })
+      .from(HOUSEHOLD_MEMBERS_TABLE)
+      .select('household:households(*)')
+      .eq('user_id', userId)
+      .eq('role', 'owner')
+      .order('created_at', { ascending: true })
       .limit(1)
       .maybeSingle();
 
@@ -52,7 +56,8 @@ export class SupabaseHouseholdRepository implements HouseholdRepository {
       throw error;
     }
 
-    return data ? mapHousehold(data) : null;
+    const householdRow = data && typeof data === 'object' && 'household' in data ? (data as any).household : null;
+    return householdRow ? mapHousehold(householdRow) : null;
   }
 
   async createInitialHousehold(input: { householdName: string; timezone: string; userId: string }) {
