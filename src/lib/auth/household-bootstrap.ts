@@ -38,7 +38,10 @@ const getBootstrapErrorMessage = (error: unknown) => {
     normalized.includes('relation') ||
     normalized.includes('schema cache')
   ) {
-    return 'Could not prepare the family household in Supabase. The shared household schema appears to be missing in the live Supabase project. Apply the household SQL migration, then try again.';
+    // This bucket historically meant "schema is missing", but in practice it can also include
+    // permission/RLS errors. Keep the guidance user-friendly, but include the raw error so
+    // we can debug support tickets without requiring console access.
+    return `Could not prepare the family space in Supabase yet. Please press "Try again". If it keeps failing, share this error with support: ${message || 'unknown error'}`;
   }
 
   return message || 'Could not prepare the family household in Supabase.';

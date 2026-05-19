@@ -31,6 +31,6 @@ describe('ensureHousehold', () => {
         id: 'user-1',
         email: 'parent@example.com',
       } as never)
-    ).rejects.toThrow(/shared household schema appears to be missing/i);
+    ).rejects.toThrow(/could not prepare the family space in supabase/i);
   });
 });
