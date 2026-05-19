@@ -131,6 +131,11 @@ const Index = () => {
   const [bootstrapAttempt, setBootstrapAttempt] = useState(0);
   const lastSyncedConfigRef = useRef<string | null>(null);
   const configSyncInFlightRef = useRef<string | null>(null);
+  const pendingCloudConfigSyncRef = useRef<{
+    signature: string;
+    state: { children: Child[]; homeScene: HomeScene; setupComplete: boolean };
+    force: boolean;
+  } | null>(null);
   const shouldSyncFirstConfigRef = useRef(false);
   const skipLocalPersistenceRef = useRef(false);
   const currentSessionSetupRef = useRef<{
@@ -404,11 +409,25 @@ const Index = () => {
       },
       options?: { force?: boolean }
     ) => {
+      const nextSignature = serializeHouseholdConfig(nextState);
+      const force = Boolean(options?.force);
+
+      // If household bootstrap is still in-flight, queue the latest desired state and flush it
+      // automatically once the household becomes ready. This prevents local-only edits right
+      // after sign-in (common on mobile Safari) from causing split devices.
       if (!isReady || authStatus !== 'signed_in' || householdStatus !== 'ready' || !household) {
+        if (authStatus === 'signed_in') {
+          pendingCloudConfigSyncRef.current = {
+            signature: nextSignature,
+            state: nextState,
+            force,
+          };
+          setCloudConfigSyncStatus('saving');
+          setCloudConfigSyncError(null);
+        }
         return false;
       }
 
-      const nextSignature = serializeHouseholdConfig(nextState);
       if (!options?.force && lastSyncedConfigRef.current === nextSignature) {
         setCloudConfigSyncStatus('saved');
         setCloudConfigSyncError(null);
@@ -506,6 +525,35 @@ const Index = () => {
   ]);
 
   useEffect(() => {
+    const pending = pendingCloudConfigSyncRef.current;
+    if (!pending) return;
+
+    if (!isReady || authStatus !== 'signed_in' || householdStatus !== 'ready' || !household) {
+      return;
+    }
+
+    if (configSyncInFlightRef.current) {
+      return;
+    }
+
+    // Only flush when the pending state is still different from what we believe is synced.
+    if (lastSyncedConfigRef.current && lastSyncedConfigRef.current === pending.signature) {
+      pendingCloudConfigSyncRef.current = null;
+      setCloudConfigSyncStatus('saved');
+      setCloudConfigSyncError(null);
+      return;
+    }
+
+    pendingCloudConfigSyncRef.current = null;
+    void attemptCloudConfigSync(pending.state, { force: pending.force }).then((ok) => {
+      if (!ok) {
+        // Re-queue; user can retry or the next ready transition can try again.
+        pendingCloudConfigSyncRef.current = pending;
+      }
+    });
+  }, [attemptCloudConfigSync, authStatus, household, householdStatus, isReady]);
+
+  useEffect(() => {
     const timer = window.setInterval(() => {
       setNow(new Date());
     }, 60_000);
@@ -527,7 +575,7 @@ const Index = () => {
         authStatus !== 'signed_in' ||
         householdStatus !== 'ready' ||
         !household ||
-        view !== 'home'
+        (view !== 'home' && view !== 'setup')
       ) {
         return;
       }
