@@ -124,6 +124,31 @@ export const AccountSettingsCard = () => {
             <p className="mt-2 text-sm text-muted-foreground">
               This browser is connected to the household saved under this parent account.
             </p>
+            <div className="mt-4 rounded-2xl border border-border bg-muted/35 px-4 py-3 text-xs text-muted-foreground">
+              <p>
+                <span className="font-semibold text-foreground">User</span>: {user.id}
+              </p>
+              <p className="mt-1">
+                <span className="font-semibold text-foreground">Household</span>: {household?.id ?? 'loading'}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  const payload = [
+                    `email=${user.email ?? ''}`,
+                    `user_id=${user.id}`,
+                    `household_id=${household?.id ?? ''}`,
+                    `household_status=${householdStatus}`,
+                    `ts=${new Date().toISOString()}`,
+                  ].join('\n');
+                  void navigator.clipboard?.writeText(payload);
+                }}
+                className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+              >
+                <Mail size={14} />
+                Copy debug info
+              </button>
+            </div>
             <button
               type="button"
               onClick={() => void signOut()}
