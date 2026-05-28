@@ -13,6 +13,14 @@ const mapChildProfile = (row: Record<string, unknown>): ChildProfileRecord => ({
   avatarAnimal:
     row.avatar_animal === null || row.avatar_animal === undefined ? null : String(row.avatar_animal),
   avatarSeed: row.avatar_seed === null || row.avatar_seed === undefined ? null : String(row.avatar_seed),
+  mascotId: row.mascot_id === null || row.mascot_id === undefined ? null : String(row.mascot_id),
+  streak: row.streak === null || row.streak === undefined ? 0 : Number(row.streak),
+  affirmations: Array.isArray(row.affirmations) ? (row.affirmations as string[]) : [],
+  badges:
+    row.badges !== null && typeof row.badges === 'object' && !Array.isArray(row.badges)
+      ? (row.badges as Record<string, boolean>)
+      : {},
+  moods: Array.isArray(row.moods) ? (row.moods as Array<{ day: string; emoji: string }>) : [],
   createdAt: String(row.created_at),
   updatedAt: String(row.updated_at),
 });
@@ -25,6 +33,11 @@ const toChildProfilePayload = (profile: Omit<ChildProfileRecord, 'createdAt' | '
   age_bucket: profile.ageBucket,
   avatar_animal: profile.avatarAnimal,
   avatar_seed: profile.avatarSeed,
+  mascot_id: profile.mascotId,
+  streak: profile.streak,
+  affirmations: profile.affirmations,
+  badges: profile.badges,
+  moods: profile.moods,
 });
 
 export class SupabaseChildProfileRepository implements ChildProfileRepository {
