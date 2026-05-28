@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Reorder } from 'framer-motion';
 import {
   Sun, Moon, Trash2, Plus, GripVertical, UserPlus, ArrowLeft, X, Check, Shuffle, Clock3, Palette, ChevronDown,
-  Users, House, Shield, CreditCard, LogOut, RefreshCw, UserRound,
+  Users, House, Shield, CreditCard, LogOut, RefreshCw, UserRound, CheckCircle2, AlertCircle, Loader2, CloudOff,
 } from 'lucide-react';
 import { TaskIcon } from './TaskIcon';
 import { TaskSuggestionPicker } from './TaskSuggestionPicker';
@@ -14,9 +14,12 @@ import type { Child, HomeScene, RoutineType } from '@/lib/types';
 import { AGE_BUCKETS, groupTasksByAge, ICON_OPTIONS, TASK_CATALOG } from '@/lib/types';
 import type { TaskCatalogItem } from '@/lib/task-catalog';
 
+type CloudSyncStatus = 'idle' | 'saving' | 'saved' | 'error';
+
 interface ParentSettingsProps {
   children: Child[];
   homeScene: HomeScene;
+  cloudConfigSyncStatus?: CloudSyncStatus;
   cloudConfigSyncError?: string | null;
   onRetryCloudConfigSync?: () => void;
   onChange: (children: Child[]) => void;
@@ -259,6 +262,7 @@ const HOME_SCENE_OPTIONS: { key: HomeScene; label: string; preview: string; desc
 export const ParentSettings = ({
   children,
   homeScene,
+  cloudConfigSyncStatus = 'idle',
   cloudConfigSyncError,
   onRetryCloudConfigSync,
   onChange,
@@ -429,12 +433,54 @@ export const ParentSettings = ({
             )}
           </div>
 
-          {cloudConfigSyncError ? (
-            <div className="mt-8 rounded-[24px] border border-destructive/20 bg-destructive/5 p-4">
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-destructive">Cloud sync needs attention</p>
-              <p className="mt-3 text-base font-bold text-foreground">This family setup has not saved to the cloud yet</p>
-              <p className="mt-1 text-sm text-muted-foreground">{cloudConfigSyncError}</p>
-              {onRetryCloudConfigSync ? (
+          {isSignedIn && (
+            <div className={`mt-8 rounded-[24px] border p-4 ${
+              cloudConfigSyncError
+                ? 'border-destructive/20 bg-destructive/5'
+                : cloudConfigSyncStatus === 'saved'
+                  ? 'border-success/20 bg-success/5'
+                  : cloudConfigSyncStatus === 'saving'
+                    ? 'border-primary/20 bg-primary/5'
+                    : 'border-border bg-background'
+            }`}>
+              <div className="flex items-center gap-2">
+                {cloudConfigSyncError ? (
+                  <AlertCircle size={16} className="shrink-0 text-destructive" />
+                ) : cloudConfigSyncStatus === 'saved' ? (
+                  <CheckCircle2 size={16} className="shrink-0 text-success" />
+                ) : cloudConfigSyncStatus === 'saving' ? (
+                  <Loader2 size={16} className="shrink-0 animate-spin text-primary" />
+                ) : (
+                  <CloudOff size={16} className="shrink-0 text-muted-foreground" />
+                )}
+                <p className={`text-xs font-black uppercase tracking-[0.22em] ${
+                  cloudConfigSyncError
+                    ? 'text-destructive'
+                    : cloudConfigSyncStatus === 'saved'
+                      ? 'text-success'
+                      : cloudConfigSyncStatus === 'saving'
+                        ? 'text-primary'
+                        : 'text-muted-foreground'
+                }`}>
+                  {cloudConfigSyncError
+                    ? 'Sync needs attention'
+                    : cloudConfigSyncStatus === 'saved'
+                      ? 'Synced with cloud'
+                      : cloudConfigSyncStatus === 'saving'
+                        ? 'Saving to cloud…'
+                        : 'Not yet synced'}
+                </p>
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {cloudConfigSyncError
+                  ? (cloudConfigSyncError.length > 120 ? cloudConfigSyncError.slice(0, 120) + '…' : cloudConfigSyncError)
+                  : cloudConfigSyncStatus === 'saved'
+                    ? 'Your family setup is backed up and will appear on any device you sign in to.'
+                    : cloudConfigSyncStatus === 'saving'
+                      ? 'Saving your family setup to the cloud right now…'
+                      : 'Sign in to back up your family setup across all devices.'}
+              </p>
+              {cloudConfigSyncError && onRetryCloudConfigSync && (
                 <button
                   type="button"
                   onClick={onRetryCloudConfigSync}
@@ -443,9 +489,9 @@ export const ParentSettings = ({
                   <RefreshCw size={16} />
                   Retry cloud save
                 </button>
-              ) : null}
+              )}
             </div>
-          ) : null}
+          )}
         </aside>
 
         <div className="space-y-8">

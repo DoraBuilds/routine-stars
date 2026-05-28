@@ -907,7 +907,10 @@ describe("Index", () => {
     expect(screen.getByRole("button", { name: "retry-setup-cloud-sync" })).toBeInTheDocument();
   });
 
-  it("shows a cloud sync error when a save succeeds locally but cannot be verified from cloud", async () => {
+  it("treats a successful cloud save as synced even when the verification re-read is stale", async () => {
+    // The verification step is now non-blocking: if the save succeeds but the re-read
+    // returns stale data (common under Supabase replication lag), we log a warning and
+    // still mark the save as successful. We never surface this as a user-facing error.
     authState.status = "signed_in";
     authState.user = { id: "user-1", email: "parent@example.com" };
     authState.householdStatus = "ready";
@@ -920,6 +923,7 @@ describe("Index", () => {
       createdAt: "2026-04-20T10:00:00Z",
       updatedAt: "2026-04-20T10:00:00Z",
     };
+    // Re-read returns stale/empty data — simulates replication lag.
     loadCloudHouseholdState.mockResolvedValue({
       homeScene: "kite",
       children: [],
@@ -931,11 +935,12 @@ describe("Index", () => {
     fireEvent.click(await screen.findByRole("button", { name: "recovery-start-fresh" }));
     fireEvent.click(await screen.findByRole("button", { name: "sync-draft-child" }));
 
+    // The sync should complete as "saved" — no error shown to the user.
     await waitFor(() => {
-      expect(screen.getByTestId("setup-cloud-sync-error")).toHaveTextContent(
-        "We could not verify that this family setup reached the cloud yet. Please retry cloud save."
-      );
+      expect(screen.getByTestId("setup-cloud-sync-status")).toHaveTextContent("saved");
     });
+    // The sync error should be empty (no error content surfaced to the user).
+    expect(screen.getByTestId("setup-cloud-sync-error")).toHaveTextContent("");
   });
 
   it("lets a parent manually retry household setup cloud sync from setup", async () => {
