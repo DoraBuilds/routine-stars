@@ -42,22 +42,41 @@ export class SupabaseHouseholdRepository implements HouseholdRepository {
   async getCurrentHousehold(userId: string) {
     // IMPORTANT: a parent account should resolve to one stable household.
     // If multiple households exist (due to earlier bugs or tests), we pick the
-    // oldest owner membership to avoid randomly switching households across devices.
+    // most recently updated owner household so existing accounts converge on the
+    // household that actually contains data.
     const { data, error } = await this.supabase
       .from(HOUSEHOLD_MEMBERS_TABLE)
       .select('household:households(*)')
       .eq('user_id', userId)
       .eq('role', 'owner')
-      .order('created_at', { ascending: true })
-      .limit(1)
-      .maybeSingle();
+      .order('created_at', { ascending: true });
 
     if (error) {
       throw error;
     }
 
-    const householdRow = data && typeof data === 'object' && 'household' in data ? (data as any).household : null;
-    return householdRow ? mapHousehold(householdRow) : null;
+    const rows = Array.isArray(data) ? data : data ? [data] : [];
+    const households = rows
+      .map((row) => (row && typeof row === 'object' && 'household' in row ? (row as any).household : null))
+      .filter(Boolean) as Array<Record<string, unknown>>;
+
+    if (!households.length) {
+      return null;
+    }
+
+    const pick = households
+      .slice()
+      .sort((left, right) => {
+        const leftUpdated = Date.parse(String(left.updated_at ?? '')) || 0;
+        const rightUpdated = Date.parse(String(right.updated_at ?? '')) || 0;
+        if (leftUpdated !== rightUpdated) return rightUpdated - leftUpdated;
+
+        const leftCreated = Date.parse(String(left.created_at ?? '')) || 0;
+        const rightCreated = Date.parse(String(right.created_at ?? '')) || 0;
+        return leftCreated - rightCreated;
+      })[0];
+
+    return mapHousehold(pick);
   }
 
   async createInitialHousehold(input: { householdName: string; timezone: string; userId: string }) {
