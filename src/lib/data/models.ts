@@ -28,6 +28,12 @@ export interface ChildProfileRecord {
   ageBucket: AgeBucket | null;
   avatarAnimal: string | null;
   avatarSeed: string | null;
+  // Cozy Pastel redesign fields
+  mascotId: string | null;
+  streak: number;
+  affirmations: string[];
+  badges: Record<string, boolean>;
+  moods: Array<{ day: string; emoji: string }>;
   createdAt: string;
   updatedAt: string;
 }

@@ -66,6 +66,11 @@ export const mapCloudHouseholdToChildren = (input: {
       ageBucket: profile.ageBucket ?? undefined,
       avatarAnimal: profile.avatarAnimal ?? undefined,
       avatarSeed: profile.avatarSeed ?? profile.id,
+      mascotId: profile.mascotId ?? undefined,
+      streak: profile.streak,
+      affirmations: profile.affirmations,
+      badges: profile.badges,
+      moods: profile.moods,
       schedule: {
         morning: routines.morning
           ? { start: routines.morning.startTime, end: routines.morning.endTime }

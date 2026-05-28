@@ -90,6 +90,11 @@ const serializeHouseholdConfig = (input: {
       ageBucket: child.ageBucket ?? null,
       avatarAnimal: child.avatarAnimal ?? null,
       avatarSeed: child.avatarSeed ?? null,
+      mascotId: child.mascotId ?? null,
+      streak: child.streak ?? 0,
+      affirmations: child.affirmations ?? [],
+      badges: child.badges ?? {},
+      moods: (child.moods ?? []).map((m) => ({ day: m.day, emoji: m.emoji })),
       schedule: child.schedule ?? null,
       morning: child.morning.map((task) => ({
         id: task.id,
