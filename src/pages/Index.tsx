@@ -1,9 +1,11 @@
 import { lazy, Suspense, useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { ChildSelector } from '@/components/ChildSelector';
 import { AccountEntryScreen } from '@/components/AccountEntryScreen';
 import { ExistingFamilyRecoveryScreen } from '@/components/ExistingFamilyRecoveryScreen';
 import { HouseholdLoadErrorScreen } from '@/components/HouseholdLoadErrorScreen';
 import { ImportFamilySetupScreen } from '@/components/ImportFamilySetupScreen';
+import { KidHome } from '@/components/KidHome';
+import { KidApp } from '@/components/KidApp';
+import { AdminApp } from '@/components/admin/AdminApp';
 import { useAuth } from '@/lib/auth/use-auth';
 import { loadCloudHouseholdState } from '@/lib/data/cloud-household-state';
 import { saveHouseholdConfigToCloud } from '@/lib/data/cloud-household-write';
@@ -11,6 +13,7 @@ import { deleteCloudHousehold } from '@/lib/data/delete-cloud-household';
 import { importLocalFamilyToCloud } from '@/lib/data/local-to-cloud-import';
 import { SupabaseProgressRepository } from '@/lib/data/supabase-progress-repository';
 import { getSupabaseClient } from '@/lib/supabase/client';
+import { DEFAULT_BADGES, DEFAULT_MOODS } from '@/lib/mascots';
 import type { AppView, Child, HomeScene, RoutineType } from '@/lib/types';
 import {
   clearLocalAppState,
@@ -824,6 +827,143 @@ const Index = () => {
     },
     [activeChild, authStatus, household, householdStatus]
   );
+  // ── New redesign handlers ──────────────────────────────────
+
+  /** Toggle a task by kidId + routine + taskId (redesign API) */
+  const handleToggleTask = useCallback(
+    (kidId: string, routine: RoutineType, taskId: string) => {
+      const child = children.find((c) => c.id === kidId);
+      if (!child) return;
+
+      const toggledAt = new Date().toISOString();
+      const nextRoutine = child[routine].map((task) => {
+        if (task.id !== taskId) return task;
+        return { ...task, completed: !task.completed };
+      });
+      const completed = nextRoutine.find((t) => t.id === taskId)?.completed ?? false;
+      const routineCompleted = nextRoutine.length > 0 && nextRoutine.every((t) => t.completed);
+
+      setChildren((prev) =>
+        prev.map((c) => (c.id !== kidId ? c : { ...c, [routine]: nextRoutine }))
+      );
+
+      if (authStatus === 'signed_in' && householdStatus === 'ready' && household) {
+        const supabase = getSupabaseClient();
+        if (!supabase) return;
+        const progressRepository = new SupabaseProgressRepository(supabase);
+        const progressDate = getLocalProgressDate(new Date());
+
+        void progressRepository
+          .upsertRoutineProgress({ childProfileId: kidId, routineType: routine, progressDate, completedAt: null })
+          .then(async (dailyRoutineProgress) => {
+            await progressRepository.setTaskCompletion({
+              dailyRoutineProgressId: dailyRoutineProgress.id,
+              routineTaskId: taskId,
+              completed,
+              completedAt: completed ? toggledAt : null,
+            });
+            await progressRepository.upsertRoutineProgress({
+              childProfileId: kidId,
+              routineType: routine,
+              progressDate,
+              completedAt: routineCompleted ? new Date().toISOString() : null,
+            });
+          })
+          .catch((error) => {
+            console.warn('Could not sync routine progress to cloud.', error);
+          });
+      }
+    },
+    [authStatus, children, household, householdStatus]
+  );
+
+  const handleSetMood = useCallback((kidId: string, dayIdx: number, emoji: string) => {
+    setChildren((prev) =>
+      prev.map((k) =>
+        k.id !== kidId
+          ? k
+          : {
+              ...k,
+              moods: (k.moods ?? DEFAULT_MOODS).map((m, i) =>
+                i === dayIdx ? { ...m, emoji } : m
+              ),
+            }
+      )
+    );
+  }, []);
+
+  const handleToggleBadge = useCallback((kidId: string, badgeId: string) => {
+    setChildren((prev) =>
+      prev.map((k) =>
+        k.id !== kidId
+          ? k
+          : {
+              ...k,
+              badges: {
+                ...(k.badges ?? DEFAULT_BADGES),
+                [badgeId]: !(k.badges ?? DEFAULT_BADGES)[badgeId],
+              },
+            }
+      )
+    );
+  }, []);
+
+  const handleAddAffirmation = useCallback((kidId: string, text: string) => {
+    setChildren((prev) =>
+      prev.map((k) =>
+        k.id !== kidId ? k : { ...k, affirmations: [...(k.affirmations ?? []), text] }
+      )
+    );
+  }, []);
+
+  const handleRemoveAffirmation = useCallback((kidId: string, idx: number) => {
+    setChildren((prev) =>
+      prev.map((k) =>
+        k.id !== kidId
+          ? k
+          : { ...k, affirmations: (k.affirmations ?? []).filter((_, i) => i !== idx) }
+      )
+    );
+  }, []);
+
+  const handleChangeMascot = useCallback((kidId: string, newMascotId: string) => {
+    setChildren((prev) =>
+      prev.map((k) => (k.id !== kidId ? k : { ...k, mascotId: newMascotId }))
+    );
+  }, []);
+
+  const handleAddTask = useCallback(
+    (kidId: string, routine: RoutineType) => {
+      const title = window.prompt('New task title:');
+      if (!title?.trim()) return;
+      const icon = window.prompt('Emoji icon (e.g. ✨):') ?? '✨';
+      const newTask = {
+        id: `${routine}_${Date.now()}`,
+        title: title.trim(),
+        icon: (icon || '✨') as Child['morning'][0]['icon'],
+        completed: false,
+      };
+      setChildren((prev) =>
+        prev.map((k) => (k.id !== kidId ? k : { ...k, [routine]: [...k[routine], newTask] }))
+      );
+    },
+    []
+  );
+
+  const handleRemoveTask = useCallback((kidId: string, routine: RoutineType, taskId: string) => {
+    setChildren((prev) =>
+      prev.map((k) =>
+        k.id !== kidId ? k : { ...k, [routine]: k[routine].filter((t) => t.id !== taskId) }
+      )
+    );
+  }, []);
+
+  const handleAddKid = useCallback(() => {
+    // Route to setup flow to add a new child
+    setView('setup');
+  }, []);
+
+  // ── Theme detection ────────────────────────────────────────
   const dueRoutineByChild = Object.fromEntries(
     children.map((child) => [child.id, getDueRoutine(child, now)])
   ) as Record<string, RoutineType | null>;
@@ -832,6 +972,9 @@ const Index = () => {
     : children.some((child) => dueRoutineByChild[child.id] === 'evening')
       ? 'evening'
       : 'free';
+
+  // Cozy Pastel: time-of-day backdrop theme (5–17h = morning, else evening)
+  const kidTheme: 'morning' | 'evening' = now.getHours() >= 5 && now.getHours() < 17 ? 'morning' : 'evening';
 
   if (!isReady) {
     return null;
@@ -984,21 +1127,43 @@ const Index = () => {
   }
 
   if (view === 'routine' && activeChild) {
+    // Use schedule-aware routine (falls back to 'morning' if no schedule)
+    const activeRoutineTheme = getDisplayRoutine(activeChild, now);
     return (
-      <Suspense fallback={<ViewLoadingFallback title="Opening routine" />}>
-        <RoutineView
-          child={activeChild}
-          routine={activeRoutine}
-          onToggleTask={toggleTask}
-          onBack={() => setView('home')}
-        />
-      </Suspense>
+      <KidApp
+        kid={activeChild}
+        theme={activeRoutineTheme}
+        onBack={() => setView('home')}
+        onToggleTask={handleToggleTask}
+        onSetMood={handleSetMood}
+      />
     );
   }
 
   if (view === 'parent') {
     return (
-      <Suspense fallback={<ViewLoadingFallback title="Opening parent settings" />}>
+      <AdminApp
+        kids={children}
+        onClose={() => setView('home')}
+        onChangeMascot={handleChangeMascot}
+        onAddTask={handleAddTask}
+        onRemoveTask={handleRemoveTask}
+        onAddAffirmation={handleAddAffirmation}
+        onRemoveAffirmation={handleRemoveAffirmation}
+        onToggleBadge={handleToggleBadge}
+        onAddKid={handleAddKid}
+        cloudSyncStatus={authStatus === 'signed_in' ? cloudConfigSyncStatus : undefined}
+        onSignOut={authStatus === 'signed_in' ? () => void signOut() : undefined}
+        onOpenAdvancedSettings={() => setView('advanced-settings')}
+        onRestartSetup={restartSetup}
+        onResetAppData={() => void resetToFreshSetup()}
+      />
+    );
+  }
+
+  if (view === 'advanced-settings') {
+    return (
+      <Suspense fallback={<ViewLoadingFallback title="Opening settings" />}>
         <ParentSettings
           children={children}
           homeScene={homeScene}
@@ -1012,25 +1177,22 @@ const Index = () => {
           onHomeSceneChange={setHomeScene}
           onRestartSetup={restartSetup}
           onResetAppData={resetToFreshSetup}
-          onBack={() => setView('home')}
+          onBack={() => setView('parent')}
         />
       </Suspense>
     );
   }
 
   return (
-    <ChildSelector
-      children={children}
-      globalTheme={globalTheme}
-      homeScene={homeScene}
-      dueRoutineByChild={dueRoutineByChild}
-      cloudSyncStatus={authStatus === 'signed_in' ? cloudConfigSyncStatus : undefined}
-      onSelectChild={(id) => {
+    <KidHome
+      kids={children}
+      theme={kidTheme}
+      onPick={(id) => {
         setNow(new Date());
         setActiveChildId(id);
         setView('routine');
       }}
-      onOpenSettings={() => setView('parent')}
+      onParent={() => setView('parent')}
     />
   );
 };

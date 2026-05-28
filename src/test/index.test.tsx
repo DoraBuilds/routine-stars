@@ -69,47 +69,49 @@ const yesterday = () => {
   return date.toDateString();
 };
 
-vi.mock("@/components/ChildSelector", () => ({
-  ChildSelector: ({
-    children,
-    onSelectChild,
-    onOpenSettings,
+// KidHome replaces ChildSelector as the main home screen
+vi.mock("@/components/KidHome", () => ({
+  KidHome: ({
+    kids,
+    onPick,
+    onParent,
   }: {
-    children: Array<{ id: string; name: string }>;
-    onSelectChild: (id: string) => void;
-    onOpenSettings: () => void;
+    kids: Array<{ id: string; name: string }>;
+    onPick: (id: string) => void;
+    onParent: () => void;
   }) => (
     <div>
-      <div data-testid="child-count">{children.length}</div>
-      <button type="button" onClick={() => onSelectChild(children[0].id)}>
+      <div data-testid="child-count">{kids.length}</div>
+      <button type="button" onClick={() => onPick(kids[0].id)}>
         select-first-child
       </button>
-      <button type="button" onClick={onOpenSettings}>
+      <button type="button" onClick={onParent}>
         open-settings
       </button>
     </div>
   ),
 }));
 
-vi.mock("@/components/RoutineView", () => ({
-  RoutineView: ({
-    child,
-    routine,
+// KidApp replaces RoutineView — note the new onToggleTask signature (kidId, routine, taskId)
+vi.mock("@/components/KidApp", () => ({
+  KidApp: ({
+    kid,
+    theme,
     onToggleTask,
     onBack,
   }: {
-    child: { name: string; morning: Array<{ id: string; completed: boolean }> };
-    routine: "morning" | "evening";
-    onToggleTask: (taskId: string) => void;
+    kid: { id: string; name: string; morning: Array<{ id: string; completed: boolean }>; evening: Array<{ id: string; completed: boolean }> };
+    theme: "morning" | "evening";
+    onToggleTask: (kidId: string, routine: "morning" | "evening", taskId: string) => void;
     onBack: () => void;
   }) => (
     <div>
-      <div data-testid="active-child">{child.name}</div>
-      <div data-testid="active-routine">{routine}</div>
+      <div data-testid="active-child">{kid.name}</div>
+      <div data-testid="active-routine">{theme}</div>
       <div data-testid="first-task-completed">
-        {String(child[routine][0]?.completed ?? false)}
+        {String(kid[theme][0]?.completed ?? false)}
       </div>
-      <button type="button" onClick={() => onToggleTask(child[routine][0].id)}>
+      <button type="button" onClick={() => onToggleTask(kid.id, theme, kid[theme][0].id)}>
         toggle-first-task
       </button>
       <button type="button" onClick={onBack}>
@@ -119,6 +121,35 @@ vi.mock("@/components/RoutineView", () => ({
   ),
 }));
 
+// AdminApp replaces ParentSettings as the primary admin screen
+vi.mock("@/components/admin/AdminApp", () => ({
+  AdminApp: ({
+    onClose,
+    onRestartSetup,
+    onResetAppData,
+    cloudSyncStatus,
+  }: {
+    onClose: () => void;
+    onRestartSetup?: () => void;
+    onResetAppData?: () => void;
+    cloudSyncStatus?: string;
+  }) => (
+    <div>
+      <button type="button" onClick={onClose}>
+        back-home
+      </button>
+      <button type="button" onClick={onRestartSetup}>
+        restart-setup
+      </button>
+      <button type="button" onClick={onResetAppData}>
+        reset-app-data
+      </button>
+      <div data-testid="admin-cloud-sync-status">{cloudSyncStatus ?? ""}</div>
+    </div>
+  ),
+}));
+
+// ParentSettings is used for the advanced-settings view (reached via AdminApp → open-advanced)
 vi.mock("@/components/ParentSettings", () => ({
   ParentSettings: ({
     onBack,
