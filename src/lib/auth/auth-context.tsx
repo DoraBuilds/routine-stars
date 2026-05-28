@@ -158,7 +158,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         if (signOutError) {
           setError(signOutError.message);
         } else {
-          clearLocalAppState();
+          clearLocalAppState(user?.id ? { userId: user.id } : undefined);
           setError(null);
         }
       },
@@ -208,7 +208,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           }
 
           // Clear device-local data even if sign-out errors, so the app resets cleanly.
-          clearLocalAppState();
+          clearLocalAppState(user?.id ? { userId: user.id } : undefined);
           await supabase.auth.signOut();
           setError(null);
           return true;

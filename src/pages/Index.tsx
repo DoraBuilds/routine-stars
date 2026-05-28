@@ -158,14 +158,14 @@ const Index = () => {
 
   const clearLocalAndState = useCallback((nextView: AppView) => {
     skipLocalPersistenceRef.current = true;
-    clearLocalAppState();
+    clearLocalAppState(user?.id ? { userId: user.id } : undefined);
     setChildren(createSetupChildren());
     setActiveChildId(null);
     setSetupComplete(false);
     setHomeScene('bike');
     setView(nextView);
     setNow(new Date());
-  }, []);
+  }, [user?.id]);
 
   const resetToFreshSetup = useCallback(async () => {
     if (authStatus === 'signed_in' && householdStatus === 'ready' && household) {
@@ -215,11 +215,12 @@ const Index = () => {
         return;
       }
 
-      const storedState = loadLocalAppState();
+      const storedState =
+        authStatus === 'signed_in' && user?.id ? loadLocalAppState({ userId: user.id }) : loadLocalAppState();
       const currentSessionSetup = currentSessionSetupRef.current;
       const recoverableLocalState =
         storedState ??
-        (currentSessionSetup.children.length > 0
+        (authStatus !== 'signed_in' && currentSessionSetup.children.length > 0
           ? {
               version: 1,
               children: currentSessionSetup.children,
@@ -712,11 +713,11 @@ const Index = () => {
         homeScene,
         lastReset: new Date().toDateString(),
         setupComplete,
-      });
+      }, user?.id ? { userId: user.id } : undefined);
     } catch (error) {
       console.warn('Could not save app state to local storage.', error);
     }
-  }, [authStatus, children, homeScene, isReady, setupComplete]);
+  }, [authStatus, children, homeScene, isReady, setupComplete, user?.id]);
 
   const activeChild = children.find((c) => c.id === activeChildId);
   const activeRoutine = activeChild ? getDisplayRoutine(activeChild, now) : 'morning';
@@ -886,7 +887,7 @@ const Index = () => {
             });
         }}
         onStartFresh={() => {
-          clearLocalAppState();
+          clearLocalAppState(user?.id ? { userId: user.id } : undefined);
           setActiveChildId(null);
           setChildren(createSetupChildren());
           setSetupComplete(false);
