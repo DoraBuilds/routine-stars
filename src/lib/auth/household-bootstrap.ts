@@ -22,29 +22,21 @@ const getSuggestedHouseholdName = (user: User) => {
 };
 
 const getBootstrapErrorMessage = (error: unknown) => {
-  const message =
-    error instanceof Error
-      ? error.message
-      : typeof error === 'object' && error !== null && 'message' in error
-        ? String(error.message)
-        : '';
-
-  const normalized = message.toLowerCase();
-
-  if (
-    normalized.includes('bootstrap_household') ||
-    normalized.includes('households') ||
-    normalized.includes('household_members') ||
-    normalized.includes('relation') ||
-    normalized.includes('schema cache')
-  ) {
-    // This bucket historically meant "schema is missing", but in practice it can also include
-    // permission/RLS errors. Keep the guidance user-friendly, but include the raw error so
-    // we can debug support tickets without requiring console access.
-    return `Could not prepare the family space in Supabase yet. Please press "Try again". If it keeps failing, share this error with support: ${message || 'unknown error'}`;
+  // Always capture the raw message — code, details, and hint from PostgREST errors are
+  // useful for debugging and are surfaced to the user so they can be shared with support.
+  let message = '';
+  if (error instanceof Error) {
+    message = error.message;
+  } else if (typeof error === 'object' && error !== null) {
+    const e = error as Record<string, unknown>;
+    const parts = [e.message, e.code, e.details, e.hint].filter(Boolean);
+    message = parts.map(String).join(' — ') || JSON.stringify(error);
   }
 
-  return message || 'Could not prepare the family household in Supabase.';
+  return (
+    `Could not set up the family space. Please tap "Try again". ` +
+    `If it keeps failing, send this to support: ${message || 'no error detail'}`
+  );
 };
 
 export const ensureHousehold = async (user: User): Promise<HouseholdRecord> => {

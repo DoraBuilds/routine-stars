@@ -31,6 +31,6 @@ describe('ensureHousehold', () => {
         id: 'user-1',
         email: 'parent@example.com',
       } as never)
-    ).rejects.toThrow(/could not prepare the family space in supabase/i);
+    ).rejects.toThrow(/could not set up the family space/i);
   });
 });
