@@ -17,8 +17,37 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@Lovable" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-    <script type="module" crossorigin src="/assets/index-CaURo6Ma.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-1Xo_Q-SV.css">
+
+    <script>
+      // Restore GitHub Pages SPA routes that were rewritten by public/404.html.
+      (function () {
+        var url = new URL(window.location.href);
+        var ghPath = url.searchParams.get("__gh_path__");
+        if (!ghPath) return;
+
+        var ghSearch = url.searchParams.get("__gh_search__") || "";
+        var ghHash = url.searchParams.get("__gh_hash__") || "";
+
+        url.searchParams.delete("__gh_path__");
+        url.searchParams.delete("__gh_search__");
+        url.searchParams.delete("__gh_hash__");
+
+        var remainingSearch = url.searchParams.toString();
+        remainingSearch = remainingSearch ? "?" + remainingSearch : "";
+
+        var restoredPath = decodeURIComponent(ghPath);
+        var restoredSearch = ghSearch ? decodeURIComponent(ghSearch) : "";
+        var restoredHash = ghHash ? decodeURIComponent(ghHash) : "";
+
+        if (restoredPath.charAt(0) !== "/") restoredPath = "/" + restoredPath;
+
+        // Keep the repo base (`/routine-stars/`) and replace the rest.
+        var base = window.location.pathname.replace(/\/?$/, "");
+        window.history.replaceState(null, "", base + restoredPath + restoredSearch + restoredHash + remainingSearch);
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-Bv1edLj7.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BqSnigaN.css">
   </head>
 
   <body>

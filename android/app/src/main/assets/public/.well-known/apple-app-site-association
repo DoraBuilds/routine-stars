@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAMID.com.routinestars.app",
+        "paths": [
+          "/auth/callback*"
+        ]
+      }
+    ]
+  }
+}
+
