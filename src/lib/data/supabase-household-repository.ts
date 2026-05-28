@@ -61,8 +61,23 @@ export class SupabaseHouseholdRepository implements HouseholdRepository {
   }
 
   async createInitialHousehold(input: { householdName: string; timezone: string; userId: string }) {
-    // Prefer direct inserts first for speed and debuggability. The RPC path is a
-    // legacy bootstrap option and can be slower on cold starts.
+    // Prefer the RPC bootstrap path: it's server-side, idempotent, and safe under
+    // concurrent callback / tab transitions.
+    const { data: rpcData, error: rpcError } = await this.supabase.rpc('bootstrap_household', {
+      p_name: input.householdName,
+      p_timezone: input.timezone,
+    });
+
+    if (!rpcError && rpcData) {
+      return mapHousehold(rpcData);
+    }
+
+    // Fallback: older environments may not have the RPC yet.
+    if (rpcError && !shouldFallbackToDirectBootstrap(rpcError)) {
+      throw rpcError;
+    }
+
+    // Direct inserts are a fallback path only.
     const { data: householdRow, error: householdError } = await this.supabase
       .from(HOUSEHOLDS_TABLE)
       .insert({
@@ -74,20 +89,16 @@ export class SupabaseHouseholdRepository implements HouseholdRepository {
       .single();
 
     if (householdError) {
-      // If direct inserts fail due to missing tables/policies, try the bootstrap RPC.
-      if (shouldFallbackToDirectBootstrap(householdError)) {
-        const { data, error } = await this.supabase.rpc('bootstrap_household', {
-          p_name: input.householdName,
-          p_timezone: input.timezone,
-        });
+      // If another tab/device created the household first (unique constraint),
+      // resolve the stable household and continue gracefully.
+      const normalizedMessage =
+        typeof householdError === 'object' && householdError !== null && 'message' in householdError
+          ? String(householdError.message).toLowerCase()
+          : '';
 
-        if (!error && data) {
-          return mapHousehold(data);
-        }
-
-        if (error) {
-          throw error;
-        }
+      if (normalizedMessage.includes('created_by_user_id') || normalizedMessage.includes('households_one_per_creator')) {
+        const existing = await this.getCurrentHousehold(input.userId);
+        if (existing) return existing;
       }
 
       throw householdError;
@@ -109,23 +120,6 @@ export class SupabaseHouseholdRepository implements HouseholdRepository {
 
     // Best-effort cleanup: avoid leaving an orphan household row behind.
     await this.supabase.from(HOUSEHOLDS_TABLE).delete().eq('id', household.id);
-
-    // If membership insert failed with a bootstrap-style error, fall back to the RPC
-    // (when present) which can create membership atomically.
-    if (shouldFallbackToDirectBootstrap(membershipError)) {
-      const { data, error } = await this.supabase.rpc('bootstrap_household', {
-        p_name: input.householdName,
-        p_timezone: input.timezone,
-      });
-
-      if (!error && data) {
-        return mapHousehold(data);
-      }
-
-      if (error) {
-        throw error;
-      }
-    }
 
     throw membershipError;
   }

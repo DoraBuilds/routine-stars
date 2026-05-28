@@ -4,6 +4,29 @@ import { getSafeStorage } from './safe-storage';
 export const LOCAL_APP_STATE_STORAGE_KEY = 'routine_stars_data';
 export const CURRENT_LOCAL_APP_STATE_VERSION = 1;
 
+type LocalAppStateScope =
+  | { userId: string }
+  | { householdId: string }
+  | { mode: 'anonymous' }
+  | undefined;
+
+const getScopedStorageKey = (scope: LocalAppStateScope) => {
+  if (!scope) {
+    // Backwards-compat: legacy key for older builds.
+    return LOCAL_APP_STATE_STORAGE_KEY;
+  }
+
+  if ('mode' in scope) {
+    return `${LOCAL_APP_STATE_STORAGE_KEY}::anon`;
+  }
+
+  if ('householdId' in scope) {
+    return `${LOCAL_APP_STATE_STORAGE_KEY}::household:${scope.householdId}`;
+  }
+
+  return `${LOCAL_APP_STATE_STORAGE_KEY}::user:${scope.userId}`;
+};
+
 export interface LocalAppState {
   version: number;
   children: Child[];
@@ -38,9 +61,9 @@ const normalizeLocalAppState = (value: unknown): LocalAppState | null => {
   };
 };
 
-export const loadLocalAppState = (): LocalAppState | null => {
+export const loadLocalAppState = (scope?: LocalAppStateScope): LocalAppState | null => {
   const storage = getSafeStorage('__routine_stars_local_app_state_test__');
-  const saved = storage.getItem(LOCAL_APP_STATE_STORAGE_KEY);
+  const saved = storage.getItem(getScopedStorageKey(scope));
   if (!saved) return null;
 
   try {
@@ -50,17 +73,23 @@ export const loadLocalAppState = (): LocalAppState | null => {
   }
 };
 
-export const saveLocalAppState = (state: Omit<LocalAppState, 'version'>) => {
+export const saveLocalAppState = (state: Omit<LocalAppState, 'version'>, scope?: LocalAppStateScope) => {
   const payload: LocalAppState = {
     version: CURRENT_LOCAL_APP_STATE_VERSION,
     ...state,
   };
 
   const storage = getSafeStorage('__routine_stars_local_app_state_test__');
-  storage.setItem(LOCAL_APP_STATE_STORAGE_KEY, JSON.stringify(payload));
+  storage.setItem(getScopedStorageKey(scope), JSON.stringify(payload));
 };
 
-export const clearLocalAppState = () => {
+export const clearLocalAppState = (scope?: LocalAppStateScope) => {
   const storage = getSafeStorage('__routine_stars_local_app_state_test__');
+  // Always clear the legacy key so older builds don't resurrect state.
   storage.removeItem(LOCAL_APP_STATE_STORAGE_KEY);
+  storage.removeItem(`${LOCAL_APP_STATE_STORAGE_KEY}::anon`);
+
+  if (scope) {
+    storage.removeItem(getScopedStorageKey(scope));
+  }
 };

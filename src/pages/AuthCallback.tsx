@@ -7,10 +7,37 @@ import { finalizeSupabaseAuthFromUrl } from '@/lib/supabase/client';
 const CALLBACK_SLOW_MS = 20000;
 const CALLBACK_FAILURE_MS = 60000;
 
+const getCallbackErrorFromUrl = () => {
+  try {
+    const url = new URL(window.location.href);
+    const error = url.searchParams.get('error');
+    const errorCode = url.searchParams.get('error_code');
+    const description =
+      url.searchParams.get('error_description') ??
+      url.searchParams.get('error_description'.toUpperCase()) ??
+      url.searchParams.get('message');
+
+    if (!error && !errorCode && !description) {
+      return null;
+    }
+
+    const normalizedCode = (errorCode ?? '').toLowerCase();
+
+    if (normalizedCode === 'otp_expired') {
+      return 'This sign-in link expired. Please request a new link and try again.';
+    }
+
+    const parts = [description, errorCode, error].filter(Boolean).map(String);
+    return parts.length ? parts.join(' • ') : 'This sign-in link did not finish cleanly.';
+  } catch {
+    return null;
+  }
+};
+
 const AuthCallback = () => {
   const navigate = useNavigate();
   const { configured, status, householdStatus, error, clearError } = useAuth();
-  const [callbackError, setCallbackError] = useState<string | null>(null);
+  const [callbackError, setCallbackError] = useState<string | null>(() => getCallbackErrorFromUrl());
   const [takingLongerThanExpected, setTakingLongerThanExpected] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
 
@@ -20,6 +47,14 @@ const AuthCallback = () => {
     }
 
     let cancelled = false;
+
+    const urlError = getCallbackErrorFromUrl();
+    if (urlError) {
+      setCallbackError(urlError);
+      return () => {
+        cancelled = true;
+      };
+    }
 
     void finalizeSupabaseAuthFromUrl().then((result) => {
       if (!cancelled && result.error) {
