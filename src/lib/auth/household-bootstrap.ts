@@ -46,7 +46,14 @@ export const ensureHousehold = async (user: User): Promise<HouseholdRecord> => {
   }
 
   const repository = new SupabaseHouseholdRepository(supabase);
-  const currentHousehold = await repository.getCurrentHousehold(user.id);
+
+  let currentHousehold: HouseholdRecord | null;
+  try {
+    currentHousehold = await repository.getCurrentHousehold(user.id);
+  } catch (error) {
+    throw new Error(getBootstrapErrorMessage(error));
+  }
+
   if (currentHousehold) {
     return currentHousehold;
   }
