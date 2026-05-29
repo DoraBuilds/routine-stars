@@ -346,7 +346,7 @@ export const ParentSettings = ({
   ];
 
   return (
-    <div className="mx-auto min-h-svh max-w-7xl px-4 py-8 sm:px-5 md:px-6 md:py-12">
+    <div className="mx-auto min-h-svh max-w-7xl px-4 py-8 sm:px-5 md:px-6 md:py-12" style={{ background: '#fff9f0', fontFamily: "'Fredoka', system-ui, sans-serif" }}>
       <header className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between md:mb-12">
         <div className="flex items-start gap-4">
           <button
