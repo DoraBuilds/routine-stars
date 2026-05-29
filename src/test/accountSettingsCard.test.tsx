@@ -121,9 +121,11 @@ describe('AccountSettingsCard', () => {
 
     render(<AccountSettingsCard />);
 
-    const deleteButtons = screen.getAllByRole('button', { name: /^delete account$/i });
-    expect(deleteButtons.length).toBeGreaterThanOrEqual(2);
-    fireEvent.click(deleteButtons[1]);
+    // First click shows the inline confirmation
+    fireEvent.click(screen.getByRole('button', { name: /^delete account$/i }));
+
+    // Confirm with the "Yes, delete it" button
+    fireEvent.click(await screen.findByRole('button', { name: /yes, delete it/i }));
 
     await waitFor(() => {
       expect(deleteAccount).toHaveBeenCalledTimes(1);

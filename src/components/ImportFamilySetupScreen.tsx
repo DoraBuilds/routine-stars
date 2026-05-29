@@ -1,5 +1,3 @@
-import { ArrowRight, CloudUpload, LoaderCircle, Sparkles } from 'lucide-react';
-
 interface ImportFamilySetupScreenProps {
   onImport: () => void;
   onStartFresh: () => void;
@@ -7,85 +5,130 @@ interface ImportFamilySetupScreenProps {
   error?: string | null;
 }
 
+const T = {
+  fonts: `'Fredoka', system-ui, sans-serif`,
+  ink: '#3d2c1f',
+  inkMute: '#8a7866',
+  cream: '#fff9f0',
+  white: '#ffffff',
+  border: 'rgba(180,120,80,0.10)',
+  orange: '#f97316',
+  orangeLight: '#fff1e8',
+  shadow: '0 6px 20px rgba(180,120,80,0.10)',
+};
+
 export const ImportFamilySetupScreen = ({
   onImport,
   onStartFresh,
   isImporting,
   error,
 }: ImportFamilySetupScreenProps) => (
-  <div className="relative min-h-svh overflow-hidden px-5 py-10 md:px-6 md:py-14">
-    <div className="absolute inset-x-0 top-0 -z-10 mx-auto h-72 w-[42rem] max-w-full rounded-full bg-primary/10 blur-3xl" />
-    <div className="absolute left-6 top-24 -z-10 h-28 w-28 rounded-full bg-accent/20 blur-2xl" />
-    <div className="absolute right-8 top-16 -z-10 h-36 w-36 rounded-full bg-success/15 blur-2xl" />
+  <div
+    style={{
+      minHeight: '100svh',
+      background: T.cream,
+      fontFamily: T.fonts,
+      color: T.ink,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '32px 16px',
+      position: 'relative',
+      overflow: 'hidden',
+    }}
+  >
+    {/* Blobs */}
+    <div style={{ position: 'fixed', top: -80, right: -60, width: 280, height: 280, borderRadius: '50%', background: 'rgba(249,115,22,0.10)', filter: 'blur(60px)', pointerEvents: 'none' }} />
+    <div style={{ position: 'fixed', bottom: -60, left: -40, width: 240, height: 240, borderRadius: '50%', background: 'rgba(34,197,94,0.08)', filter: 'blur(50px)', pointerEvents: 'none' }} />
 
-    <div className="mx-auto max-w-4xl rounded-[36px] border border-border bg-card/95 p-7 shadow-card md:p-9">
-      <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-black uppercase tracking-[0.22em] text-primary">
-        <CloudUpload size={16} />
-        Bring Your Family Setup
+    <div style={{ position: 'relative', maxWidth: 680, width: '100%' }}>
+      {/* Badge */}
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: T.orangeLight, borderRadius: 99, padding: '6px 14px', fontSize: 11, fontWeight: 700, color: T.orange, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 18 }}>
+        ☁️ Bring your family setup
       </div>
 
-      <h1 className="mt-6 text-4xl font-bold text-foreground md:text-5xl">
+      <h1 style={{ fontSize: 30, fontWeight: 700, lineHeight: 1.2, margin: '0 0 12px' }}>
         We found routines already saved on this device
       </h1>
-      <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-        You can import this family setup into your parent account or start fresh for this household instead.
+      <p style={{ fontSize: 14, color: T.inkMute, marginBottom: 24, lineHeight: 1.6 }}>
+        You can import this family setup into your parent account, or start fresh for this household instead.
       </p>
 
-      <div className="mt-8 grid gap-4 md:grid-cols-2">
-        <div className="rounded-[28px] bg-primary/8 p-5">
-          <p className="text-sm font-black uppercase tracking-[0.2em] text-primary">Recommended</p>
-          <h2 className="mt-3 text-2xl font-bold text-foreground">Import this family setup</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
+      {/* Option cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 12, marginBottom: 20 }}>
+        <div style={{ background: T.orangeLight, borderRadius: 22, padding: '18px 16px', border: `2px solid ${T.orange}22` }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: T.orange, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>⭐ Recommended</div>
+          <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 8 }}>Import this family setup</div>
+          <div style={{ fontSize: 12, color: T.inkMute, lineHeight: 1.6 }}>
             Keep the children, routines, schedules, and home scene already saved on this device.
-          </p>
+          </div>
         </div>
-
-        <div className="rounded-[28px] bg-muted/55 p-5">
-          <p className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground">Alternative</p>
-          <h2 className="mt-3 text-2xl font-bold text-foreground">Start fresh instead</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Leave this device&apos;s old setup behind and create a brand-new household setup in your account.
-          </p>
+        <div style={{ background: T.white, borderRadius: 22, padding: '18px 16px', border: `1.5px solid ${T.border}` }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: T.inkMute, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Alternative</div>
+          <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 8 }}>Start fresh instead</div>
+          <div style={{ fontSize: 12, color: T.inkMute, lineHeight: 1.6 }}>
+            Leave this device's old setup behind and create a brand-new household in your account.
+          </div>
         </div>
       </div>
 
-      <div className="mt-8 rounded-[28px] border border-border bg-background/80 p-5">
-        <div className="flex items-center gap-2 text-foreground">
-          <Sparkles size={18} className="text-primary" />
-          <p className="text-sm font-black uppercase tracking-[0.18em]">Import notes</p>
-        </div>
-        <div className="mt-4 grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
-          <p>1. Children, schedules, and routines move into your account.</p>
-          <p>2. Daily completion progress does not get merged into cloud yet.</p>
-          <p>3. This device keeps working for kids after setup is ready.</p>
+      {/* Notes */}
+      <div style={{ background: T.white, borderRadius: 18, padding: '14px 16px', border: `1.5px solid ${T.border}`, marginBottom: 20 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>✨ What gets imported</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {['Children, schedules, and routines move into your account.', 'Daily completion progress is not merged into the cloud yet.', 'This device keeps working for kids after setup is ready.'].map((note, i) => (
+            <div key={i} style={{ fontSize: 12, color: T.inkMute, display: 'flex', gap: 8 }}>
+              <span style={{ color: T.orange, fontWeight: 700 }}>{i + 1}.</span> {note}
+            </div>
+          ))}
         </div>
       </div>
 
       {error && (
-        <div className="mt-6 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-          {error}
+        <div style={{ background: '#fff5f5', borderRadius: 14, padding: '10px 14px', border: '1.5px solid rgba(220,38,38,0.2)', fontSize: 12, color: '#dc2626', marginBottom: 16 }}>
+          ⚠️ {error}
         </div>
       )}
 
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+      {/* Action buttons */}
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         <button
-          type="button"
           onClick={onImport}
           disabled={isImporting}
-          className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-button transition-transform active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+          style={{
+            background: isImporting ? '#fdba74' : T.orange,
+            color: '#fff',
+            border: 'none',
+            borderRadius: 16,
+            padding: '12px 24px',
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: isImporting ? 'not-allowed' : 'pointer',
+            fontFamily: 'inherit',
+            boxShadow: '0 3px 0 rgba(194,65,12,0.35)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+          }}
         >
-          {isImporting ? <LoaderCircle size={16} className="animate-spin" /> : <CloudUpload size={16} />}
-          Import this family setup
+          {isImporting ? '🔄 Importing…' : '☁️ Import this family setup'}
         </button>
-
         <button
-          type="button"
           onClick={onStartFresh}
           disabled={isImporting}
-          className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-background px-5 py-3 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+          style={{
+            background: T.white,
+            color: T.ink,
+            border: `1.5px solid ${T.border}`,
+            borderRadius: 16,
+            padding: '12px 20px',
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: isImporting ? 'not-allowed' : 'pointer',
+            fontFamily: 'inherit',
+          }}
         >
-          <ArrowRight size={16} />
-          Start fresh instead
+          Start fresh instead →
         </button>
       </div>
     </div>

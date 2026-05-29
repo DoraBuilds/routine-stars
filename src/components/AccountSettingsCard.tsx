@@ -1,19 +1,35 @@
 import { useMemo, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Cloud, CloudOff, LoaderCircle, LogIn, LogOut, Mail, RefreshCcw, ShieldCheck, Trash2, UserRound, UserRoundPlus } from 'lucide-react';
 import { useAuth } from '@/lib/auth/use-auth';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
 
 type AuthMode = 'signin' | 'signup';
+
+const T = {
+  fonts: `'Fredoka', system-ui, sans-serif`,
+  ink: '#3d2c1f',
+  inkMute: '#8a7866',
+  cream: '#fff9f0',
+  white: '#ffffff',
+  border: 'rgba(180,120,80,0.10)',
+  borderStrong: 'rgba(180,120,80,0.20)',
+  orange: '#f97316',
+  orangeLight: '#fff1e8',
+  shadow: '0 4px 14px rgba(180,120,80,0.08)',
+};
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '11px 14px',
+  borderRadius: 14,
+  border: `1.5px solid ${T.borderStrong}`,
+  background: T.cream,
+  fontFamily: T.fonts,
+  fontSize: 15,
+  fontWeight: 500,
+  color: T.ink,
+  outline: 'none',
+  boxSizing: 'border-box',
+  marginTop: 6,
+};
 
 export const AccountSettingsCard = () => {
   const {
@@ -29,6 +45,7 @@ export const AccountSettingsCard = () => {
     signOut,
     deleteAccount,
   } = useAuth();
+
   const [mode, setMode] = useState<AuthMode>('signin');
   const [parentName, setParentName] = useState('');
   const [email, setEmail] = useState('');
@@ -36,13 +53,14 @@ export const AccountSettingsCard = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [emailSentTo, setEmailSentTo] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const isCreateMode = mode === 'signup';
   const trimmedEmail = useMemo(() => email.trim(), [email]);
   const trimmedParentName = useMemo(() => parentName.trim(), [parentName]);
 
   const primaryLabel = isCreateMode ? 'Create account' : 'Send sign-in link';
-  const submitLabel = isSubmitting ? 'Sending…' : emailSentTo ? 'Email sent' : primaryLabel;
+  const submitLabel = isSubmitting ? 'Sending…' : emailSentTo ? 'Email sent ✓' : primaryLabel;
   const canSubmit =
     !isSubmitting &&
     status !== 'loading' &&
@@ -62,10 +80,12 @@ export const AccountSettingsCard = () => {
       return;
     }
 
-    const ok = await sendEmailLink(trimmedEmail, mode, isCreateMode ? { parentName: trimmedParentName } : undefined);
-    if (ok) {
-      setEmailSentTo(trimmedEmail);
-    }
+    const ok = await sendEmailLink(
+      trimmedEmail,
+      mode,
+      isCreateMode ? { parentName: trimmedParentName } : undefined
+    );
+    if (ok) setEmailSentTo(trimmedEmail);
     setIsSubmitting(false);
   };
 
@@ -78,61 +98,62 @@ export const AccountSettingsCard = () => {
       setParentName('');
       setEmailSentTo(null);
       setMode('signin');
+      setConfirmDelete(false);
     }
     setIsDeleting(false);
   };
 
   return (
-    <section className="rounded-[32px] border border-border bg-card p-6 shadow-sm md:p-8">
-      <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-          <Cloud size={22} />
+    <div
+      style={{
+        background: T.white,
+        borderRadius: 26,
+        padding: '22px 20px',
+        border: `1.5px solid ${T.border}`,
+        boxShadow: T.shadow,
+        fontFamily: T.fonts,
+        color: T.ink,
+      }}
+    >
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+        <div style={{ width: 44, height: 44, borderRadius: 14, background: T.orangeLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
+          ☁️
         </div>
         <div>
-          <h3 className="text-2xl font-bold text-foreground">Parent Account</h3>
-          <p className="text-sm text-muted-foreground">
+          <div style={{ fontSize: 18, fontWeight: 700 }}>Parent Account</div>
+          <div style={{ fontSize: 12, color: T.inkMute, marginTop: 1 }}>
             Sign in to load and manage the household saved to this account.
-          </p>
+          </div>
         </div>
       </div>
 
+      {/* ── Not configured ── */}
       {!configured ? (
-        <div className="mt-6 rounded-[28px] border border-dashed border-primary/25 bg-primary/5 p-5">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 rounded-2xl bg-background p-3 text-primary">
-              <CloudOff size={20} />
-            </div>
-            <div>
-              <h4 className="text-lg font-bold text-foreground">Supabase not connected yet</h4>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Add <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> to enable real parent sign in.
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Routine Stars needs these keys before account-based household access can work.
-              </p>
-            </div>
+        <div style={{ background: T.cream, borderRadius: 18, padding: '14px 16px', border: `2px dashed ${T.border}` }}>
+          <div style={{ fontSize: 16, marginBottom: 8 }}>🔌</div>
+          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 6 }}>Supabase not connected yet</div>
+          <div style={{ fontSize: 12, color: T.inkMute, lineHeight: 1.6 }}>
+            Add <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> to enable real parent sign in.
           </div>
         </div>
+
       ) : status === 'signed_in' && user ? (
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <div className="rounded-[28px] border border-border bg-background p-5">
-            <div className="flex items-center gap-2 text-foreground">
-              <ShieldCheck size={18} className="text-primary" />
-              <p className="text-sm font-black uppercase tracking-[0.18em]">Signed in</p>
-            </div>
-            <p className="mt-4 text-lg font-bold text-foreground">{user.email}</p>
-            <p className="mt-2 text-sm text-muted-foreground">
+        /* ── Signed in ── */
+        <div style={{ display: 'grid', gap: 12 }}>
+          {/* Signed in panel */}
+          <div style={{ background: T.cream, borderRadius: 18, padding: '14px 16px', border: `1.5px solid ${T.border}` }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: T.inkMute, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>🛡️ Signed in</div>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{user.email}</div>
+            <div style={{ fontSize: 12, color: T.inkMute, marginBottom: 12 }}>
               This browser is connected to the household saved under this parent account.
-            </p>
-            <div className="mt-4 rounded-2xl border border-border bg-muted/35 px-4 py-3 text-xs text-muted-foreground">
-              <p>
-                <span className="font-semibold text-foreground">User</span>: {user.id}
-              </p>
-              <p className="mt-1">
-                <span className="font-semibold text-foreground">Household</span>: {household?.id ?? 'loading'}
-              </p>
+            </div>
+
+            {/* Debug info */}
+            <div style={{ background: T.white, borderRadius: 12, padding: '10px 12px', border: `1.5px solid ${T.border}`, fontSize: 11, color: T.inkMute, marginBottom: 12 }}>
+              <div><strong style={{ color: T.ink }}>User</strong>: {user.id}</div>
+              <div style={{ marginTop: 3 }}><strong style={{ color: T.ink }}>Household</strong>: {household?.id ?? 'loading'}</div>
               <button
-                type="button"
                 onClick={() => {
                   const payload = [
                     `email=${user.email ?? ''}`,
@@ -143,216 +164,212 @@ export const AccountSettingsCard = () => {
                   ].join('\n');
                   void navigator.clipboard?.writeText(payload);
                 }}
-                className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                style={{ marginTop: 8, background: T.white, border: `1.5px solid ${T.border}`, borderRadius: 10, padding: '4px 10px', fontSize: 10, fontWeight: 700, color: T.inkMute, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}
               >
-                <Mail size={14} />
-                Copy debug info
+                ✉️ Copy debug info
               </button>
             </div>
+
             <button
-              type="button"
               onClick={() => void signOut()}
-              className="mt-5 inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+              style={{ background: T.white, border: `1.5px solid ${T.border}`, borderRadius: 12, padding: '8px 14px', fontSize: 12, fontWeight: 700, color: T.ink, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}
             >
-              <LogOut size={16} />
-              Sign out
+              → Sign out
             </button>
 
-            <div className="mt-6 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-4">
-              <div className="flex items-center gap-2 text-destructive">
-                <AlertTriangle size={16} />
-                <p className="text-xs font-black uppercase tracking-[0.22em]">Danger zone</p>
-              </div>
-              <p className="mt-3 text-sm font-semibold text-foreground">Delete parent account</p>
-              <p className="mt-1 text-sm text-muted-foreground">
+            {/* Danger zone */}
+            <div style={{ marginTop: 16, background: '#fff5f5', borderRadius: 16, padding: '12px 14px', border: '1.5px solid rgba(220,38,38,0.15)' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#dc2626', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>⚠️ Danger zone</div>
+              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Delete parent account</div>
+              <div style={{ fontSize: 11, color: T.inkMute, marginBottom: 10 }}>
                 This permanently deletes the parent account and the synced household data. This cannot be undone.
-              </p>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <button
-                    type="button"
-                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full border border-destructive/30 bg-background px-4 py-2.5 text-sm font-bold text-destructive transition-colors hover:border-destructive/50"
-                  >
-                    <Trash2 size={16} />
-                    Delete account
-                  </button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete this parent account?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will permanently remove your parent login and the synced family space. You will need to create a new account to use Routine Stars again.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
+              </div>
+
+              {!confirmDelete ? (
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  style={{ width: '100%', background: T.white, border: '1.5px solid rgba(220,38,38,0.25)', borderRadius: 12, padding: '8px 14px', fontSize: 12, fontWeight: 700, color: '#dc2626', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                >
+                  Delete account
+                </button>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#dc2626' }}>Are you sure? This cannot be undone.</div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
                       onClick={() => void handleDeleteAccount()}
                       disabled={isDeleting}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      style={{ flex: 1, background: '#dc2626', color: '#fff', border: 'none', borderRadius: 12, padding: '8px 0', fontSize: 12, fontWeight: 700, cursor: isDeleting ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
                     >
-                      {isDeleting ? <LoaderCircle size={16} className="mr-2 inline animate-spin" /> : null}
-                      Delete account
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                      {isDeleting ? 'Deleting…' : 'Yes, delete it'}
+                    </button>
+                    <button
+                      onClick={() => setConfirmDelete(false)}
+                      style={{ flex: 1, background: T.white, border: `1.5px solid ${T.border}`, borderRadius: 12, padding: '8px 0', fontSize: 12, fontWeight: 700, color: T.ink, cursor: 'pointer', fontFamily: 'inherit' }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-border bg-background p-5">
-            <div className="flex items-center gap-2 text-foreground">
-              {householdStatus === 'loading' ? (
-                <LoaderCircle size={18} className="animate-spin text-primary" />
-              ) : (
-                <UserRoundPlus size={18} className="text-primary" />
-              )}
-              <p className="text-sm font-black uppercase tracking-[0.18em]">Family space</p>
+          {/* Family space panel */}
+          <div style={{ background: T.cream, borderRadius: 18, padding: '14px 16px', border: `1.5px solid ${T.border}` }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: T.inkMute, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>
+              {householdStatus === 'loading' ? '🔄' : '👨‍👩‍👧'} Family space
             </div>
-            <p className="mt-4 text-lg font-bold text-foreground">
+            <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>
               {household?.name ?? 'Preparing family space'}
-            </p>
-            <p className="mt-2 text-sm text-muted-foreground">
+            </div>
+            <div style={{ fontSize: 12, color: T.inkMute, lineHeight: 1.5 }}>
               {householdStatus === 'ready'
-                ? 'Your parent account is connected to the family space in Supabase.'
+                ? 'Your parent account is connected to the family space.'
                 : householdStatus === 'error'
                   ? 'We hit a problem while setting up the family space. If the live Supabase project is missing the household schema, retry will keep failing until that database setup is applied.'
                   : 'We are preparing the first synced family space for this parent account.'}
-            </p>
+            </div>
             {householdStatus === 'error' && (
-              <div className="mt-4 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3">
-                <p className="text-sm text-destructive">{error ?? 'The family space is not ready yet.'}</p>
-                <p className="mt-3 text-xs text-muted-foreground">
-                  After the Supabase household schema is applied, return here and choose <span className="font-semibold text-foreground">Try again</span>.
-                </p>
+              <div style={{ marginTop: 12, background: '#fff5f5', borderRadius: 14, padding: '10px 12px', border: '1.5px solid rgba(220,38,38,0.15)' }}>
+                <div style={{ fontSize: 12, color: '#dc2626', lineHeight: 1.5, marginBottom: 10 }}>
+                  {error ?? 'The family space is not ready yet.'}
+                </div>
+                <div style={{ fontSize: 11, color: T.inkMute, marginBottom: 10 }}>
+                  After the Supabase household schema is applied, return here and choose <strong>Try again</strong>.
+                </div>
                 <button
-                  type="button"
                   onClick={() => void retryHousehold()}
-                  className="mt-3 inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                  style={{ background: T.white, border: `1.5px solid ${T.border}`, borderRadius: 10, padding: '7px 14px', fontSize: 12, fontWeight: 700, color: T.ink, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}
                 >
-                  <RefreshCcw size={16} />
-                  Try again
+                  🔄 Try again
                 </button>
               </div>
             )}
           </div>
         </div>
+
       ) : (
-        <div className="mt-6 rounded-[28px] border border-border bg-background p-5">
-          <div className="inline-flex w-full rounded-full bg-muted p-1 sm:w-auto">
-            {([
-              ['signin', 'Sign in'],
-              ['signup', 'Create account'],
-            ] as const).map(([value, label]) => (
+        /* ── Sign in form ── */
+        <div>
+          {/* Mode toggle */}
+          <div style={{ display: 'flex', gap: 4, background: T.cream, borderRadius: 14, padding: 4, border: `1.5px solid ${T.border}`, marginBottom: 18 }}>
+            {([['signin', 'Sign in'], ['signup', 'Create account']] as const).map(([value, label]) => (
               <button
                 key={value}
-                type="button"
                 onClick={() => {
                   clearError();
                   setValidationError(null);
                   setEmailSentTo(null);
                   setMode(value);
                 }}
-                className={`flex-1 rounded-full px-4 py-2 text-sm font-bold transition-colors sm:flex-none ${
-                  mode === value ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
-                }`}
+                style={{
+                  flex: 1,
+                  padding: '8px 0',
+                  borderRadius: 10,
+                  border: 'none',
+                  background: mode === value ? T.white : 'transparent',
+                  color: mode === value ? T.ink : T.inkMute,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  boxShadow: mode === value ? T.shadow : 'none',
+                  transition: 'all 0.15s',
+                }}
               >
                 {label}
               </button>
             ))}
           </div>
 
-          <div className="mt-5">
-            {isCreateMode && (
-              <label className="block text-sm font-semibold text-muted-foreground">
+          {/* Form fields */}
+          {isCreateMode && (
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: T.inkMute }}>
                 Parent name
-                <div className="mt-2 flex items-center gap-3 rounded-2xl bg-muted px-4 py-3">
-                  <UserRound size={18} className="text-muted-foreground" />
-                  <input
-                    type="text"
-                    value={parentName}
-                    onChange={(event) => setParentName(event.target.value)}
-                    className="w-full bg-transparent text-base font-medium text-foreground outline-none"
-                    placeholder="e.g. Dora"
-                    autoComplete="name"
-                  />
-                </div>
-              </label>
-            )}
-
-            <label className="text-sm font-semibold text-muted-foreground">
-              Parent email
-              <div className="mt-2 flex items-center gap-3 rounded-2xl bg-muted px-4 py-3">
-                <Mail size={18} className="text-muted-foreground" />
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  className="w-full bg-transparent text-base font-medium text-foreground outline-none"
-                  placeholder="parent@example.com"
-                  autoComplete="email"
+                  type="text"
+                  value={parentName}
+                  onChange={(e) => setParentName(e.target.value)}
+                  placeholder="e.g. Dora"
+                  autoComplete="name"
+                  style={inputStyle}
                 />
-              </div>
+              </label>
+            </div>
+          )}
+
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ fontSize: 12, fontWeight: 700, color: T.inkMute }}>
+              Parent email
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="parent@example.com"
+                autoComplete="email"
+                onKeyDown={(e) => { if (e.key === 'Enter' && canSubmit) void handleSubmit(); }}
+                style={inputStyle}
+              />
             </label>
           </div>
 
-          <p className="mt-4 text-sm text-muted-foreground">
+          <div style={{ fontSize: 12, color: T.inkMute, marginBottom: 16, lineHeight: 1.5 }}>
             {mode === 'signin'
-              ? 'We will email a sign-in link to this address so this device can open the household saved to your account.'
-              : 'We will email a one-time sign-up link. After you confirm it, the household bootstrap will run automatically.'}
-          </p>
+              ? "We'll email a sign-in link to this address so this device can open the household saved to your account."
+              : "We'll email a one-time sign-up link. After you confirm it, the household bootstrap will run automatically."}
+          </div>
 
+          {/* Success */}
           {emailSentTo && (
-            <div className="mt-4 rounded-2xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-foreground">
-              <div className="flex items-start gap-3">
-                <CheckCircle2 size={18} className="mt-0.5 text-success" />
-                <div>
-                  <p className="font-bold text-foreground">Check your email</p>
-                  <p className="mt-1 text-muted-foreground">
-                    We sent a secure link to <span className="font-semibold text-foreground">{emailSentTo}</span>.
-                    Open it on this device to finish {mode === 'signin' ? 'signing in' : 'creating the parent account'}.
-                  </p>
-                </div>
+            <div style={{ background: '#f0fdf4', borderRadius: 14, padding: '12px 14px', border: '1.5px solid rgba(34,197,94,0.2)', marginBottom: 14 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#16a34a', marginBottom: 4 }}>✅ Check your email</div>
+              <div style={{ fontSize: 12, color: '#15803d' }}>
+                We sent a secure link to <strong>{emailSentTo}</strong>. Open it on this device to finish {mode === 'signin' ? 'signing in' : 'creating the parent account'}.
               </div>
             </div>
           )}
 
-          {validationError && (
-            <div className="mt-4 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-              {validationError}
+          {/* Errors */}
+          {(validationError || error) && (
+            <div style={{ background: '#fff5f5', borderRadius: 14, padding: '10px 14px', border: '1.5px solid rgba(220,38,38,0.2)', fontSize: 12, color: '#dc2626', marginBottom: 14 }}>
+              ⚠️ {validationError ?? error}
             </div>
           )}
 
-          {error && (
-            <div className="mt-4 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
-
+          {/* Submit */}
           <button
-            type="button"
             onClick={() => void handleSubmit()}
             disabled={!canSubmit}
-            className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-button transition-transform active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+            style={{
+              width: '100%',
+              background: canSubmit ? T.orange : '#fdba74',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 16,
+              padding: '13px 0',
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: canSubmit ? 'pointer' : 'not-allowed',
+              fontFamily: 'inherit',
+              boxShadow: canSubmit ? '0 3px 0 rgba(194,65,12,0.35)' : 'none',
+              marginBottom: emailSentTo ? 10 : 0,
+            }}
           >
-            {isSubmitting || status === 'loading' ? <LoaderCircle size={16} className="animate-spin" /> : <LogIn size={16} />}
             {submitLabel}
           </button>
 
           {emailSentTo && (
             <button
-              type="button"
-              onClick={() => {
-                setEmailSentTo(null);
-                void handleSubmit();
-              }}
-              className="mt-3 inline-flex w-full items-center justify-center rounded-full border border-border bg-background px-5 py-3 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+              onClick={() => { setEmailSentTo(null); void handleSubmit(); }}
+              style={{ width: '100%', background: T.white, border: `1.5px solid ${T.border}`, borderRadius: 16, padding: '11px 0', fontSize: 13, fontWeight: 700, color: T.ink, cursor: 'pointer', fontFamily: 'inherit' }}
             >
               Resend email link
             </button>
           )}
         </div>
       )}
-    </section>
+    </div>
   );
 };

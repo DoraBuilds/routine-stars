@@ -1,50 +1,89 @@
-import { CloudOff, RefreshCw, ShieldAlert } from 'lucide-react';
-
 interface HouseholdLoadErrorScreenProps {
   error: string;
   onRetry: () => void;
 }
 
-export const HouseholdLoadErrorScreen = ({ error, onRetry }: HouseholdLoadErrorScreenProps) => (
-  <div className="relative min-h-svh overflow-hidden px-5 py-10 md:px-6 md:py-14">
-    <div className="absolute inset-x-0 top-0 -z-10 mx-auto h-72 w-[42rem] max-w-full rounded-full bg-primary/10 blur-3xl" />
-    <div className="absolute left-6 top-24 -z-10 h-28 w-28 rounded-full bg-warning/20 blur-2xl" />
-    <div className="absolute right-8 top-16 -z-10 h-36 w-36 rounded-full bg-destructive/10 blur-2xl" />
+const T = {
+  fonts: `'Fredoka', system-ui, sans-serif`,
+  ink: '#3d2c1f',
+  inkMute: '#8a7866',
+  cream: '#fff9f0',
+  white: '#ffffff',
+  border: 'rgba(180,120,80,0.10)',
+  orange: '#f97316',
+};
 
-    <div className="mx-auto max-w-4xl rounded-[36px] border border-border bg-card/95 p-7 shadow-card md:p-9">
-      <div className="inline-flex items-center gap-2 rounded-full bg-warning/10 px-4 py-2 text-sm font-black uppercase tracking-[0.22em] text-warning">
-        <CloudOff size={16} />
-        Household Sync Paused
+export const HouseholdLoadErrorScreen = ({ error, onRetry }: HouseholdLoadErrorScreenProps) => (
+  <div
+    style={{
+      minHeight: '100svh',
+      background: T.cream,
+      fontFamily: T.fonts,
+      color: T.ink,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '32px 16px',
+      position: 'relative',
+      overflow: 'hidden',
+    }}
+  >
+    {/* Blobs */}
+    <div style={{ position: 'fixed', top: -80, right: -60, width: 280, height: 280, borderRadius: '50%', background: 'rgba(251,191,36,0.1)', filter: 'blur(60px)', pointerEvents: 'none' }} />
+    <div style={{ position: 'fixed', bottom: -60, left: -40, width: 240, height: 240, borderRadius: '50%', background: 'rgba(239,68,68,0.06)', filter: 'blur(50px)', pointerEvents: 'none' }} />
+
+    <div style={{ position: 'relative', maxWidth: 600, width: '100%' }}>
+      {/* Badge */}
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fef3c7', borderRadius: 99, padding: '6px 14px', fontSize: 11, fontWeight: 700, color: '#92400e', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 18 }}>
+        ⚠️ Household sync paused
       </div>
 
-      <h1 className="mt-6 text-4xl font-bold text-foreground md:text-5xl">
+      <h1 style={{ fontSize: 26, fontWeight: 700, lineHeight: 1.2, margin: '0 0 12px' }}>
         We could not load this family account yet
       </h1>
-      <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-        This device is signed in, but we could not confirm the household from the cloud right now. We are pausing here
-        so we do not accidentally treat the account like a brand-new family.
+      <p style={{ fontSize: 14, color: T.inkMute, marginBottom: 22, lineHeight: 1.6 }}>
+        This device is signed in, but we could not confirm the household from the cloud right now. We're pausing here so we don't accidentally treat the account like a brand-new family.
       </p>
 
-      <div className="mt-8 rounded-[28px] border border-destructive/20 bg-destructive/5 p-5">
-        <div className="flex items-center gap-2 text-destructive">
-          <ShieldAlert size={18} />
-          <p className="text-sm font-black uppercase tracking-[0.18em]">Why we paused</p>
-        </div>
-        <p className="mt-3 text-sm text-foreground">{error}</p>
+      {/* Error detail */}
+      <div style={{ background: '#fff5f5', borderRadius: 18, padding: '14px 16px', border: '1.5px solid rgba(220,38,38,0.15)', marginBottom: 16 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#dc2626', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>🛡️ Why we paused</div>
+        <div style={{ fontSize: 12, color: '#dc2626', lineHeight: 1.6 }}>{error}</div>
       </div>
 
-      <div className="mt-8 rounded-[28px] border border-border bg-background/80 p-5 text-sm text-muted-foreground">
-        <p>1. We did not open a fresh setup flow because that could overwrite the wrong family data.</p>
-        <p className="mt-2">2. Retry once the connection or family sync service is available again.</p>
+      {/* What to do */}
+      <div style={{ background: T.white, borderRadius: 18, padding: '14px 16px', border: `1.5px solid ${T.border}`, marginBottom: 22 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {[
+            'We did not open a fresh setup flow because that could overwrite the wrong family data.',
+            'Retry once the connection or family sync service is available again.',
+          ].map((note, i) => (
+            <div key={i} style={{ fontSize: 12, color: T.inkMute, display: 'flex', gap: 8 }}>
+              <span style={{ color: T.orange, fontWeight: 700 }}>{i + 1}.</span> {note}
+            </div>
+          ))}
+        </div>
       </div>
 
       <button
-        type="button"
         onClick={onRetry}
-        className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-button transition-transform active:translate-y-0.5"
+        style={{
+          background: T.orange,
+          color: '#fff',
+          border: 'none',
+          borderRadius: 16,
+          padding: '12px 24px',
+          fontSize: 14,
+          fontWeight: 700,
+          cursor: 'pointer',
+          fontFamily: 'inherit',
+          boxShadow: '0 3px 0 rgba(194,65,12,0.35)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}
       >
-        <RefreshCw size={16} />
-        Retry loading the household
+        🔄 Retry loading the household
       </button>
     </div>
   </div>

@@ -1,98 +1,136 @@
-import { ArrowRight, Clock3, LogOut, Search, ShieldCheck } from 'lucide-react';
-
 interface ExistingFamilyRecoveryScreenProps {
   onStartFresh: () => void;
   onSignOut: () => void;
 }
 
+const T = {
+  fonts: `'Fredoka', system-ui, sans-serif`,
+  ink: '#3d2c1f',
+  inkMute: '#8a7866',
+  cream: '#fff9f0',
+  white: '#ffffff',
+  border: 'rgba(180,120,80,0.10)',
+  orange: '#f97316',
+  orangeLight: '#fff1e8',
+  amber: '#f59e0b',
+  amberLight: '#fef3c7',
+};
+
 export const ExistingFamilyRecoveryScreen = ({
   onStartFresh,
   onSignOut,
 }: ExistingFamilyRecoveryScreenProps) => (
-  <div className="relative min-h-svh overflow-hidden bg-[linear-gradient(180deg,#eef8ff_0%,#fffdf7_52%,#fff6ea_100%)] px-5 py-10 md:px-6 md:py-14">
-    <div className="absolute inset-x-0 top-0 -z-10 mx-auto h-80 w-[44rem] max-w-full rounded-full bg-amber-200/30 blur-3xl" />
-    <div className="absolute left-10 top-20 -z-10 h-36 w-36 rounded-full bg-primary/15 blur-3xl" />
-    <div className="absolute right-0 top-16 -z-10 h-44 w-44 rounded-full bg-accent/20 blur-3xl" />
+  <div
+    style={{
+      minHeight: '100svh',
+      background: T.cream,
+      fontFamily: T.fonts,
+      color: T.ink,
+      display: 'flex',
+      alignItems: 'flex-start',
+      justifyContent: 'center',
+      padding: '32px 16px',
+      position: 'relative',
+      overflow: 'hidden',
+    }}
+  >
+    {/* Blobs */}
+    <div style={{ position: 'fixed', top: -80, left: -60, width: 300, height: 300, borderRadius: '50%', background: 'rgba(251,191,36,0.12)', filter: 'blur(60px)', pointerEvents: 'none' }} />
+    <div style={{ position: 'fixed', bottom: -60, right: -40, width: 260, height: 260, borderRadius: '50%', background: 'rgba(249,115,22,0.08)', filter: 'blur(50px)', pointerEvents: 'none' }} />
 
-    <div className="mx-auto max-w-4xl space-y-5">
-      {/* Reassurance banner — shown prominently before anything else */}
-      <div className="flex items-center gap-3 rounded-[28px] border border-success/30 bg-success/8 px-5 py-4">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
-          <ShieldCheck size={20} />
-        </div>
+    <div style={{ position: 'relative', maxWidth: 680, width: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+      {/* Safety banner */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#f0fdf4', borderRadius: 18, padding: '12px 16px', border: '1.5px solid rgba(34,197,94,0.2)' }}>
+        <span style={{ fontSize: 24 }}>🛡️</span>
         <div>
-          <p className="text-sm font-black uppercase tracking-[0.2em] text-success">Your data is safe</p>
-          <p className="mt-0.5 text-sm text-muted-foreground">
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Your data is safe</div>
+          <div style={{ fontSize: 12, color: '#15803d', marginTop: 2 }}>
             Your kids and routines are not lost — they just need to be imported from the browser where they were first created.
-          </p>
+          </div>
         </div>
       </div>
 
-      <div className="rounded-[40px] border border-white/80 bg-card/95 p-7 shadow-card md:p-10">
-        <div className="inline-flex items-center gap-2 rounded-full bg-amber-100 px-4 py-2 text-sm font-black uppercase tracking-[0.22em] text-amber-800">
-          <Search size={16} />
-          Looking for your family?
+      {/* Main card */}
+      <div style={{ background: T.white, borderRadius: 26, padding: '22px 20px', border: `1.5px solid ${T.border}`, boxShadow: '0 6px 20px rgba(180,120,80,0.08)' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: T.amberLight, borderRadius: 99, padding: '6px 14px', fontSize: 11, fontWeight: 700, color: '#92400e', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>
+          🔍 Looking for your family?
         </div>
 
-        <h1 className="mt-6 max-w-3xl text-4xl font-bold text-foreground md:text-5xl">
+        <h1 style={{ fontSize: 26, fontWeight: 700, lineHeight: 1.2, margin: '0 0 12px' }}>
           This browser looks brand new
         </h1>
-        <p className="mt-4 max-w-3xl text-lg leading-8 text-muted-foreground">
-          You&apos;re signed in, but we didn&apos;t find any saved family routines here yet. If your kids and routines
-          were created in a different browser, laptop profile, or older tab, Routine Stars can only import them from
-          that original place.
+        <p style={{ fontSize: 14, color: T.inkMute, marginBottom: 22, lineHeight: 1.6 }}>
+          You're signed in, but we didn't find any saved family routines here yet. If your kids and routines were created in a different browser, the routines can only be imported from that original place.
         </p>
 
-        <div className="mt-8 grid gap-4 md:grid-cols-2">
-          <div className="rounded-[30px] border border-primary/15 bg-primary/5 p-5">
-            <div className="flex items-center gap-3 text-foreground">
-              <Clock3 size={18} className="text-primary" />
-              <p className="text-sm font-black uppercase tracking-[0.18em]">Safest next step</p>
+        {/* Option cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 10, marginBottom: 20 }}>
+          <div style={{ background: '#eff6ff', borderRadius: 18, padding: '14px 14px', border: '1.5px solid rgba(59,130,246,0.15)' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#1d4ed8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>⏰ Safest next step</div>
+            <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Go back to the original browser once</div>
+            <div style={{ fontSize: 12, color: T.inkMute, lineHeight: 1.6 }}>
+              Open the browser where routines were first created, sign in there, then import that family into your account.
             </div>
-            <h2 className="mt-3 text-2xl font-bold text-foreground">Go back to the original browser once</h2>
-            <p className="mt-2 text-sm leading-7 text-muted-foreground">
-              Open the exact browser context where the routines were first created, sign in there, and import that saved
-              family into your account. After that, this device will load the synced household normally.
-            </p>
           </div>
-
-          <div className="rounded-[30px] border border-border bg-background/80 p-5">
-            <div className="flex items-center gap-3 text-foreground">
-              <ArrowRight size={18} className="text-accent" />
-              <p className="text-sm font-black uppercase tracking-[0.18em]">Only if this is intentional</p>
+          <div style={{ background: T.cream, borderRadius: 18, padding: '14px 14px', border: `1.5px solid ${T.border}` }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: T.inkMute, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>→ Only if intentional</div>
+            <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Start a brand-new family here</div>
+            <div style={{ fontSize: 12, color: T.inkMute, lineHeight: 1.6 }}>
+              Choose this only if you want a clean household and you're not trying to recover existing kids and routines.
             </div>
-            <h2 className="mt-3 text-2xl font-bold text-foreground">Start a brand-new family here</h2>
-            <p className="mt-2 text-sm leading-7 text-muted-foreground">
-              Choose this only if you really want a clean household on this account and you are not trying to recover
-              existing kids and routines.
-            </p>
           </div>
         </div>
 
-        <div className="mt-8 rounded-[30px] border border-border bg-background/85 p-5">
-          <p className="text-sm font-black uppercase tracking-[0.18em] text-foreground">Why this happens</p>
-          <div className="mt-4 grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
-            <p>1. Older routines may still live only in the browser where they were originally created.</p>
-            <p>2. Signing in on a different browser context can look like an empty family account.</p>
-            <p>3. Once the original setup is imported, new devices can load it from the cloud.</p>
+        {/* Why this happens */}
+        <div style={{ background: T.cream, borderRadius: 16, padding: '12px 14px', border: `1.5px solid ${T.border}`, marginBottom: 22 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>Why this happens</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {[
+              'Older routines may still live only in the browser where they were originally created.',
+              'Signing in on a different browser context can look like an empty family account.',
+              'Once the original setup is imported, new devices can load it from the cloud.',
+            ].map((note, i) => (
+              <div key={i} style={{ fontSize: 12, color: T.inkMute, display: 'flex', gap: 8 }}>
+                <span style={{ color: T.orange, fontWeight: 700 }}>{i + 1}.</span> {note}
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button
-            type="button"
             onClick={onStartFresh}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-button transition-transform active:translate-y-0.5"
+            style={{
+              background: T.orange,
+              color: '#fff',
+              border: 'none',
+              borderRadius: 16,
+              padding: '12px 22px',
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              boxShadow: '0 3px 0 rgba(194,65,12,0.35)',
+            }}
           >
-            <ArrowRight size={16} />
-            Start fresh on this device
+            Start fresh on this device →
           </button>
           <button
-            type="button"
             onClick={onSignOut}
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-border bg-background px-5 py-3 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+            style={{
+              background: T.white,
+              color: T.ink,
+              border: `1.5px solid ${T.border}`,
+              borderRadius: 16,
+              padding: '12px 20px',
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
           >
-            <LogOut size={16} />
             Sign out here
           </button>
         </div>
