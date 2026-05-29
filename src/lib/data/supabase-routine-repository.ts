@@ -28,8 +28,7 @@ const mapRoutineTask = (row: Record<string, unknown>): RoutineTaskRecord => ({
   updatedAt: String(row.updated_at),
 });
 
-const toRoutinePayload = (routine: Omit<RoutineRecord, 'createdAt' | 'updatedAt'>) => ({
-  id: routine.id,
+const toRoutinePayload = (routine: Omit<RoutineRecord, 'id' | 'createdAt' | 'updatedAt'>) => ({
   child_profile_id: routine.childProfileId,
   type: routine.type,
   start_time: routine.startTime,
@@ -71,7 +70,7 @@ export class SupabaseRoutineRepository implements RoutineRepository {
     };
   }
 
-  async upsertRoutine(input: Omit<RoutineRecord, 'createdAt' | 'updatedAt'>) {
+  async upsertRoutine(input: Omit<RoutineRecord, 'id' | 'createdAt' | 'updatedAt'>) {
     const { data, error } = await this.supabase
       .from(ROUTINES_TABLE)
       .upsert(toRoutinePayload(input), { onConflict: 'child_profile_id,type' })

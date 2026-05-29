@@ -110,7 +110,6 @@ describe('saveHouseholdConfigToCloud', () => {
     expect(upsertRoutine).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
-        id: 'child-1-morning',
         childProfileId: 'child-1',
         type: 'morning',
         startTime: '07:30',

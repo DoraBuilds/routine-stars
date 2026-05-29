@@ -104,7 +104,6 @@ describe('SupabaseRoutineRepository', () => {
 
     await expect(
       repository.upsertRoutine({
-        id: 'routine-1',
         childProfileId: 'child-1',
         type: 'morning',
         startTime: '07:00',
@@ -118,7 +117,6 @@ describe('SupabaseRoutineRepository', () => {
 
     expect(upsert).toHaveBeenCalledWith(
       {
-        id: 'routine-1',
         child_profile_id: 'child-1',
         type: 'morning',
         start_time: '07:00',

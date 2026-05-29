@@ -90,7 +90,6 @@ export const saveHouseholdConfigToCloud = async (input: {
       let routine;
       try {
         routine = await routineRepository.upsertRoutine({
-          id: `${savedChild.id}-${routineType}`,
           childProfileId: savedChild.id,
           type: routineType,
           startTime: child.schedule?.[routineType].start ?? (routineType === 'morning' ? '07:00' : '17:00'),
