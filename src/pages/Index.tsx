@@ -1145,28 +1145,7 @@ const Index = () => {
     );
   }
 
-  if (view === 'parent') {
-    return (
-      <AdminApp
-        kids={children}
-        onClose={() => setView('home')}
-        onChangeMascot={handleChangeMascot}
-        onAddTask={handleAddTask}
-        onRemoveTask={handleRemoveTask}
-        onAddAffirmation={handleAddAffirmation}
-        onRemoveAffirmation={handleRemoveAffirmation}
-        onToggleBadge={handleToggleBadge}
-        onAddKid={handleAddKid}
-        cloudSyncStatus={authStatus === 'signed_in' ? cloudConfigSyncStatus : undefined}
-        onSignOut={authStatus === 'signed_in' ? () => void signOut() : undefined}
-        onOpenAdvancedSettings={() => setView('advanced-settings')}
-        onRestartSetup={restartSetup}
-        onResetAppData={() => void resetToFreshSetup()}
-      />
-    );
-  }
-
-  if (view === 'advanced-settings') {
+  if (view === 'parent' || view === 'advanced-settings') {
     return (
       <Suspense fallback={<ViewLoadingFallback title="Opening settings" />}>
         <ParentSettings
@@ -1182,7 +1161,7 @@ const Index = () => {
           onHomeSceneChange={setHomeScene}
           onRestartSetup={restartSetup}
           onResetAppData={resetToFreshSetup}
-          onBack={() => setView('parent')}
+          onBack={() => setView('home')}
         />
       </Suspense>
     );
