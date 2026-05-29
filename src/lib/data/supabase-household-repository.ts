@@ -44,21 +44,42 @@ export class SupabaseHouseholdRepository implements HouseholdRepository {
     // If multiple households exist (due to earlier bugs or tests), we pick the
     // most recently updated owner household so existing accounts converge on the
     // household that actually contains data.
-    const { data, error } = await this.supabase
+    //
+    // NOTE: We intentionally avoid PostgREST embedded-resource joins here
+    // (e.g. `household:households(*)`) because those depend on PostgREST having
+    // detected the FK relationship in its schema cache. That cache can be stale
+    // after manual migrations, causing the join to fail even when both tables and
+    // the FK exist perfectly. Two plain queries are slower by one round-trip but
+    // are completely immune to schema-cache issues.
+    const { data: memberRows, error: memberError } = await this.supabase
       .from(HOUSEHOLD_MEMBERS_TABLE)
-      .select('household:households(*)')
+      .select('household_id')
       .eq('user_id', userId)
       .eq('role', 'owner')
       .order('created_at', { ascending: true });
 
-    if (error) {
-      throw error;
+    if (memberError) {
+      throw memberError;
     }
 
-    const rows = Array.isArray(data) ? data : data ? [data] : [];
-    const households = rows
-      .map((row) => (row && typeof row === 'object' && 'household' in row ? (row as any).household : null))
-      .filter(Boolean) as Array<Record<string, unknown>>;
+    const householdIds = (Array.isArray(memberRows) ? memberRows : memberRows ? [memberRows] : [])
+      .map((row) => (row && typeof row === 'object' && 'household_id' in row ? String((row as any).household_id) : null))
+      .filter(Boolean) as string[];
+
+    if (!householdIds.length) {
+      return null;
+    }
+
+    const { data: householdRows, error: householdError } = await this.supabase
+      .from(HOUSEHOLDS_TABLE)
+      .select('*')
+      .in('id', householdIds);
+
+    if (householdError) {
+      throw householdError;
+    }
+
+    const households = (Array.isArray(householdRows) ? householdRows : householdRows ? [householdRows] : []) as Array<Record<string, unknown>>;
 
     if (!households.length) {
       return null;

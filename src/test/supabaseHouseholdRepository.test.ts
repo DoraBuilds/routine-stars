@@ -9,47 +9,47 @@ const createSupabaseClient = (rpcResult: { data: unknown; error: unknown }, tabl
 
 describe('SupabaseHouseholdRepository', () => {
   it('selects the most recently updated owner household when duplicates exist', async () => {
-    const order = vi.fn().mockResolvedValue({
+    // Step 1 mock: household_members → returns household_ids
+    const memberOrder = vi.fn().mockResolvedValue({
+      data: [{ household_id: 'house-old' }, { household_id: 'house-new' }],
+      error: null,
+    });
+    const memberEqRole = vi.fn(() => ({ order: memberOrder }));
+    const memberEqUser = vi.fn(() => ({ eq: memberEqRole }));
+    const memberSelect = vi.fn(() => ({ eq: memberEqUser }));
+
+    // Step 2 mock: households → returns full household rows
+    const householdIn = vi.fn().mockResolvedValue({
       data: [
         {
-          household: {
-            id: 'house-old',
-            name: "Dora's Family",
-            timezone: 'Europe/Madrid',
-            home_scene: 'bike',
-            created_by_user_id: 'user-1',
-            created_at: '2026-05-01T12:00:00Z',
-            updated_at: '2026-05-01T12:00:00Z',
-          },
+          id: 'house-old',
+          name: "Dora's Family",
+          timezone: 'Europe/Madrid',
+          home_scene: 'bike',
+          created_by_user_id: 'user-1',
+          created_at: '2026-05-01T12:00:00Z',
+          updated_at: '2026-05-01T12:00:00Z',
         },
         {
-          household: {
-            id: 'house-new',
-            name: "Dora's Family",
-            timezone: 'Europe/Madrid',
-            home_scene: 'school',
-            created_by_user_id: 'user-1',
-            created_at: '2026-05-02T12:00:00Z',
-            updated_at: '2026-05-04T12:00:00Z',
-          },
+          id: 'house-new',
+          name: "Dora's Family",
+          timezone: 'Europe/Madrid',
+          home_scene: 'school',
+          created_by_user_id: 'user-1',
+          created_at: '2026-05-02T12:00:00Z',
+          updated_at: '2026-05-04T12:00:00Z',
         },
       ],
       error: null,
     });
-    const eqRole = vi.fn(() => ({
-      order,
-    }));
-    const eqUser = vi.fn(() => ({
-      eq: eqRole,
-    }));
-    const select = vi.fn(() => ({
-      eq: eqUser,
-    }));
+    const householdSelect = vi.fn(() => ({ in: householdIn }));
 
     const repository = new SupabaseHouseholdRepository({
-      from: vi.fn(() => ({
-        select,
-      })),
+      from: vi.fn((table: string) =>
+        table === 'household_members'
+          ? { select: memberSelect }
+          : { select: householdSelect }
+      ),
     } as never);
 
     await expect(repository.getCurrentHousehold('user-1')).resolves.toEqual({
@@ -62,10 +62,12 @@ describe('SupabaseHouseholdRepository', () => {
       updatedAt: '2026-05-04T12:00:00Z',
     });
 
-    expect(select).toHaveBeenCalledWith('household:households(*)');
-    expect(eqUser).toHaveBeenCalledWith('user_id', 'user-1');
-    expect(eqRole).toHaveBeenCalledWith('role', 'owner');
-    expect(order).toHaveBeenCalledWith('created_at', { ascending: true });
+    expect(memberSelect).toHaveBeenCalledWith('household_id');
+    expect(memberEqUser).toHaveBeenCalledWith('user_id', 'user-1');
+    expect(memberEqRole).toHaveBeenCalledWith('role', 'owner');
+    expect(memberOrder).toHaveBeenCalledWith('created_at', { ascending: true });
+    expect(householdSelect).toHaveBeenCalledWith('*');
+    expect(householdIn).toHaveBeenCalledWith('id', ['house-old', 'house-new']);
   });
 
   it('returns the RPC household when bootstrap_household succeeds', async () => {
