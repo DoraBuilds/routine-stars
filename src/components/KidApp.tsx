@@ -28,7 +28,7 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood }: KidAppPr
     <div
       style={{
         position: 'relative',
-        height: '100%',
+        height: '100dvh',
         background: '#fff9f0',
         fontFamily: "'Fredoka', system-ui, sans-serif",
         display: 'flex',

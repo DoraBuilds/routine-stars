@@ -48,7 +48,7 @@ export const KidHome = ({ kids, theme, onPick, onParent }: KidHomeProps) => {
     <div
       style={{
         position: 'relative',
-        height: '100%',
+        height: '100dvh',
         overflow: 'hidden',
         fontFamily: "'Fredoka', system-ui, sans-serif",
         color: isMorning ? INK : '#fff',
