@@ -79,7 +79,7 @@ export const KidHome = ({ kids, theme, onPick, onParent }: KidHomeProps) => {
         <div style={{ marginBottom: 24, flexShrink: 0, textAlign: 'center' }}>
           <div
             style={{
-              fontSize: 11,
+              fontSize: 14,
               fontWeight: 600,
               color: isMorning ? '#d97706' : '#fde68a',
               letterSpacing: '0.14em',
@@ -97,7 +97,7 @@ export const KidHome = ({ kids, theme, onPick, onParent }: KidHomeProps) => {
           </div>
           <div
             style={{
-              fontSize: 13,
+              fontSize: 15,
               color: isMorning ? INK_MUTE : 'rgba(255,255,255,0.7)',
               marginTop: 6,
             }}
@@ -191,7 +191,7 @@ export const KidHome = ({ kids, theme, onPick, onParent }: KidHomeProps) => {
                       background: isMorning ? '#fff7ed' : 'rgba(255,255,255,0.15)',
                       borderRadius: 8,
                       padding: '3px 7px',
-                      fontSize: 11,
+                      fontSize: 14,
                       fontWeight: 700,
                       color: '#f97316',
                       display: 'flex',
@@ -219,7 +219,7 @@ export const KidHome = ({ kids, theme, onPick, onParent }: KidHomeProps) => {
                 {/* Mascot label */}
                 <div
                   style={{
-                    fontSize: 11,
+                    fontSize: 14,
                     color: isMorning ? INK_MUTE : 'rgba(255,255,255,0.65)',
                     marginTop: -4,
                   }}
@@ -277,7 +277,7 @@ export const KidHome = ({ kids, theme, onPick, onParent }: KidHomeProps) => {
             flexShrink: 0,
           }}
         >
-          <span style={{ fontSize: 11, fontWeight: 500 }}>⚙️ Hold to open parent settings</span>
+          <span style={{ fontSize: 14, fontWeight: 500 }}>⚙️ Hold to open parent settings</span>
           <div
             style={{
               width: 90,
