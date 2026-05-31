@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { PainterlyBanner } from './PainterlyBanner';
-import { TaskIcon } from './TaskIcon';
+import { TaskIcon, getTaskIconColor } from './TaskIcon';
 import { getMascot } from '@/lib/mascots';
 import type { Child, RoutineType } from '@/lib/types';
 
@@ -140,21 +140,27 @@ export const RoutinesTab = ({ kid, theme, onToggleTask }: RoutinesTabProps) => {
                 transition: 'transform 0.1s, opacity 0.3s',
               }}
             >
-              <div
-                style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: 12,
-                  background: 'rgba(255,255,255,0.7)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 22,
-                  flexShrink: 0,
-                }}
-              >
-                <TaskIcon iconKey={t.icon} size={22} strokeWidth={2.5} />
-              </div>
+              {(() => {
+                const iconColor = getTaskIconColor(t.icon);
+                return (
+                  <div
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 14,
+                      background: t.completed ? 'rgba(255,255,255,0.5)' : `${iconColor}20`,
+                      border: `1.5px solid ${t.completed ? 'rgba(255,255,255,0.4)' : `${iconColor}40`}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      transition: 'all 0.3s',
+                    }}
+                  >
+                    <TaskIcon iconKey={t.icon} size={22} strokeWidth={2.5} />
+                  </div>
+                );
+              })()}
               <div
                 style={{
                   flex: 1,
