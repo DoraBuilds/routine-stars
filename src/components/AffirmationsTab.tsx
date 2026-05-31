@@ -96,31 +96,33 @@ export const AffirmationsTab = ({ kid }: AffirmationsTabProps) => {
             position: 'relative',
           }}
         >
-          {/* Decorations */}
+          {/* Decorations — corners, no top-right so heart is clear */}
           <div style={{ position: 'absolute', top: 10, left: 14, fontSize: 16, opacity: 0.45 }}>✿</div>
-          <div style={{ position: 'absolute', top: 14, right: 16, fontSize: 14, opacity: 0.45 }}>✦</div>
           <div style={{ position: 'absolute', bottom: 10, left: 16, fontSize: 12, opacity: 0.45 }}>✦</div>
           <div style={{ position: 'absolute', bottom: 14, right: 14, fontSize: 16, opacity: 0.45 }}>✿</div>
 
           {/* Heart favourite button */}
           <button
             onClick={handleFave}
+            title={isFaved ? 'Remove from favourites' : 'Save to favourites'}
             style={{
               position: 'absolute',
-              top: 12,
-              right: 14,
+              top: 10,
+              right: 12,
               background: 'none',
               border: 'none',
-              fontSize: 22,
+              fontSize: 24,
+              lineHeight: 1,
               cursor: 'pointer',
-              color: isFaved ? PINK : 'rgba(236,72,153,0.35)',
-              transition: 'transform 0.15s, color 0.15s',
-              transform: isFaved ? 'scale(1.2)' : 'scale(1)',
+              color: isFaved ? '#ef4444' : '#3d2c1f',
+              transition: 'transform 0.15s, color 0.2s',
+              transform: isFaved ? 'scale(1.25)' : 'scale(1)',
               WebkitTapHighlightColor: 'transparent',
               zIndex: 2,
+              padding: 4,
             }}
           >
-            {isFaved ? '❤️' : '🤍'}
+            {isFaved ? '♥' : '♡'}
           </button>
 
           <div style={{ fontSize: 60, marginBottom: 12 }}>{m.emoji}</div>
@@ -259,9 +261,9 @@ export const AffirmationsTab = ({ kid }: AffirmationsTabProps) => {
                 </div>
                 <button
                   onClick={() => setFavourites((prev) => { const n = new Set(prev); n.delete(aff); return n; })}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: PINK, padding: 2, WebkitTapHighlightColor: 'transparent' }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: '#ef4444', padding: 2, WebkitTapHighlightColor: 'transparent', lineHeight: 1 }}
                 >
-                  ❤️
+                  ♥
                 </button>
               </div>
             ))}
