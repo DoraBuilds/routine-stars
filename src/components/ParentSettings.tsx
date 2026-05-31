@@ -100,7 +100,7 @@ const TaskModal = ({ initial, routine, mode, suggestions, onSave, onClose }: Tas
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
           <div>
             <div style={{ fontSize: 18, fontWeight: 700 }}>{mode === 'edit' ? 'Edit Task' : 'New Task'}</div>
-            <div style={{ fontSize: 12, color: T.inkMute, marginTop: 3 }}>
+            <div style={{ fontSize: 15, color: T.inkMute, marginTop: 3 }}>
               {mode === 'edit' ? 'Tweak the task for this child.' : `Start with a ${routine === 'morning' ? 'morning' : 'bedtime'} suggestion or build your own.`}
             </div>
           </div>
@@ -119,7 +119,7 @@ const TaskModal = ({ initial, routine, mode, suggestions, onSave, onClose }: Tas
 
         {/* Task name */}
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Task Name</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Task Name</div>
           <input
             style={inputStyle}
             placeholder="e.g. Brush teeth"
@@ -131,7 +131,7 @@ const TaskModal = ({ initial, routine, mode, suggestions, onSave, onClose }: Tas
 
         {/* Icon picker */}
         <div style={{ marginBottom: 22 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Icon</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Icon</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
             {ICON_OPTIONS.map((opt) => (
               <button
@@ -146,7 +146,7 @@ const TaskModal = ({ initial, routine, mode, suggestions, onSave, onClose }: Tas
                 }}
               >
                 <TaskIcon iconKey={opt.key} size={22} strokeWidth={2.5} />
-                <span style={{ fontSize: 9, fontWeight: 700 }}>{opt.label}</span>
+                <span style={{ fontSize: 15, fontWeight: 700 }}>{opt.label}</span>
               </button>
             ))}
           </div>
@@ -218,7 +218,7 @@ const RoutineColumn = ({ type, tasks, onReorder, onDelete, onQuickAdd, onAdd, on
             </span>
             <button
               onClick={() => onEdit(task.id)}
-              style={{ flex: 1, background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 500, color: T.ink, padding: 0 }}
+              style={{ flex: 1, background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', fontSize: 15, fontWeight: 500, color: T.ink, padding: 0 }}
             >
               {task.title}
             </button>
@@ -235,7 +235,7 @@ const RoutineColumn = ({ type, tasks, onReorder, onDelete, onQuickAdd, onAdd, on
       {/* Age bucket task suggestions */}
       {otherTasks.length > 0 && (
         <div style={{ marginTop: 12, borderRadius: 16, border: `2px dashed ${T.border}`, background: T.cream, padding: '12px 14px' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
             More tasks to add
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -243,10 +243,10 @@ const RoutineColumn = ({ type, tasks, onReorder, onDelete, onQuickAdd, onAdd, on
               <details key={`${type}-${group.key}`} style={{ borderRadius: 14, border: `1.5px solid ${T.border}`, background: T.white, overflow: 'hidden' }}>
                 <summary style={{ display: 'flex', cursor: 'pointer', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 14px', listStyle: 'none' }}>
                   <div>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{group.label}</div>
-                    <div style={{ fontSize: 10, color: T.inkMute, marginTop: 1 }}>{group.description}</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{group.label}</div>
+                    <div style={{ fontSize: 15, color: T.inkMute, marginTop: 1 }}>{group.description}</div>
                   </div>
-                  <span style={{ fontSize: 12, color: T.inkMute }}>›</span>
+                  <span style={{ fontSize: 15, color: T.inkMute }}>›</span>
                 </summary>
                 <div style={{ borderTop: `1px solid ${T.border}`, padding: '10px 14px' }}>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -257,7 +257,7 @@ const RoutineColumn = ({ type, tasks, onReorder, onDelete, onQuickAdd, onAdd, on
                         style={{
                           display: 'flex', alignItems: 'center', gap: 6, borderRadius: 99,
                           border: `1.5px solid ${T.border}`, background: T.white,
-                          padding: '5px 10px', fontSize: 12, fontWeight: 500, color: T.ink,
+                          padding: '5px 10px', fontSize: 15, fontWeight: 500, color: T.ink,
                           cursor: 'pointer', fontFamily: 'inherit',
                         }}
                       >
@@ -280,7 +280,7 @@ const RoutineColumn = ({ type, tasks, onReorder, onDelete, onQuickAdd, onAdd, on
           marginTop: 10, width: '100%', padding: '11px 0', borderRadius: 14,
           border: `2px dashed ${isMorning ? T.orange + '55' : '#7c3aed55'}`,
           background: 'transparent', color: isMorning ? T.orange : '#7c3aed',
-          fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+          fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
         }}
       >
@@ -416,7 +416,7 @@ export const ParentSettings = ({
             </button>
             <div>
               <div style={{ fontSize: 20, fontWeight: 700 }}>Parent Settings</div>
-              <div style={{ fontSize: 12, color: T.inkMute }}>Manage children and their daily routines.</div>
+              <div style={{ fontSize: 15, color: T.inkMute }}>Manage children and their daily routines.</div>
             </div>
           </div>
           <button
@@ -457,8 +457,8 @@ export const ParentSettings = ({
                   >
                     <span style={{ fontSize: 16 }}>{meta.emoji}</span>
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{meta.label}</div>
-                      <div style={{ fontSize: 9, opacity: 0.75, marginTop: 1 }}>{desc}</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{meta.label}</div>
+                      <div style={{ fontSize: 15, opacity: 0.75, marginTop: 1 }}>{desc}</div>
                     </div>
                   </button>
                 );
@@ -467,20 +467,20 @@ export const ParentSettings = ({
 
             {/* Quick view */}
             <div style={{ background: T.cream, borderRadius: 14, padding: '10px 12px', marginBottom: 14 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Quick view</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Quick view</div>
               <div style={{ fontSize: 17, fontWeight: 700 }}>{children.length} kids</div>
-              <div style={{ fontSize: 11, color: T.inkMute, marginTop: 3 }}>Choose a section on the left instead of scrolling through everything at once.</div>
+              <div style={{ fontSize: 14, color: T.inkMute, marginTop: 3 }}>Choose a section on the left instead of scrolling through everything at once.</div>
             </div>
 
             {/* Account status */}
             <div style={{ background: T.white, borderRadius: 14, padding: '10px 12px', border: `1.5px solid ${T.border}`, marginBottom: isSignedIn ? 14 : 0 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>
                 {isSignedIn ? 'Account status' : 'Sign-in required'}
               </div>
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
+              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>
                 {isSignedIn ? 'Parent account connected' : 'Parent account not connected'}
               </div>
-              <div style={{ fontSize: 11, color: T.inkMute, marginBottom: isSignedIn ? 10 : 0 }}>
+              <div style={{ fontSize: 14, color: T.inkMute, marginBottom: isSignedIn ? 10 : 0 }}>
                 {isSignedIn
                   ? 'This browser is signed in. Manage sync from the Parents section.'
                   : 'Sign in from the Parents section to load and manage the household saved to this account.'}
@@ -488,7 +488,7 @@ export const ParentSettings = ({
               {isSignedIn && (
                 <button
                   onClick={() => void signOut()}
-                  style={{ width: '100%', background: T.white, border: `1.5px solid ${T.border}`, borderRadius: 10, padding: '7px 0', fontSize: 12, fontWeight: 700, color: T.ink, cursor: 'pointer', fontFamily: 'inherit' }}
+                  style={{ width: '100%', background: T.white, border: `1.5px solid ${T.border}`, borderRadius: 10, padding: '7px 0', fontSize: 15, fontWeight: 700, color: T.ink, cursor: 'pointer', fontFamily: 'inherit' }}
                 >
                   Logout
                 </button>
@@ -498,8 +498,8 @@ export const ParentSettings = ({
             {/* Cloud sync status */}
             {isSignedIn && (
               <div style={{ background: syncBg, borderRadius: 14, padding: '10px 12px', border: `1.5px solid ${syncBorder}` }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: syncLabelColor, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>{syncLabel}</div>
-                <div style={{ fontSize: 11, color: T.inkMute, lineHeight: 1.5 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: syncLabelColor, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>{syncLabel}</div>
+                <div style={{ fontSize: 14, color: T.inkMute, lineHeight: 1.5 }}>
                   {cloudConfigSyncError
                     ? (cloudConfigSyncError.length > 120 ? cloudConfigSyncError.slice(0, 120) + '…' : cloudConfigSyncError)
                     : cloudConfigSyncStatus === 'saved'
@@ -511,7 +511,7 @@ export const ParentSettings = ({
                 {cloudConfigSyncError && onRetryCloudConfigSync && (
                   <button
                     onClick={onRetryCloudConfigSync}
-                    style={{ width: '100%', marginTop: 10, background: T.white, border: '1.5px solid rgba(220,38,38,0.2)', borderRadius: 10, padding: '7px 0', fontSize: 12, fontWeight: 700, color: '#dc2626', cursor: 'pointer', fontFamily: 'inherit' }}
+                    style={{ width: '100%', marginTop: 10, background: T.white, border: '1.5px solid rgba(220,38,38,0.2)', borderRadius: 10, padding: '7px 0', fontSize: 15, fontWeight: 700, color: '#dc2626', cursor: 'pointer', fontFamily: 'inherit' }}
                   >
                     🔄 Retry cloud save
                   </button>
@@ -529,12 +529,12 @@ export const ParentSettings = ({
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 18 }}>
                   <div>
                     <div style={{ fontSize: 18, fontWeight: 700 }}>Kids</div>
-                    <div style={{ fontSize: 12, color: T.inkMute, marginTop: 2 }}>Pick one child, then switch between profile details and routine setup.</div>
+                    <div style={{ fontSize: 15, color: T.inkMute, marginTop: 2 }}>Pick one child, then switch between profile details and routine setup.</div>
                   </div>
                   {children.length < 3 && (
                     <button
                       onClick={addChild}
-                      style={{ background: T.orange, color: '#fff', border: 'none', borderRadius: 14, padding: '9px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 3px 0 rgba(194,65,12,0.35)' }}
+                      style={{ background: T.orange, color: '#fff', border: 'none', borderRadius: 14, padding: '9px 18px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 3px 0 rgba(194,65,12,0.35)' }}
                     >
                       Add another child
                     </button>
@@ -545,8 +545,8 @@ export const ParentSettings = ({
                   <div style={{ textAlign: 'center', padding: '32px 16px', border: `2px dashed rgba(249,115,22,0.3)`, borderRadius: 18, background: T.orangeLight }}>
                     <div style={{ fontSize: 36, marginBottom: 12 }}>🐣</div>
                     <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Create the first child profile</div>
-                    <div style={{ fontSize: 12, color: T.inkMute, marginBottom: 18 }}>Add a child here first, then switch over to routines when you're ready.</div>
-                    <button onClick={addChild} style={{ background: T.orange, color: '#fff', border: 'none', borderRadius: 14, padding: '10px 22px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 3px 0 rgba(194,65,12,0.35)' }}>
+                    <div style={{ fontSize: 15, color: T.inkMute, marginBottom: 18 }}>Add a child here first, then switch over to routines when you're ready.</div>
+                    <button onClick={addChild} style={{ background: T.orange, color: '#fff', border: 'none', borderRadius: 14, padding: '10px 22px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 3px 0 rgba(194,65,12,0.35)' }}>
                       + Create first profile
                     </button>
                   </div>
@@ -572,7 +572,7 @@ export const ParentSettings = ({
                               {m.emoji}
                             </div>
                             <div>
-                              <div style={{ fontSize: 13, fontWeight: 600 }}>{child.name}</div>
+                              <div style={{ fontSize: 15, fontWeight: 600 }}>{child.name}</div>
                             </div>
                           </button>
                         );
@@ -595,7 +595,7 @@ export const ParentSettings = ({
                             padding: '8px 14px', borderRadius: 10, border: 'none',
                             background: kidEditorTab === key ? T.white : 'transparent',
                             color: kidEditorTab === key ? T.ink : T.inkMute,
-                            fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                            fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                             boxShadow: kidEditorTab === key ? T.shadow : 'none', transition: 'all 0.15s',
                           }}
                         >
@@ -618,7 +618,7 @@ export const ParentSettings = ({
                                 </div>
                               );
                             })()}
-                            <div style={{ fontSize: 11, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>Pick mascot</div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>Pick mascot</div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 4 }}>
                               {MASCOTS.map((opt) => {
                                 const selected = opt.id === (editorChild.mascotId ?? editorChild.avatarAnimal);
@@ -652,7 +652,7 @@ export const ParentSettings = ({
                               {children.length > 1 && (
                                 <button
                                   onClick={() => onChange(children.filter((c) => c.id !== editorChild.id))}
-                                  style={{ background: '#fff5f5', border: '1.5px solid rgba(220,38,38,0.2)', borderRadius: 10, padding: '8px 12px', fontSize: 12, fontWeight: 700, color: '#dc2626', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                  style={{ background: '#fff5f5', border: '1.5px solid rgba(220,38,38,0.2)', borderRadius: 10, padding: '8px 12px', fontSize: 15, fontWeight: 700, color: '#dc2626', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
                                 >
                                   🗑️
                                 </button>
@@ -661,7 +661,7 @@ export const ParentSettings = ({
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                               <div>
-                                <div style={{ fontSize: 11, fontWeight: 700, color: T.inkMute, marginBottom: 4 }}>Age</div>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: T.inkMute, marginBottom: 4 }}>Age</div>
                                 <input
                                   type="number" min={2} max={12}
                                   style={inputStyle}
@@ -670,7 +670,7 @@ export const ParentSettings = ({
                                 />
                               </div>
                               <div>
-                                <div style={{ fontSize: 11, fontWeight: 700, color: T.inkMute, marginBottom: 4 }}>Age group</div>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: T.inkMute, marginBottom: 4 }}>Age group</div>
                                 <select
                                   style={inputStyle}
                                   value={editorChild.ageBucket ?? '4-6'}
@@ -683,20 +683,20 @@ export const ParentSettings = ({
 
                             {/* Schedule */}
                             <div style={{ background: T.cream, borderRadius: 14, padding: '10px 12px', border: `1.5px solid ${T.border}` }}>
-                              <div style={{ fontSize: 11, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>⏰ Routine schedule</div>
+                              <div style={{ fontSize: 14, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>⏰ Routine schedule</div>
                               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                                 {(['morning', 'evening'] as const).map((routine) => (
                                   <div key={`${editorChild.id}-${routine}`} style={{ background: T.white, borderRadius: 12, padding: '8px 10px', border: `1.5px solid ${T.border}` }}>
-                                    <div style={{ fontSize: 10, fontWeight: 700, color: T.inkMute, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+                                    <div style={{ fontSize: 15, fontWeight: 700, color: T.inkMute, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
                                       {routine === 'morning' ? '☀️' : '🌙'} {routine}
                                     </div>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
                                       {(['start', 'end'] as const).map((bound) => (
                                         <div key={bound}>
-                                          <div style={{ fontSize: 9, color: T.inkMute, marginBottom: 2 }}>{bound}</div>
+                                          <div style={{ fontSize: 15, color: T.inkMute, marginBottom: 2 }}>{bound}</div>
                                           <input
                                             type="time"
-                                            style={{ ...inputStyle, fontSize: 11, padding: '4px 6px', borderRadius: 8 }}
+                                            style={{ ...inputStyle, fontSize: 14, padding: '4px 6px', borderRadius: 8 }}
                                             value={editorChild.schedule?.[routine]?.[bound] ?? DEFAULT_SCHEDULE[routine][bound]}
                                             onChange={(e) =>
                                               updateChild(editorChild.id, (c) => ({
@@ -773,7 +773,7 @@ export const ParentSettings = ({
                                   ? (routine === 'morning' ? 'linear-gradient(135deg,#fed7aa,#fdba74)' : 'linear-gradient(135deg,#a78bfa,#7c3aed)')
                                   : T.white,
                                 color: editorRoutine === routine ? (routine === 'morning' ? '#7c2d12' : '#fff') : T.inkMute,
-                                fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                                fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                                 border: `1.5px solid ${T.border}`, transition: 'all 0.15s',
                               }}
                             >
@@ -810,7 +810,7 @@ export const ParentSettings = ({
                   <div style={{ width: 44, height: 44, borderRadius: 14, background: T.orangeLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>🎨</div>
                   <div>
                     <div style={{ fontSize: 17, fontWeight: 700 }}>Household setup</div>
-                    <div style={{ fontSize: 12, color: T.inkMute }}>Pick the scene that appears when no routine is due.</div>
+                    <div style={{ fontSize: 15, color: T.inkMute }}>Pick the scene that appears when no routine is due.</div>
                   </div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(140px,1fr))', gap: 10 }}>
@@ -827,8 +827,8 @@ export const ParentSettings = ({
                       }}
                     >
                       <div style={{ fontSize: 32, marginBottom: 8 }}>{option.preview}</div>
-                      <div style={{ fontSize: 13, fontWeight: 700 }}>{option.label}</div>
-                      <div style={{ fontSize: 11, color: T.inkMute, marginTop: 4, lineHeight: 1.4 }}>{option.description}</div>
+                      <div style={{ fontSize: 15, fontWeight: 700 }}>{option.label}</div>
+                      <div style={{ fontSize: 14, color: T.inkMute, marginTop: 4, lineHeight: 1.4 }}>{option.description}</div>
                     </button>
                   ))}
                 </div>
@@ -842,19 +842,19 @@ export const ParentSettings = ({
                   <div style={{ width: 44, height: 44, borderRadius: 14, background: '#fff5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>⚙️</div>
                   <div>
                     <div style={{ fontSize: 17, fontWeight: 700 }}>Admin</div>
-                    <div style={{ fontSize: 12, color: T.inkMute }}>Restart setup or clear everything and start over.</div>
+                    <div style={{ fontSize: 15, color: T.inkMute }}>Restart setup or clear everything and start over.</div>
                   </div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 12 }}>
                   {/* Restart setup */}
                   <div style={{ background: T.cream, borderRadius: 18, padding: '16px', border: `1.5px solid ${T.border}` }}>
                     <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Restart setup</div>
-                    <div style={{ fontSize: 12, color: T.inkMute, lineHeight: 1.6, marginBottom: 14 }}>
+                    <div style={{ fontSize: 15, color: T.inkMute, lineHeight: 1.6, marginBottom: 14 }}>
                       Keep the current children and open the setup flow again to review profiles and routines.
                     </div>
                     <button
                       onClick={onRestartSetup}
-                      style={{ background: T.white, border: `1.5px solid ${T.border}`, borderRadius: 12, padding: '9px 18px', fontSize: 12, fontWeight: 700, color: T.ink, cursor: 'pointer', fontFamily: 'inherit' }}
+                      style={{ background: T.white, border: `1.5px solid ${T.border}`, borderRadius: 12, padding: '9px 18px', fontSize: 15, fontWeight: 700, color: T.ink, cursor: 'pointer', fontFamily: 'inherit' }}
                     >
                       Restart setup
                     </button>
@@ -863,7 +863,7 @@ export const ParentSettings = ({
                   {/* Reset app data */}
                   <div style={{ background: '#fff5f5', borderRadius: 18, padding: '16px', border: '1.5px solid rgba(220,38,38,0.15)' }}>
                     <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Reset app data</div>
-                    <div style={{ fontSize: 12, color: T.inkMute, lineHeight: 1.6, marginBottom: 14 }}>
+                    <div style={{ fontSize: 15, color: T.inkMute, lineHeight: 1.6, marginBottom: 14 }}>
                       {isSignedIn
                         ? 'Permanently delete the signed-in household, all child profiles, routines, schedules, and progress from Supabase and this browser.'
                         : 'This clears everything saved in this browser. Remove all saved children, routines, schedules, and progress and return to a fresh start.'}
@@ -871,7 +871,7 @@ export const ParentSettings = ({
 
                     {confirmReset ? (
                       <div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#dc2626', marginBottom: 10 }}>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: '#dc2626', marginBottom: 10 }}>
                           {isSignedIn
                             ? 'This permanently deletes the signed-in household everywhere and clears this browser. Are you sure?'
                             : 'This clears everything. Are you sure?'}
@@ -883,14 +883,14 @@ export const ParentSettings = ({
                               setIsResetting(true);
                               try { await onResetAppData(); } finally { setIsResetting(false); setConfirmReset(false); }
                             }}
-                            style={{ flex: 1, background: '#dc2626', color: '#fff', border: 'none', borderRadius: 12, padding: '9px 0', fontSize: 12, fontWeight: 700, cursor: isResetting ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
+                            style={{ flex: 1, background: '#dc2626', color: '#fff', border: 'none', borderRadius: 12, padding: '9px 0', fontSize: 15, fontWeight: 700, cursor: isResetting ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
                           >
                             {isResetting ? 'Deleting…' : 'Yes, reset everything'}
                           </button>
                           <button
                             disabled={isResetting}
                             onClick={() => setConfirmReset(false)}
-                            style={{ flex: 1, background: T.white, border: `1.5px solid ${T.border}`, borderRadius: 12, padding: '9px 0', fontSize: 12, fontWeight: 700, color: T.ink, cursor: 'pointer', fontFamily: 'inherit' }}
+                            style={{ flex: 1, background: T.white, border: `1.5px solid ${T.border}`, borderRadius: 12, padding: '9px 0', fontSize: 15, fontWeight: 700, color: T.ink, cursor: 'pointer', fontFamily: 'inherit' }}
                           >
                             Cancel
                           </button>
@@ -900,7 +900,7 @@ export const ParentSettings = ({
                       <button
                         disabled={isResetting}
                         onClick={() => setConfirmReset(true)}
-                        style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: 12, padding: '9px 18px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                        style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: 12, padding: '9px 18px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                       >
                         Reset everything
                       </button>
@@ -917,13 +917,13 @@ export const ParentSettings = ({
                   <div style={{ width: 44, height: 44, borderRadius: 14, background: T.orangeLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>💳</div>
                   <div>
                     <div style={{ fontSize: 17, fontWeight: 700 }}>Billing</div>
-                    <div style={{ fontSize: 12, color: T.inkMute }}>Subscriptions and paid family features when we're ready.</div>
+                    <div style={{ fontSize: 15, color: T.inkMute }}>Subscriptions and paid family features when we're ready.</div>
                   </div>
                 </div>
                 <div style={{ textAlign: 'center', padding: '32px 16px', border: `2px dashed rgba(249,115,22,0.3)`, borderRadius: 18, background: T.orangeLight }}>
                   <div style={{ fontSize: 32, marginBottom: 10 }}>🚀</div>
                   <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Coming soon</div>
-                  <div style={{ fontSize: 12, color: T.inkMute }}>For the MVP, there is nothing to configure here yet.</div>
+                  <div style={{ fontSize: 15, color: T.inkMute }}>For the MVP, there is nothing to configure here yet.</div>
                 </div>
               </Card>
             )}
