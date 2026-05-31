@@ -264,7 +264,7 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood }: KidAppPr
     <div
       style={{
         height: '100dvh',
-        background: isNight ? '#130d36' : '#f5ede2',
+        background: isNight ? '#271a6e' : '#f5ede2',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'stretch',
@@ -276,7 +276,7 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood }: KidAppPr
         style={{
           width: '100%',
           maxWidth: 540,
-          background: isNight ? '#1a1040' : '#fff9f0',
+          background: isNight ? '#312e81' : '#fff9f0',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
@@ -292,7 +292,7 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood }: KidAppPr
             alignItems: 'center',
             gap: 10,
             padding: '10px 14px',
-            background: isNight ? 'rgba(19,13,54,0.95)' : 'rgba(255,249,240,0.95)',
+            background: isNight ? 'rgba(44,38,120,0.97)' : 'rgba(255,249,240,0.95)',
             backdropFilter: 'blur(8px)',
             borderBottom: `1px solid ${isNight ? 'rgba(255,255,255,0.06)' : 'rgba(180,120,80,0.07)'}`,
             position: 'relative',

@@ -68,9 +68,9 @@ export const RoutinesTab = ({ kid, theme, onToggleTask }: RoutinesTabProps) => {
     }
   };
 
-  const nightCard1 = 'rgba(255,255,255,0.06)';
-  const nightCard2 = 'rgba(255,255,255,0.04)';
-  const nightDone  = 'rgba(139,92,246,0.18)';
+  const nightCard1 = 'rgba(255,255,255,0.10)';
+  const nightCard2 = 'rgba(255,255,255,0.07)';
+  const nightDone  = 'rgba(167,139,250,0.28)';
 
   return (
     <div
@@ -80,7 +80,7 @@ export const RoutinesTab = ({ kid, theme, onToggleTask }: RoutinesTabProps) => {
         paddingBottom: 24,
         background: isMorning
           ? 'linear-gradient(180deg,#fff9f0 0%,#fef0e1 100%)'
-          : 'linear-gradient(180deg,#0f0a2e 0%,#1a1040 100%)',
+          : 'linear-gradient(180deg,#312e81 0%,#4c1d95 60%,#5b21b6 100%)',
         fontFamily: "'Fredoka', system-ui, sans-serif",
         color: isMorning ? INK : 'rgba(255,255,255,0.92)',
       }}

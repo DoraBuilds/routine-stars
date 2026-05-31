@@ -22,7 +22,7 @@ export const BottomNav = ({ active, onChange, theme = 'morning' }: BottomNavProp
       style={{
         width: 84,
         flexShrink: 0,
-        background: isNight ? 'rgba(15,8,50,0.96)' : 'rgba(255,250,243,0.97)',
+        background: isNight ? 'rgba(40,32,110,0.97)' : 'rgba(255,250,243,0.97)',
         backdropFilter: 'blur(12px)',
         borderRight: `1px solid ${isNight ? 'rgba(255,255,255,0.07)' : 'rgba(180,120,80,0.08)'}`,
         display: 'flex',
