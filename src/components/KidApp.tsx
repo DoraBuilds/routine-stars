@@ -16,6 +16,8 @@ interface KidAppProps {
   onBack: () => void;
   onToggleTask: (kidId: string, routine: RoutineType, taskId: string) => void;
   onSetMood: (kidId: string, dayIdx: number, emoji: string) => void;
+  onAddAffirmation: (kidId: string, text: string) => void;
+  onRemoveAffirmation: (kidId: string, text: string) => void;
 }
 
 type KidView = 'hub' | KidTab;
@@ -62,7 +64,7 @@ const CATEGORIES: {
   },
 ];
 
-export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood }: KidAppProps) => {
+export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood, onAddAffirmation, onRemoveAffirmation }: KidAppProps) => {
   const [view, setView] = useState<KidView>('hub');
   const m = getMascot(kid.mascotId ?? kid.avatarAnimal);
   const streak = kid.streak ?? 0;
@@ -375,7 +377,13 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood }: KidAppPr
               {view === 'routines' && (
                 <RoutinesTab kid={kid} theme={theme} onToggleTask={onToggleTask} />
               )}
-              {view === 'affirmations' && <AffirmationsTab kid={kid} />}
+              {view === 'affirmations' && (
+                <AffirmationsTab
+                  kid={kid}
+                  onAddFavourite={(text) => onAddAffirmation(kid.id, text)}
+                  onRemoveFavourite={(text) => onRemoveAffirmation(kid.id, text)}
+                />
+              )}
               {view === 'achievements' && <AchievementsTab kid={kid} />}
               {view === 'mood' && <MoodTab kid={kid} onSetMood={onSetMood} />}
             </div>

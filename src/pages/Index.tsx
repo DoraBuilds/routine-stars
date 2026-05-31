@@ -897,6 +897,30 @@ const Index = () => {
     );
   }, []);
 
+  const handleKidFaveAffirmation = useCallback((kidId: string, text: string) => {
+    setChildren((prev) =>
+      prev.map((k) =>
+        k.id !== kidId ? k : {
+          ...k,
+          affirmations: (k.affirmations ?? []).includes(text)
+            ? (k.affirmations ?? [])
+            : [...(k.affirmations ?? []), text],
+        }
+      )
+    );
+  }, []);
+
+  const handleKidUnfaveAffirmation = useCallback((kidId: string, text: string) => {
+    setChildren((prev) =>
+      prev.map((k) =>
+        k.id !== kidId ? k : {
+          ...k,
+          affirmations: (k.affirmations ?? []).filter((a) => a !== text),
+        }
+      )
+    );
+  }, []);
+
   const handleToggleBadge = useCallback((kidId: string, badgeId: string) => {
     setChildren((prev) =>
       prev.map((k) =>
@@ -1141,6 +1165,8 @@ const Index = () => {
         onBack={() => setView('home')}
         onToggleTask={handleToggleTask}
         onSetMood={handleSetMood}
+        onAddAffirmation={handleKidFaveAffirmation}
+        onRemoveAffirmation={handleKidUnfaveAffirmation}
       />
     );
   }

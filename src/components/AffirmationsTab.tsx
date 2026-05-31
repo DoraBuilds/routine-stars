@@ -5,6 +5,8 @@ import type { Child } from '@/lib/types';
 
 interface AffirmationsTabProps {
   kid: Child;
+  onAddFavourite: (text: string) => void;
+  onRemoveFavourite: (text: string) => void;
 }
 
 const INK = '#3d2c1f';
@@ -25,17 +27,27 @@ function speak(text: string) {
   window.speechSynthesis.speak(u);
 }
 
-export const AffirmationsTab = ({ kid }: AffirmationsTabProps) => {
+// Built-in library shown when no parent-curated affirmations exist yet
+const DEFAULT_AFFIRMATIONS = [
+  'I am exactly enough.',
+  'I am brave and kind.',
+  'I can do hard things.',
+  'I am loved just as I am.',
+  'Today is going to be a great day.',
+];
+
+export const AffirmationsTab = ({ kid, onAddFavourite, onRemoveFavourite }: AffirmationsTabProps) => {
   const [idx, setIdx] = useState(0);
-  const [favourites, setFavourites] = useState<Set<string>>(new Set());
   const [speaking, setSpeaking] = useState(false);
 
   const m = getMascot(kid.mascotId ?? kid.avatarAnimal);
-  const list = kid.affirmations?.length ? kid.affirmations : ['I am exactly enough.', 'I am brave and kind.', 'I can do hard things.'];
+  // If parent has added custom affirmations, use those; otherwise show the built-in library
+  const list = kid.affirmations?.length ? kid.affirmations : DEFAULT_AFFIRMATIONS;
   const current = idx % list.length;
   const text = list[current];
-  const isFaved = favourites.has(text);
-  const favedList = list.filter((a) => favourites.has(a));
+  // A card is "faved" when it already lives in kid.affirmations
+  const isFaved = Boolean(kid.affirmations?.includes(text));
+  const favedList = kid.affirmations ?? [];
 
   const handlePlay = () => {
     if (speaking) {
@@ -52,12 +64,8 @@ export const AffirmationsTab = ({ kid }: AffirmationsTabProps) => {
   };
 
   const handleFave = () => {
-    setFavourites((prev) => {
-      const next = new Set(prev);
-      if (next.has(text)) next.delete(text);
-      else next.add(text);
-      return next;
-    });
+    if (isFaved) onRemoveFavourite(text);
+    else onAddFavourite(text);
   };
 
   const handleNext = () => {
@@ -260,7 +268,7 @@ export const AffirmationsTab = ({ kid }: AffirmationsTabProps) => {
                   "{aff}"
                 </div>
                 <button
-                  onClick={() => setFavourites((prev) => { const n = new Set(prev); n.delete(aff); return n; })}
+                  onClick={() => onRemoveFavourite(aff)}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: '#ef4444', padding: 2, WebkitTapHighlightColor: 'transparent', lineHeight: 1 }}
                 >
                   ♥

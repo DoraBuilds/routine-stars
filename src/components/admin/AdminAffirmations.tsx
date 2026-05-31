@@ -57,8 +57,12 @@ export const AdminAffirmations = ({
         >
           <div style={{ fontSize: 26 }}>💫</div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#831843' }}>Daily affirmation</div>
-            <div style={{ fontSize: 11, color: '#be185d', marginTop: 1 }}>A new one each morning</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#831843' }}>Daily affirmations</div>
+            <div style={{ fontSize: 11, color: '#be185d', marginTop: 1, lineHeight: 1.5 }}>
+              By default, {kid.name} sees affirmations from our built-in library.
+              Add your own below and <em>only yours</em> will be shown — perfect
+              if you have specific phrases you'd love {kid.name} to repeat every day.
+            </div>
           </div>
           {/* Toggle (static on) */}
           <div
