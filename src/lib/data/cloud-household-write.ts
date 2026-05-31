@@ -4,6 +4,7 @@ import { TASK_CATALOG } from '@/lib/types';
 import { SupabaseChildProfileRepository } from './supabase-child-profile-repository';
 import { SupabaseHouseholdRepository } from './supabase-household-repository';
 import { SupabaseRoutineRepository } from './supabase-routine-repository';
+import { getLocalProgressDate } from './cloud-household-state';
 import { getSupabaseClient } from '@/lib/supabase/client';
 
 const findTemplateForTask = (
@@ -81,6 +82,12 @@ export const saveHouseholdConfigToCloud = async (input: {
         affirmations: child.affirmations ?? [],
         badges: child.badges ?? {},
         moods: (child.moods ?? []).map((m) => ({ day: m.day, emoji: m.emoji, note: m.note ?? null })),
+        taskCompletion: {
+          [getLocalProgressDate(new Date())]: {
+            morning: child.morning.filter((t) => t.completed).map((t) => t.title),
+            evening: child.evening.filter((t) => t.completed).map((t) => t.title),
+          },
+        },
       });
     } catch (error) {
       throw describeStepError(`Upserting child profile "${child.name}".`, error);

@@ -21,8 +21,14 @@ const mapChildProfile = (row: Record<string, unknown>): ChildProfileRecord => ({
       ? (row.badges as Record<string, boolean>)
       : {},
   moods: Array.isArray(row.moods) && (row.moods as unknown[]).length > 0
-    ? (row.moods as Array<{ day: string; emoji: string | null }>)
+    ? (row.moods as Array<{ day: string; emoji: string | null; note?: string | null }>)
     : ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((day) => ({ day, emoji: null })),
+  taskCompletion:
+    row.task_completion !== null &&
+    typeof row.task_completion === 'object' &&
+    !Array.isArray(row.task_completion)
+      ? (row.task_completion as Record<string, { morning: string[]; evening: string[] }>)
+      : {},
   createdAt: String(row.created_at),
   updatedAt: String(row.updated_at),
 });
@@ -40,6 +46,7 @@ const toChildProfilePayload = (profile: Omit<ChildProfileRecord, 'createdAt' | '
   affirmations: profile.affirmations,
   badges: profile.badges,
   moods: profile.moods,
+  task_completion: profile.taskCompletion,
 });
 
 export class SupabaseChildProfileRepository implements ChildProfileRepository {

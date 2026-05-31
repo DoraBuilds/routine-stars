@@ -33,7 +33,9 @@ export interface ChildProfileRecord {
   streak: number;
   affirmations: string[];
   badges: Record<string, boolean>;
-  moods: Array<{ day: string; emoji: string }>;
+  moods: Array<{ day: string; emoji: string | null; note?: string | null }>;
+  /** date-keyed map of completed task titles, e.g. { "2026-05-31": { morning: ["Brush teeth"], evening: [] } } */
+  taskCompletion: Record<string, { morning: string[]; evening: string[] }>;
   createdAt: string;
   updatedAt: string;
 }

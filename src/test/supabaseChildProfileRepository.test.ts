@@ -51,6 +51,7 @@ describe('SupabaseChildProfileRepository', () => {
         affirmations: ['I am kind'],
         badges: {},
         moods: DEFAULT_MOODS,
+        taskCompletion: {},
         createdAt: '2026-04-20T10:00:00Z',
         updatedAt: '2026-04-20T10:00:00Z',
       },
