@@ -75,8 +75,8 @@ export const KidHome = ({ kids, theme, onPick, onParent }: KidHomeProps) => {
           overflow: 'hidden',
         }}
       >
-        {/* Header */}
-        <div style={{ marginBottom: 24, flexShrink: 0 }}>
+        {/* Header — centred */}
+        <div style={{ marginBottom: 24, flexShrink: 0, textAlign: 'center' }}>
           <div
             style={{
               fontSize: 11,
@@ -117,7 +117,7 @@ export const KidHome = ({ kids, theme, onPick, onParent }: KidHomeProps) => {
             alignContent: 'start',
           }}
         >
-          {kids.map((k) => {
+          {kids.map((k, kidIdx) => {
             const m = getMascot(k.mascotId ?? k.avatarAnimal);
             const tasks = isMorning ? k.morning : k.evening;
             const done = tasks.filter((t) => t.completed).length;
@@ -125,12 +125,19 @@ export const KidHome = ({ kids, theme, onPick, onParent }: KidHomeProps) => {
             const pct = total ? (done / total) * 100 : 0;
             const streak = k.streak ?? 0;
             const allDone = total > 0 && done === total;
+            // Last card in an odd-count list → span both columns and self-centre
+            const isLoneLastCard = kids.length % 2 !== 0 && kidIdx === kids.length - 1;
 
             return (
               <button
                 key={k.id}
                 onClick={() => onPick(k.id)}
                 style={{
+                  ...(isLoneLastCard && {
+                    gridColumn: '1 / -1',
+                    justifySelf: 'center',
+                    width: 'calc(50% - 7px)',
+                  }),
                   background: isMorning
                     ? 'rgba(255,255,255,0.88)'
                     : 'rgba(255,255,255,0.13)',
