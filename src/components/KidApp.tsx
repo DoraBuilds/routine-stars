@@ -375,7 +375,12 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood, onAddAffir
           <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', inset: 0 }}>
               {view === 'routines' && (
-                <RoutinesTab kid={kid} theme={theme} onToggleTask={onToggleTask} />
+                <RoutinesTab
+                  kid={kid}
+                  theme={theme}
+                  onToggleTask={onToggleTask}
+                  onAllDone={onBack}
+                />
               )}
               {view === 'affirmations' && (
                 <AffirmationsTab

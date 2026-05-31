@@ -10,6 +10,7 @@ interface RoutinesTabProps {
   kid: Child;
   theme: 'morning' | 'evening';
   onToggleTask: (kidId: string, routine: RoutineType, taskId: string) => void;
+  onAllDone?: () => void;
 }
 
 const INK = '#3d2c1f';
@@ -49,7 +50,7 @@ function fireRoutineConfetti() {
   void fire(0.4, { spread: 110, decay: 0.91, scalar: 0.85 });
 }
 
-export const RoutinesTab = ({ kid, theme, onToggleTask }: RoutinesTabProps) => {
+export const RoutinesTab = ({ kid, theme, onToggleTask, onAllDone }: RoutinesTabProps) => {
   const isMorning = theme === 'morning';
   const tasks = isMorning ? kid.morning : kid.evening;
   const done = tasks.filter((t) => t.completed).length;
@@ -67,6 +68,8 @@ export const RoutinesTab = ({ kid, theme, onToggleTask }: RoutinesTabProps) => {
         setTimeout(() => {
           fireRoutineConfetti();
           void balloons();
+          // Return to home screen after the celebration finishes (~4.5 s)
+          if (onAllDone) setTimeout(onAllDone, 4500);
         }, 120);
       }
     }
