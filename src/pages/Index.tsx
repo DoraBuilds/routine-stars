@@ -889,7 +889,7 @@ const Index = () => {
           ? k
           : {
               ...k,
-              moods: (k.moods ?? DEFAULT_MOODS).map((m, i) =>
+              moods: (k.moods?.length === 7 ? k.moods : DEFAULT_MOODS).map((m, i) =>
                 i === dayIdx ? { ...m, emoji } : m
               ),
             }

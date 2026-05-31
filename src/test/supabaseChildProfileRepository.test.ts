@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { SupabaseChildProfileRepository } from '@/lib/data/supabase-child-profile-repository';
 
+const DEFAULT_MOODS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((day) => ({ day, emoji: null }));
+
 const createSupabaseClient = (fromImpl: (table: string) => unknown) =>
   ({
     from: vi.fn(fromImpl),
@@ -48,7 +50,7 @@ describe('SupabaseChildProfileRepository', () => {
         streak: 2,
         affirmations: ['I am kind'],
         badges: {},
-        moods: [],
+        moods: DEFAULT_MOODS,
         createdAt: '2026-04-20T10:00:00Z',
         updatedAt: '2026-04-20T10:00:00Z',
       },

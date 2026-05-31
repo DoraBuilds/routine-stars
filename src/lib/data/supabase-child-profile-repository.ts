@@ -20,7 +20,9 @@ const mapChildProfile = (row: Record<string, unknown>): ChildProfileRecord => ({
     row.badges !== null && typeof row.badges === 'object' && !Array.isArray(row.badges)
       ? (row.badges as Record<string, boolean>)
       : {},
-  moods: Array.isArray(row.moods) ? (row.moods as Array<{ day: string; emoji: string }>) : [],
+  moods: Array.isArray(row.moods) && (row.moods as unknown[]).length > 0
+    ? (row.moods as Array<{ day: string; emoji: string | null }>)
+    : ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((day) => ({ day, emoji: null })),
   createdAt: String(row.created_at),
   updatedAt: String(row.updated_at),
 });
