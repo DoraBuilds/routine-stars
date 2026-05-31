@@ -18,16 +18,17 @@ export const BottomNav = ({ active, onChange }: BottomNavProps) => {
   return (
     <div
       style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        background: 'rgba(255,250,243,0.96)',
+        width: 76,
+        flexShrink: 0,
+        background: 'rgba(255,250,243,0.97)',
         backdropFilter: 'blur(12px)',
-        borderTop: '1px solid rgba(180,120,80,0.08)',
-        padding: '8px 6px env(safe-area-inset-bottom, 16px)',
+        borderRight: '1px solid rgba(180,120,80,0.08)',
         display: 'flex',
-        justifyContent: 'space-around',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 4,
+        padding: '16px 6px',
         zIndex: 30,
         fontFamily: "'Fredoka', system-ui, sans-serif",
       }}
@@ -40,15 +41,16 @@ export const BottomNav = ({ active, onChange }: BottomNavProps) => {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: 2,
-            padding: '6px 10px',
+            gap: 4,
+            padding: '10px 8px',
             borderRadius: 16,
+            width: 62,
             background: t.id === active ? `${activeTint}18` : 'transparent',
             border: 'none',
             cursor: 'pointer',
             fontFamily: 'inherit',
             WebkitTapHighlightColor: 'transparent',
-            minWidth: 60,
+            transition: 'background 0.2s',
           }}
         >
           <div
@@ -63,8 +65,9 @@ export const BottomNav = ({ active, onChange }: BottomNavProps) => {
           </div>
           <div
             style={{
-              fontSize: 10,
+              fontSize: 9,
               fontWeight: 700,
+              letterSpacing: '0.04em',
               color: t.id === active ? activeTint : '#8a7866',
               transition: 'color 0.2s',
             }}

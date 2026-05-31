@@ -25,101 +25,119 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood }: KidAppPr
   const streak = kid.streak ?? 0;
 
   return (
+    // Full viewport — centers the content card
     <div
       style={{
-        position: 'relative',
         height: '100dvh',
-        background: '#fff9f0',
-        fontFamily: "'Fredoka', system-ui, sans-serif",
+        background: '#f5ede2',
         display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
+        justifyContent: 'center',
+        alignItems: 'stretch',
+        fontFamily: "'Fredoka', system-ui, sans-serif",
       }}
     >
-      {/* Top bar */}
+      {/* Centered content card */}
       <div
         style={{
+          width: '100%',
+          maxWidth: 540,
+          background: '#fff9f0',
           display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          padding: '10px 14px',
-          background: 'transparent',
-          position: 'relative',
-          zIndex: 10,
-          flexShrink: 0,
+          flexDirection: 'column',
+          overflow: 'hidden',
+          boxShadow: '0 0 60px rgba(180,120,80,0.12)',
         }}
       >
-        <button
-          onClick={onBack}
+        {/* Top bar */}
+        <div
           style={{
-            width: 34,
-            height: 34,
-            borderRadius: 12,
-            background: '#fff',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 16,
-            color: INK,
-            border: 'none',
-            cursor: 'pointer',
-            boxShadow: '0 2px 6px rgba(180,120,80,0.1)',
-            fontFamily: 'inherit',
-            WebkitTapHighlightColor: 'transparent',
+            gap: 10,
+            padding: '10px 14px',
+            background: 'rgba(255,249,240,0.95)',
+            backdropFilter: 'blur(8px)',
+            borderBottom: '1px solid rgba(180,120,80,0.07)',
+            position: 'relative',
+            zIndex: 10,
+            flexShrink: 0,
           }}
         >
-          ‹
-        </button>
-        <MascotBubble mascotId={kid.mascotId ?? kid.avatarAnimal} size={34} />
-        <div style={{ flex: 1 }}>
-          <div
+          <button
+            onClick={onBack}
             style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: INK_MUTE,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-            }}
-          >
-            with {m.name}
-          </div>
-          <div style={{ fontSize: 14, fontWeight: 600, color: INK, marginTop: -1 }}>
-            Hi, {kid.name}!
-          </div>
-        </div>
-        {streak > 0 && (
-          <div
-            style={{
+              width: 34,
+              height: 34,
+              borderRadius: 12,
               background: '#fff',
-              borderRadius: 10,
-              padding: '5px 10px',
-              fontSize: 11,
-              fontWeight: 700,
-              color: '#f97316',
               display: 'flex',
               alignItems: 'center',
-              gap: 4,
-              boxShadow: '0 2px 6px rgba(180,120,80,0.08)',
+              justifyContent: 'center',
+              fontSize: 16,
+              color: INK,
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 2px 6px rgba(180,120,80,0.1)',
+              fontFamily: 'inherit',
+              WebkitTapHighlightColor: 'transparent',
             }}
           >
-            🔥 {streak}
+            ‹
+          </button>
+          <MascotBubble mascotId={kid.mascotId ?? kid.avatarAnimal} size={34} />
+          <div style={{ flex: 1 }}>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: INK_MUTE,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+              }}
+            >
+              with {m.name}
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: INK, marginTop: -1 }}>
+              Hi, {kid.name}!
+            </div>
           </div>
-        )}
-      </div>
-
-      {/* Tab content */}
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0 }}>
-          {tab === 'routines' && (
-            <RoutinesTab kid={kid} theme={theme} onToggleTask={onToggleTask} />
+          {streak > 0 && (
+            <div
+              style={{
+                background: '#fff',
+                borderRadius: 10,
+                padding: '5px 10px',
+                fontSize: 11,
+                fontWeight: 700,
+                color: '#f97316',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                boxShadow: '0 2px 6px rgba(180,120,80,0.08)',
+              }}
+            >
+              🔥 {streak}
+            </div>
           )}
-          {tab === 'affirmations' && <AffirmationsTab kid={kid} />}
-          {tab === 'achievements' && <AchievementsTab kid={kid} />}
-          {tab === 'mood' && <MoodTab kid={kid} onSetMood={onSetMood} />}
+        </div>
+
+        {/* Side nav + tab content */}
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+          <BottomNav active={tab} onChange={setTab} />
+
+          {/* Tab content */}
+          <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', inset: 0 }}>
+              {tab === 'routines' && (
+                <RoutinesTab kid={kid} theme={theme} onToggleTask={onToggleTask} />
+              )}
+              {tab === 'affirmations' && <AffirmationsTab kid={kid} />}
+              {tab === 'achievements' && <AchievementsTab kid={kid} />}
+              {tab === 'mood' && <MoodTab kid={kid} onSetMood={onSetMood} />}
+            </div>
+          </div>
         </div>
       </div>
-
-      <BottomNav active={tab} onChange={setTab} />
     </div>
   );
 };

@@ -41,26 +41,34 @@ export const KidHome = ({ kids, theme, onPick, onParent }: KidHomeProps) => {
   };
 
   const greeting = isMorning ? 'Good morning,' : 'Good evening,';
-  const tagline = isMorning ? 'little stars!' : 'little dreamers';
+  const tagline = isMorning ? 'little stars! ✨' : 'little dreamers 🌙';
   const sub = isMorning ? "Who's ready to shine?" : 'Time to wind down';
 
   return (
+    // Full viewport — centres the card horizontally
     <div
       style={{
         position: 'relative',
         height: '100dvh',
         overflow: 'hidden',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'stretch',
         fontFamily: "'Fredoka', system-ui, sans-serif",
         color: isMorning ? INK : '#fff',
       }}
     >
+      {/* Background fills entire viewport */}
       {isMorning ? <MorningBackdrop /> : <NightBackdrop />}
 
+      {/* Centred content card */}
       <div
         style={{
           position: 'relative',
           zIndex: 2,
-          padding: '20px 18px 16px',
+          width: '100%',
+          maxWidth: 540,
+          padding: '24px 20px 20px',
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
@@ -68,7 +76,7 @@ export const KidHome = ({ kids, theme, onPick, onParent }: KidHomeProps) => {
         }}
       >
         {/* Header */}
-        <div style={{ marginBottom: 18, flexShrink: 0 }}>
+        <div style={{ marginBottom: 24, flexShrink: 0 }}>
           <div
             style={{
               fontSize: 11,
@@ -82,7 +90,7 @@ export const KidHome = ({ kids, theme, onPick, onParent }: KidHomeProps) => {
             {new Date().toLocaleDateString('en-US', { weekday: 'long' })}{' '}
             {isMorning ? 'morning' : 'evening'}
           </div>
-          <div style={{ fontSize: 26, fontWeight: 600, marginTop: 4, lineHeight: 1.15 }}>
+          <div style={{ fontSize: 28, fontWeight: 700, marginTop: 6, lineHeight: 1.15 }}>
             {greeting}
             <br />
             {tagline}
@@ -91,21 +99,22 @@ export const KidHome = ({ kids, theme, onPick, onParent }: KidHomeProps) => {
             style={{
               fontSize: 13,
               color: isMorning ? INK_MUTE : 'rgba(255,255,255,0.7)',
-              marginTop: 4,
+              marginTop: 6,
             }}
           >
             {sub}
           </div>
         </div>
 
-        {/* Kid cards */}
+        {/* Kid cards — big squares in a responsive grid */}
         <div
           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 10,
             flex: 1,
             overflowY: 'auto',
+            display: 'grid',
+            gridTemplateColumns: kids.length === 1 ? '1fr' : 'repeat(2, 1fr)',
+            gap: 14,
+            alignContent: 'start',
           }}
         >
           {kids.map((k) => {
@@ -115,6 +124,7 @@ export const KidHome = ({ kids, theme, onPick, onParent }: KidHomeProps) => {
             const total = tasks.length;
             const pct = total ? (done / total) * 100 : 0;
             const streak = k.streak ?? 0;
+            const allDone = total > 0 && done === total;
 
             return (
               <button
@@ -122,86 +132,117 @@ export const KidHome = ({ kids, theme, onPick, onParent }: KidHomeProps) => {
                 onClick={() => onPick(k.id)}
                 style={{
                   background: isMorning
-                    ? 'rgba(255,255,255,0.9)'
-                    : 'rgba(255,255,255,0.12)',
-                  backdropFilter: 'blur(8px)',
-                  borderRadius: 24,
-                  padding: '14px 16px',
+                    ? 'rgba(255,255,255,0.88)'
+                    : 'rgba(255,255,255,0.13)',
+                  backdropFilter: 'blur(12px)',
+                  borderRadius: 28,
+                  padding: '22px 16px 18px',
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
-                  gap: 14,
+                  gap: 10,
                   boxShadow: isMorning
-                    ? '0 6px 16px rgba(180,120,80,0.1)'
-                    : '0 6px 20px rgba(0,0,0,0.25)',
+                    ? '0 8px 24px rgba(180,120,80,0.12)'
+                    : '0 8px 28px rgba(0,0,0,0.28)',
                   border:
                     '1.5px solid ' +
-                    (isMorning ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.15)'),
+                    (allDone
+                      ? `${m.color}66`
+                      : isMorning
+                      ? 'rgba(255,255,255,0.75)'
+                      : 'rgba(255,255,255,0.15)'),
                   cursor: 'pointer',
                   fontFamily: 'inherit',
                   color: 'inherit',
-                  textAlign: 'left',
+                  textAlign: 'center',
                   WebkitTapHighlightColor: 'transparent',
-                  transition: 'transform 0.15s',
-                  flexShrink: 0,
+                  transition: 'transform 0.15s, box-shadow 0.15s',
+                  position: 'relative',
+                  overflow: 'hidden',
                 }}
               >
+                {/* All-done shine overlay */}
+                {allDone && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      background: `linear-gradient(135deg, ${m.color}12, ${m.light}30)`,
+                      borderRadius: 28,
+                      pointerEvents: 'none',
+                    }}
+                  />
+                )}
+
+                {/* Streak badge */}
+                {streak > 0 && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 12,
+                      right: 12,
+                      background: isMorning ? '#fff7ed' : 'rgba(255,255,255,0.15)',
+                      borderRadius: 8,
+                      padding: '3px 7px',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: '#f97316',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2,
+                    }}
+                  >
+                    🔥{streak}
+                  </div>
+                )}
+
+                {/* Mascot */}
                 <MascotBubble
                   mascotId={k.mascotId ?? k.avatarAnimal}
-                  size={56}
-                  showStreak
+                  size={72}
+                  showStreak={false}
                   streak={streak}
                 />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 17, fontWeight: 600 }}>{k.name}</div>
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: isMorning ? INK_MUTE : 'rgba(255,255,255,0.75)',
-                      marginTop: 1,
-                    }}
-                  >
-                    with {m.name} · {done} / {total} done
-                  </div>
-                  {/* Progress bar */}
-                  <div
-                    style={{
-                      height: 4,
-                      background: isMorning
-                        ? 'rgba(0,0,0,0.06)'
-                        : 'rgba(255,255,255,0.12)',
-                      borderRadius: 99,
-                      marginTop: 6,
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <div
-                      style={{
-                        height: '100%',
-                        width: `${pct}%`,
-                        background: m.color,
-                        borderRadius: 99,
-                        transition: 'width 0.5s',
-                      }}
-                    />
-                  </div>
+
+                {/* Name */}
+                <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1 }}>
+                  {k.name}
                 </div>
+
+                {/* Mascot label */}
                 <div
                   style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: '50%',
-                    background: m.color,
-                    color: '#fff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 18,
-                    fontWeight: 700,
-                    boxShadow: `0 3px 0 ${m.color}66`,
-                    flexShrink: 0,
+                    fontSize: 11,
+                    color: isMorning ? INK_MUTE : 'rgba(255,255,255,0.65)',
+                    marginTop: -4,
                   }}
                 >
-                  ›
+                  {allDone ? '🌟 All done!' : `${done} / ${total} done`}
+                </div>
+
+                {/* Progress bar */}
+                <div
+                  style={{
+                    width: '100%',
+                    height: 6,
+                    background: isMorning
+                      ? 'rgba(0,0,0,0.06)'
+                      : 'rgba(255,255,255,0.12)',
+                    borderRadius: 99,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div
+                    style={{
+                      height: '100%',
+                      width: `${pct}%`,
+                      background: allDone
+                        ? `linear-gradient(90deg, ${m.color}, ${m.color}bb)`
+                        : m.color,
+                      borderRadius: 99,
+                      transition: 'width 0.5s',
+                    }}
+                  />
                 </div>
               </button>
             );
@@ -219,7 +260,7 @@ export const KidHome = ({ kids, theme, onPick, onParent }: KidHomeProps) => {
             flexDirection: 'column',
             alignItems: 'center',
             gap: 6,
-            margin: '14px auto 0',
+            margin: '18px auto 0',
             background: 'none',
             border: 'none',
             cursor: 'pointer',
