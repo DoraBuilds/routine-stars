@@ -897,6 +897,19 @@ const Index = () => {
     );
   }, []);
 
+  const handleSaveNote = useCallback((kidId: string, dayIdx: number, note: string) => {
+    setChildren((prev) =>
+      prev.map((k) =>
+        k.id !== kidId ? k : {
+          ...k,
+          moods: (k.moods?.length === 7 ? k.moods : DEFAULT_MOODS).map((m, i) =>
+            i === dayIdx ? { ...m, note } : m
+          ),
+        }
+      )
+    );
+  }, []);
+
   const handleKidFaveAffirmation = useCallback((kidId: string, text: string) => {
     setChildren((prev) =>
       prev.map((k) =>
@@ -1165,6 +1178,7 @@ const Index = () => {
         onBack={() => setView('home')}
         onToggleTask={handleToggleTask}
         onSetMood={handleSetMood}
+        onSaveNote={handleSaveNote}
         onAddAffirmation={handleKidFaveAffirmation}
         onRemoveAffirmation={handleKidUnfaveAffirmation}
       />

@@ -18,6 +18,7 @@ export interface BadgeEntry {
 export interface MoodEntry {
   day: string;
   emoji: string | null;
+  note?: string | null;
 }
 
 export interface MoodOption {

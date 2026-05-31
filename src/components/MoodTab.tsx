@@ -6,21 +6,33 @@ import type { Child } from '@/lib/types';
 interface MoodTabProps {
   kid: Child;
   onSetMood: (kidId: string, dayIdx: number, emoji: string) => void;
+  onSaveNote: (kidId: string, dayIdx: number, note: string) => void;
 }
 
 const INK = '#3d2c1f';
 const INK_MUTE = '#8a7866';
 const MOOD_PURPLE = '#a855f7';
 
-export const MoodTab = ({ kid, onSetMood }: MoodTabProps) => {
+export const MoodTab = ({ kid, onSetMood, onSaveNote }: MoodTabProps) => {
   const m = getMascot(kid.mascotId ?? kid.avatarAnimal);
-  const [note, setNote] = useState('');
+  const [noteDraft, setNoteDraft] = useState('');
+  const [saved, setSaved] = useState(false);
 
   // Today's index (Mon=0 … Sun=6)
   const today = new Date().getDay();
   const todayIdx = today === 0 ? 6 : today - 1;
   const moods = kid.moods ?? WEEK_DAYS.map((day) => ({ day, emoji: null }));
   const todayMood = moods[todayIdx]?.emoji ?? null;
+  const todayNote = moods[todayIdx]?.note ?? null;
+
+  const handleSaveNote = () => {
+    const trimmed = noteDraft.trim();
+    if (!trimmed) return;
+    onSaveNote(kid.id, todayIdx, trimmed);
+    setNoteDraft('');
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
 
   return (
     <div
@@ -89,21 +101,22 @@ export const MoodTab = ({ kid, onSetMood }: MoodTabProps) => {
             border: '1.5px solid rgba(180,120,80,0.08)',
           }}
         >
-          <div
-            style={{
-              fontSize: 10,
-              fontWeight: 700,
-              color: INK_MUTE,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-            }}
-          >
+          <div style={{ fontSize: 12, fontWeight: 700, color: INK_MUTE, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
             Tell me more (optional)
           </div>
+
+          {/* Show today's saved note if it exists */}
+          {todayNote && (
+            <div style={{ marginTop: 8, padding: '8px 10px', background: '#faf5ff', borderRadius: 12, border: '1.5px solid rgba(168,85,247,0.15)' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: MOOD_PURPLE, marginBottom: 3 }}>Today you wrote:</div>
+              <div style={{ fontSize: 13, color: INK, fontStyle: 'italic' }}>"{todayNote}"</div>
+            </div>
+          )}
+
           <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="I had a great morning!"
+            value={noteDraft}
+            onChange={(e) => { setNoteDraft(e.target.value); setSaved(false); }}
+            placeholder={todayNote ? 'Add another thought…' : 'I had a great morning!'}
             style={{
               width: '100%',
               border: 'none',
@@ -113,11 +126,40 @@ export const MoodTab = ({ kid, onSetMood }: MoodTabProps) => {
               fontFamily: 'inherit',
               fontSize: 13,
               color: MOOD_PURPLE,
-              marginTop: 6,
+              marginTop: 8,
               fontStyle: 'italic',
-              minHeight: 30,
+              minHeight: 36,
+              boxSizing: 'border-box',
             }}
           />
+
+          {/* Save button — appears when there's text */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
+            {saved && (
+              <span style={{ fontSize: 12, color: '#16a34a', fontWeight: 600 }}>✓ Saved!</span>
+            )}
+            {noteDraft.trim() && !saved && (
+              <button
+                onClick={handleSaveNote}
+                style={{
+                  background: MOOD_PURPLE,
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 12,
+                  padding: '7px 18px',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  boxShadow: '0 3px 0 rgba(168,85,247,0.3)',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                Save note
+              </button>
+            )}
+          </div>
+
           <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
             <button
               style={{
@@ -126,10 +168,11 @@ export const MoodTab = ({ kid, onSetMood }: MoodTabProps) => {
                 border: 'none',
                 borderRadius: 10,
                 padding: '5px 10px',
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: 700,
-                cursor: 'pointer',
+                cursor: 'not-allowed',
                 fontFamily: 'inherit',
+                opacity: 0.5,
               }}
             >
               ✏️ Draw
@@ -141,10 +184,11 @@ export const MoodTab = ({ kid, onSetMood }: MoodTabProps) => {
                 border: 'none',
                 borderRadius: 10,
                 padding: '5px 10px',
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: 700,
-                cursor: 'pointer',
+                cursor: 'not-allowed',
                 fontFamily: 'inherit',
+                opacity: 0.5,
               }}
             >
               🎤 Voice

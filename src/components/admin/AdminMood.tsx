@@ -94,26 +94,10 @@ export const AdminMood = ({ kid, onBack }: AdminMoodProps) => {
 
       {/* Week preview */}
       <div style={{ padding: '14px 14px 0' }}>
-        <div
-          style={{
-            fontSize: 11,
-            fontWeight: 700,
-            color: INK_MUTE,
-            marginBottom: 6,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-          }}
-        >
+        <div style={{ fontSize: 11, fontWeight: 700, color: INK_MUTE, marginBottom: 6, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
           This week's moods
         </div>
-        <div
-          style={{
-            background: '#fff',
-            borderRadius: 16,
-            padding: 12,
-            border: '1.5px solid rgba(180,120,80,0.05)',
-          }}
-        >
+        <div style={{ background: '#fff', borderRadius: 16, padding: 12, border: '1.5px solid rgba(180,120,80,0.05)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 4 }}>
             {moods.map((m, i) => (
               <div
@@ -124,15 +108,41 @@ export const AdminMood = ({ kid, onBack }: AdminMoodProps) => {
                   padding: '8px 0',
                   background: '#fff9f0',
                   borderRadius: 12,
+                  position: 'relative',
                 }}
               >
                 <div style={{ fontSize: 22, opacity: m.emoji ? 1 : 0.25 }}>{m.emoji ?? '·'}</div>
                 <div style={{ fontSize: 9, fontWeight: 700, color: INK_MUTE, marginTop: 2 }}>{m.day}</div>
+                {/* Note indicator */}
+                {m.note && (
+                  <div style={{ position: 'absolute', top: 4, right: 4, width: 6, height: 6, borderRadius: '50%', background: '#a855f7' }} />
+                )}
               </div>
             ))}
           </div>
         </div>
       </div>
+
+      {/* Notes from this week */}
+      {moods.some((m) => m.note) && (
+        <div style={{ padding: '12px 14px 0' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: INK_MUTE, marginBottom: 6, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            📝 {kid.name}'s notes
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {moods.filter((m) => m.note).map((m, i) => (
+              <div key={i} style={{ background: '#faf5ff', borderRadius: 14, padding: '10px 12px', border: '1.5px solid rgba(168,85,247,0.12)' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#a855f7', marginBottom: 3 }}>
+                  {m.emoji} {m.day}
+                </div>
+                <div style={{ fontSize: 12, color: INK, fontStyle: 'italic', lineHeight: 1.5 }}>
+                  "{m.note}"
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Insights card */}
       <div style={{ padding: '12px 14px 24px' }}>
