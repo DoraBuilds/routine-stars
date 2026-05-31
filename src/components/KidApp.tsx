@@ -34,7 +34,7 @@ const CATEGORIES: {
     label: 'Routines',
     desc: 'Your daily tasks',
     bg: 'linear-gradient(145deg,#4338ca,#818cf8)',
-    bgNight: 'linear-gradient(145deg,#312e81,#4338ca)',
+    bgNight: 'linear-gradient(145deg,#4338ca,#818cf8)',
   },
   {
     id: 'affirmations',
@@ -42,7 +42,7 @@ const CATEGORIES: {
     label: 'Affirmations',
     desc: 'You are amazing!',
     bg: 'linear-gradient(145deg,#c2410c,#fdba74)',
-    bgNight: 'linear-gradient(145deg,#9a3412,#c2410c)',
+    bgNight: 'linear-gradient(145deg,#c2410c,#fdba74)',
   },
   {
     id: 'achievements',
@@ -50,7 +50,7 @@ const CATEGORIES: {
     label: 'Awards',
     desc: 'Badges & streaks',
     bg: 'linear-gradient(145deg,#047857,#6ee7b7)',
-    bgNight: 'linear-gradient(145deg,#064e3b,#047857)',
+    bgNight: 'linear-gradient(145deg,#047857,#6ee7b7)',
   },
   {
     id: 'mood',
@@ -58,7 +58,7 @@ const CATEGORIES: {
     label: 'Mood',
     desc: 'How do you feel?',
     bg: 'linear-gradient(145deg,#9d174d,#fda4af)',
-    bgNight: 'linear-gradient(145deg,#831843,#9d174d)',
+    bgNight: 'linear-gradient(145deg,#9d174d,#fda4af)',
   },
 ];
 
