@@ -380,27 +380,6 @@ export const ParentSettings = ({
   const selectedSuggestions = modal ? TASK_CATALOG[modal.routine] : [];
   const editorChild = children.find((c) => c.id === editorChildId) ?? children[0];
 
-  const syncBg =
-    cloudConfigSyncError ? '#fff5f5' :
-    cloudConfigSyncStatus === 'saved' ? '#f0fdf4' :
-    cloudConfigSyncStatus === 'saving' ? '#eff6ff' :
-    T.cream;
-  const syncBorder =
-    cloudConfigSyncError ? 'rgba(220,38,38,0.18)' :
-    cloudConfigSyncStatus === 'saved' ? 'rgba(34,197,94,0.2)' :
-    cloudConfigSyncStatus === 'saving' ? 'rgba(59,130,246,0.2)' :
-    T.border;
-  const syncLabel =
-    cloudConfigSyncError ? '⚠️ Sync needs attention' :
-    cloudConfigSyncStatus === 'saved' ? '✅ Synced with cloud' :
-    cloudConfigSyncStatus === 'saving' ? '🔄 Saving to cloud…' :
-    '☁️ Ready to sync';
-  const syncLabelColor =
-    cloudConfigSyncError ? '#dc2626' :
-    cloudConfigSyncStatus === 'saved' ? '#16a34a' :
-    cloudConfigSyncStatus === 'saving' ? '#2563eb' :
-    T.inkMute;
-
   return (
     <div style={{ minHeight: '100svh', background: T.cream, fontFamily: T.fonts, color: T.ink, padding: '24px 16px 48px' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
@@ -495,25 +474,19 @@ export const ParentSettings = ({
               )}
             </div>
 
-            {/* Cloud sync status */}
-            {isSignedIn && (
-              <div style={{ background: syncBg, borderRadius: 14, padding: '10px 12px', border: `1.5px solid ${syncBorder}` }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: syncLabelColor, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>{syncLabel}</div>
-                <div style={{ fontSize: 14, color: T.inkMute, lineHeight: 1.5 }}>
-                  {cloudConfigSyncError
-                    ? (cloudConfigSyncError.length > 120 ? cloudConfigSyncError.slice(0, 120) + '…' : cloudConfigSyncError)
-                    : cloudConfigSyncStatus === 'saved'
-                      ? 'Your family setup is backed up and will appear on any signed-in device.'
-                      : cloudConfigSyncStatus === 'saving'
-                        ? 'Saving your family setup to the cloud right now…'
-                        : 'Your family setup will sync automatically when you make changes.'}
+            {/* Cloud sync — only surface errors, normal sync is silent */}
+            {isSignedIn && cloudConfigSyncError && (
+              <div style={{ background: '#fff5f5', borderRadius: 14, padding: '10px 12px', border: '1.5px solid rgba(220,38,38,0.18)' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#dc2626', marginBottom: 4 }}>⚠️ Sync issue</div>
+                <div style={{ fontSize: 13, color: '#dc2626', lineHeight: 1.5, marginBottom: 8 }}>
+                  {cloudConfigSyncError.length > 120 ? cloudConfigSyncError.slice(0, 120) + '…' : cloudConfigSyncError}
                 </div>
-                {cloudConfigSyncError && onRetryCloudConfigSync && (
+                {onRetryCloudConfigSync && (
                   <button
                     onClick={onRetryCloudConfigSync}
-                    style={{ width: '100%', marginTop: 10, background: T.white, border: '1.5px solid rgba(220,38,38,0.2)', borderRadius: 10, padding: '7px 0', fontSize: 15, fontWeight: 700, color: '#dc2626', cursor: 'pointer', fontFamily: 'inherit' }}
+                    style={{ width: '100%', background: T.white, border: '1.5px solid rgba(220,38,38,0.2)', borderRadius: 10, padding: '7px 0', fontSize: 13, fontWeight: 700, color: '#dc2626', cursor: 'pointer', fontFamily: 'inherit' }}
                   >
-                    🔄 Retry cloud save
+                    🔄 Retry
                   </button>
                 )}
               </div>
