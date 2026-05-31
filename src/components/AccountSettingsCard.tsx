@@ -123,7 +123,9 @@ export const AccountSettingsCard = () => {
         <div>
           <div style={{ fontSize: 18, fontWeight: 700 }}>Parent Account</div>
           <div style={{ fontSize: 12, color: T.inkMute, marginTop: 1 }}>
-            Sign in to load and manage the household saved to this account.
+            {status === 'signed_in'
+              ? 'You\'re signed in and your family data is synced.'
+              : 'Sign in to load and manage the household saved to this account.'}
           </div>
         </div>
       </div>
