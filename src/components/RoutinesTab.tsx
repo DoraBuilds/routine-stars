@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import confetti from 'canvas-confetti';
+import { balloons } from 'balloons-js';
 import { PainterlyBanner } from './PainterlyBanner';
 import { TaskIcon, getTaskIconColor } from './TaskIcon';
 import { getMascot } from '@/lib/mascots';
@@ -63,7 +64,10 @@ export const RoutinesTab = ({ kid, theme, onToggleTask }: RoutinesTabProps) => {
       // Check all-done after state update
       const remaining = tasks.filter((t) => t.id !== taskId && !t.completed);
       if (remaining.length === 0) {
-        setTimeout(() => fireRoutineConfetti(), 120);
+        setTimeout(() => {
+          fireRoutineConfetti();
+          void balloons();
+        }, 120);
       }
     }
   };
