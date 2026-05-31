@@ -68,15 +68,21 @@ export const RoutinesTab = ({ kid, theme, onToggleTask }: RoutinesTabProps) => {
     }
   };
 
+  const nightCard1 = 'rgba(255,255,255,0.06)';
+  const nightCard2 = 'rgba(255,255,255,0.04)';
+  const nightDone  = 'rgba(139,92,246,0.18)';
+
   return (
     <div
       style={{
         height: '100%',
         overflowY: 'auto',
-        paddingBottom: 80,
-        background: 'linear-gradient(180deg,#fff9f0 0%,#fef0e1 100%)',
+        paddingBottom: 24,
+        background: isMorning
+          ? 'linear-gradient(180deg,#fff9f0 0%,#fef0e1 100%)'
+          : 'linear-gradient(180deg,#0f0a2e 0%,#1a1040 100%)',
         fontFamily: "'Fredoka', system-ui, sans-serif",
-        color: INK,
+        color: isMorning ? INK : 'rgba(255,255,255,0.92)',
       }}
     >
       <PainterlyBanner
@@ -95,7 +101,7 @@ export const RoutinesTab = ({ kid, theme, onToggleTask }: RoutinesTabProps) => {
           marginBottom: 8,
         }}
       >
-        <div style={{ fontSize: 12, fontWeight: 600, color: INK_MUTE }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: isMorning ? INK_MUTE : 'rgba(255,255,255,0.45)' }}>
           {done} of {tasks.length} done
         </div>
         <div style={{ display: 'flex', gap: 4 }}>
@@ -106,7 +112,9 @@ export const RoutinesTab = ({ kid, theme, onToggleTask }: RoutinesTabProps) => {
                 width: 16,
                 height: 4,
                 borderRadius: 99,
-                background: t.completed ? ROUTINES_ORANGE : 'rgba(180,120,80,0.18)',
+                background: t.completed
+                  ? ROUTINES_ORANGE
+                  : isMorning ? 'rgba(180,120,80,0.18)' : 'rgba(255,255,255,0.12)',
               }}
             />
           ))}
@@ -116,7 +124,10 @@ export const RoutinesTab = ({ kid, theme, onToggleTask }: RoutinesTabProps) => {
       {/* Task cards */}
       <div style={{ padding: '4px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {tasks.map((t, i) => {
-          const cardBg = t.completed ? LAVENDER : i % 2 === 0 ? PEACH : '#fff1e1';
+          const cardBg = isMorning
+            ? (t.completed ? LAVENDER : i % 2 === 0 ? PEACH : '#fff1e1')
+            : (t.completed ? nightDone : i % 2 === 0 ? nightCard1 : nightCard2);
+          const iconColor = getTaskIconColor(t.icon);
           return (
             <button
               key={t.id}
@@ -125,12 +136,12 @@ export const RoutinesTab = ({ kid, theme, onToggleTask }: RoutinesTabProps) => {
               style={{
                 background: cardBg,
                 borderRadius: 18,
-                padding: '12px 14px',
+                padding: '13px 14px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12,
                 opacity: t.completed ? 0.7 : 1,
-                border: '1px solid rgba(255,255,255,0.5)',
+                border: `1px solid ${isMorning ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.06)'}`,
                 cursor: 'pointer',
                 fontFamily: 'inherit',
                 color: 'inherit',
@@ -140,44 +151,44 @@ export const RoutinesTab = ({ kid, theme, onToggleTask }: RoutinesTabProps) => {
                 transition: 'transform 0.1s, opacity 0.3s',
               }}
             >
-              {(() => {
-                const iconColor = getTaskIconColor(t.icon);
-                return (
-                  <div
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 14,
-                      background: t.completed ? 'rgba(255,255,255,0.5)' : `${iconColor}20`,
-                      border: `1.5px solid ${t.completed ? 'rgba(255,255,255,0.4)' : `${iconColor}40`}`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      transition: 'all 0.3s',
-                    }}
-                  >
-                    <TaskIcon iconKey={t.icon} size={22} strokeWidth={2.5} />
-                  </div>
-                );
-              })()}
+              <div
+                style={{
+                  width: 46,
+                  height: 46,
+                  borderRadius: 15,
+                  background: t.completed
+                    ? (isMorning ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.08)')
+                    : `${iconColor}28`,
+                  border: `1.5px solid ${t.completed ? 'rgba(255,255,255,0.35)' : `${iconColor}50`}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  transition: 'all 0.3s',
+                }}
+              >
+                <TaskIcon iconKey={t.icon} size={24} />
+              </div>
               <div
                 style={{
                   flex: 1,
-                  fontSize: 14,
-                  fontWeight: 500,
+                  fontSize: 15,
+                  fontWeight: 600,
                   textDecoration: t.completed ? 'line-through' : 'none',
+                  opacity: t.completed ? 0.6 : 1,
                 }}
               >
                 {t.title}
               </div>
               <div
                 style={{
-                  width: 26,
-                  height: 26,
+                  width: 28,
+                  height: 28,
                   borderRadius: '50%',
-                  background: t.completed ? MOOD_PURPLE : 'transparent',
-                  border: t.completed ? 'none' : '2px solid rgba(180,120,80,0.3)',
+                  background: t.completed ? (isMorning ? MOOD_PURPLE : '#7c3aed') : 'transparent',
+                  border: t.completed
+                    ? 'none'
+                    : `2px solid ${isMorning ? 'rgba(180,120,80,0.3)' : 'rgba(255,255,255,0.2)'}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -198,7 +209,7 @@ export const RoutinesTab = ({ kid, theme, onToggleTask }: RoutinesTabProps) => {
             style={{
               textAlign: 'center',
               padding: '32px 16px',
-              color: INK_MUTE,
+              color: isMorning ? INK_MUTE : 'rgba(255,255,255,0.35)',
               fontSize: 13,
             }}
           >
