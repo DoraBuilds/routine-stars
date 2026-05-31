@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { PainterlyBanner } from './PainterlyBanner';
+import { TaskIcon } from './TaskIcon';
 import { getMascot } from '@/lib/mascots';
 import type { Child, RoutineType } from '@/lib/types';
 
@@ -152,7 +153,7 @@ export const RoutinesTab = ({ kid, theme, onToggleTask }: RoutinesTabProps) => {
                   flexShrink: 0,
                 }}
               >
-                {t.icon}
+                <TaskIcon iconKey={t.icon} size={22} strokeWidth={2.5} />
               </div>
               <div
                 style={{
