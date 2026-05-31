@@ -3,6 +3,9 @@ import { Reorder } from 'framer-motion';
 import { TaskIcon } from './TaskIcon';
 import { TaskSuggestionPicker } from './TaskSuggestionPicker';
 import { AccountSettingsCard } from './AccountSettingsCard';
+import { AdminAffirmations } from './admin/AdminAffirmations';
+import { AdminAchievements } from './admin/AdminAchievements';
+import { AdminMood } from './admin/AdminMood';
 import { getMascot, MASCOTS } from '@/lib/mascots';
 import { useAuth } from '@/lib/auth/use-auth';
 import type { Child, HomeScene, RoutineType } from '@/lib/types';
@@ -61,7 +64,7 @@ const DEFAULT_SCHEDULE = {
 } as const;
 
 type ParentSection = 'kids' | 'parents' | 'household' | 'admin' | 'billing';
-type KidEditorTab = 'profile' | 'routines';
+type KidEditorTab = 'profile' | 'routines' | 'affirmations' | 'awards' | 'mood';
 
 // ── Task Modal ─────────────────────────────────────────────
 interface TaskModalProps {
@@ -576,21 +579,27 @@ export const ParentSettings = ({
                       })}
                     </div>
 
-                    {/* Profile / Routines tabs */}
-                    <div style={{ display: 'flex', gap: 4, background: T.cream, borderRadius: 14, padding: 4, border: `1.5px solid ${T.border}`, marginBottom: 18, width: 'fit-content' }}>
-                      {(['profile', 'routines'] as const).map((tab) => (
+                    {/* Profile / Routines / Affirmations / Awards / Mood tabs */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, background: T.cream, borderRadius: 14, padding: 4, border: `1.5px solid ${T.border}`, marginBottom: 18 }}>
+                      {([
+                        { key: 'profile',      label: '👤 Profile' },
+                        { key: 'routines',     label: '📋 Routines' },
+                        { key: 'affirmations', label: '💫 Affirmations' },
+                        { key: 'awards',       label: '🏆 Awards' },
+                        { key: 'mood',         label: '💗 Mood' },
+                      ] as const).map(({ key, label }) => (
                         <button
-                          key={tab}
-                          onClick={() => setKidEditorTab(tab)}
+                          key={key}
+                          onClick={() => setKidEditorTab(key)}
                           style={{
-                            padding: '8px 18px', borderRadius: 10, border: 'none',
-                            background: kidEditorTab === tab ? T.white : 'transparent',
-                            color: kidEditorTab === tab ? T.ink : T.inkMute,
+                            padding: '8px 14px', borderRadius: 10, border: 'none',
+                            background: kidEditorTab === key ? T.white : 'transparent',
+                            color: kidEditorTab === key ? T.ink : T.inkMute,
                             fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                            boxShadow: kidEditorTab === tab ? T.shadow : 'none', transition: 'all 0.15s',
+                            boxShadow: kidEditorTab === key ? T.shadow : 'none', transition: 'all 0.15s',
                           }}
                         >
-                          {tab === 'profile' ? '👤 Profile' : '📋 Routines'}
+                          {label}
                         </button>
                       ))}
                     </div>
@@ -714,6 +723,39 @@ export const ParentSettings = ({
                           </div>
                         </div>
                       </div>
+                    )}
+
+                    {/* AFFIRMATIONS tab */}
+                    {kidEditorTab === 'affirmations' && (
+                      <AdminAffirmations
+                        kid={editorChild}
+                        onBack={() => setKidEditorTab('profile')}
+                        onAdd={(kidId, text) =>
+                          updateChild(kidId, (c) => ({ ...c, affirmations: [...(c.affirmations ?? []), text] }))
+                        }
+                        onRemove={(kidId, idx) =>
+                          updateChild(kidId, (c) => ({ ...c, affirmations: (c.affirmations ?? []).filter((_, i) => i !== idx) }))
+                        }
+                      />
+                    )}
+
+                    {/* AWARDS tab */}
+                    {kidEditorTab === 'awards' && (
+                      <AdminAchievements
+                        kid={editorChild}
+                        onBack={() => setKidEditorTab('profile')}
+                        onToggleBadge={(kidId, badgeId) =>
+                          updateChild(kidId, (c) => ({ ...c, badges: { ...(c.badges ?? {}), [badgeId]: !(c.badges ?? {})[badgeId] } }))
+                        }
+                      />
+                    )}
+
+                    {/* MOOD tab */}
+                    {kidEditorTab === 'mood' && (
+                      <AdminMood
+                        kid={editorChild}
+                        onBack={() => setKidEditorTab('profile')}
+                      />
                     )}
 
                     {/* ROUTINES tab */}
