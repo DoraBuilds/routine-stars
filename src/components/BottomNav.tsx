@@ -10,7 +10,7 @@ const TABS: { id: KidTab; icon: string; label: string; tint: string }[] = [
   { id: 'routines',     icon: '✅', label: 'Routines', tint: '#f97316' },
   { id: 'affirmations', icon: '💫', label: 'Affirm.',  tint: '#ec4899' },
   { id: 'achievements', icon: '🏆', label: 'Awards',   tint: '#f59e0b' },
-  { id: 'mood',         icon: '💗', label: 'Mood',     tint: '#a855f7' },
+  { id: 'mood',         icon: '😌', label: 'Mood',     tint: '#a855f7' },
 ];
 
 export const BottomNav = ({ active, onChange, theme = 'morning' }: BottomNavProps) => {

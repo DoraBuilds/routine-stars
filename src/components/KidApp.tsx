@@ -54,7 +54,7 @@ const CATEGORIES: {
   },
   {
     id: 'mood',
-    emoji: '💗',
+    emoji: '😌',
     label: 'Mood',
     desc: 'How do you feel?',
     bg: 'linear-gradient(145deg,#9d174d,#fda4af)',
