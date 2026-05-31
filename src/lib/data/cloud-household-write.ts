@@ -80,7 +80,7 @@ export const saveHouseholdConfigToCloud = async (input: {
         streak: child.streak ?? 0,
         affirmations: child.affirmations ?? [],
         badges: child.badges ?? {},
-        moods: (child.moods ?? []).map((m) => ({ day: m.day, emoji: m.emoji })),
+        moods: (child.moods ?? []).map((m) => ({ day: m.day, emoji: m.emoji, note: m.note ?? null })),
       });
     } catch (error) {
       throw describeStepError(`Upserting child profile "${child.name}".`, error);

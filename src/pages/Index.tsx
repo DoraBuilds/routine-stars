@@ -94,17 +94,19 @@ const serializeHouseholdConfig = (input: {
       streak: child.streak ?? 0,
       affirmations: child.affirmations ?? [],
       badges: child.badges ?? {},
-      moods: (child.moods ?? []).map((m) => ({ day: m.day, emoji: m.emoji })),
+      moods: (child.moods ?? []).map((m) => ({ day: m.day, emoji: m.emoji, note: m.note ?? null })),
       schedule: child.schedule ?? null,
       morning: child.morning.map((task) => ({
         id: task.id,
         title: task.title,
         icon: task.icon,
+        completed: task.completed,
       })),
       evening: child.evening.map((task) => ({
         id: task.id,
         title: task.title,
         icon: task.icon,
+        completed: task.completed,
       })),
     })),
     homeScene: input.homeScene,
@@ -621,7 +623,29 @@ const Index = () => {
           return;
         }
 
-        setChildren(cloudState.children);
+        // Merge cloud data with local completion state so a cloud refresh never
+        // erases tasks the child has already ticked off during this session.
+        // (The daily_routine_progress write is not yet implemented, so completion
+        // lives only in local state. This merge preserves it across cloud reads.)
+        setChildren((prev) =>
+          cloudState.children.map((cloudChild) => {
+            const local = prev.find((c) => c.id === cloudChild.id);
+            if (!local) return cloudChild;
+            const mergeCompletion = (
+              cloudTasks: typeof cloudChild.morning,
+              localTasks: typeof local.morning,
+            ) =>
+              cloudTasks.map((ct) => {
+                const lt = localTasks.find((t) => t.id === ct.id);
+                return lt ? { ...ct, completed: lt.completed } : ct;
+              });
+            return {
+              ...cloudChild,
+              morning: mergeCompletion(cloudChild.morning, local.morning),
+              evening: mergeCompletion(cloudChild.evening, local.evening),
+            };
+          })
+        );
         setHomeScene(cloudState.homeScene);
         setSetupComplete(nextSetupComplete);
         setView(nextSetupComplete ? 'home' : 'setup');
