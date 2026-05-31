@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Reorder } from 'framer-motion';
 import { TaskIcon } from './TaskIcon';
 import { TaskSuggestionPicker } from './TaskSuggestionPicker';
@@ -328,6 +328,15 @@ export const ParentSettings = ({
   onResetAppData,
   onBack,
 }: ParentSettingsProps) => {
+  const [viewportWidth, setViewportWidth] = React.useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth : 1024
+  );
+  React.useEffect(() => {
+    const onResize = () => setViewportWidth(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  const isMobile = viewportWidth < 768;
   const { status: authStatus, signOut } = useAuth();
   const isSignedIn = authStatus === 'signed_in';
   const [confirmReset, setConfirmReset] = useState(false);
@@ -406,8 +415,8 @@ export const ParentSettings = ({
           </button>
         </div>
 
-        {/* Two-column layout */}
-        <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '240px minmax(0,1fr)', alignItems: 'start' }}>
+        {/* Two-column layout — sidebar on left, content on right; stacks on mobile */}
+        <div style={{ display: 'grid', gap: 16, gridTemplateColumns: isMobile ? '1fr' : '240px minmax(0,1fr)', alignItems: 'start' }}>
 
           {/* ── Sidebar ── */}
           <Card>
@@ -580,7 +589,7 @@ export const ParentSettings = ({
                     {/* PROFILE tab */}
                     {kidEditorTab === 'profile' && (
                       <div style={{ background: T.cream, borderRadius: 18, padding: '16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '200px minmax(0,1fr)', gap: 14, alignItems: 'start' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '200px minmax(0,1fr)', gap: 14, alignItems: 'start' }}>
                           {/* Mascot picker */}
                           <div style={{ background: T.white, borderRadius: 18, padding: '14px 12px', border: `1.5px solid ${T.border}`, textAlign: 'center' }}>
                             {(() => {

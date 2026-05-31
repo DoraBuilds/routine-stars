@@ -112,6 +112,17 @@ export class SupabaseHouseholdRepository implements HouseholdRepository {
       return mapHousehold(rpcData);
     }
 
+    // After any RPC failure, check whether the household already exists.
+    // This handles: (a) race conditions where two tabs called bootstrap
+    // simultaneously, (b) retries after a partial failure, and (c) cases
+    // where the RPC ran but returned null/empty data.
+    try {
+      const alreadyExists = await this.getCurrentHousehold(input.userId);
+      if (alreadyExists) return alreadyExists;
+    } catch {
+      // ignore — fall through to the error/fallback path below
+    }
+
     // Fallback: older environments may not have the RPC yet.
     if (rpcError && !shouldFallbackToDirectBootstrap(rpcError)) {
       throw rpcError;

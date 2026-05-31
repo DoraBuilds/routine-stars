@@ -181,14 +181,16 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood, onSaveNote
             )}
           </div>
 
-          {/* 2×2 category grid */}
+          {/* 2×2 category grid — rows sized naturally, not stretched */}
           <div
             style={{
               flex: 1,
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
-              gridTemplateRows: '1fr 1fr',
+              gridAutoRows: 'minmax(160px, 220px)',
               gap: 14,
+              alignContent: 'center',
+              overflowY: 'auto',
             }}
           >
             {CATEGORIES.map((cat) => (
