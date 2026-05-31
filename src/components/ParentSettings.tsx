@@ -394,7 +394,7 @@ export const ParentSettings = ({
     cloudConfigSyncError ? '⚠️ Sync needs attention' :
     cloudConfigSyncStatus === 'saved' ? '✅ Synced with cloud' :
     cloudConfigSyncStatus === 'saving' ? '🔄 Saving to cloud…' :
-    '☁️ Not yet synced';
+    '☁️ Ready to sync';
   const syncLabelColor =
     cloudConfigSyncError ? '#dc2626' :
     cloudConfigSyncStatus === 'saved' ? '#16a34a' :
@@ -506,7 +506,7 @@ export const ParentSettings = ({
                       ? 'Your family setup is backed up and will appear on any signed-in device.'
                       : cloudConfigSyncStatus === 'saving'
                         ? 'Saving your family setup to the cloud right now…'
-                        : 'Sign in to back up your family setup across all devices.'}
+                        : 'Your family setup will sync automatically when you make changes.'}
                 </div>
                 {cloudConfigSyncError && onRetryCloudConfigSync && (
                   <button
