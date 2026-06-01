@@ -18,7 +18,38 @@ export type IconKey =
   | 'backpack'
   | 'hand'
   | 'package-open'
-  | 'chef-hat';
+  | 'chef-hat'
+  | 'toilet'
+  | 'shower-head'
+  | 'glass-water'
+  | 'milk'
+  | 'banana'
+  | 'sandwich'
+  | 'pill'
+  | 'sun'
+  | 'star'
+  | 'palette'
+  | 'pencil'
+  | 'puzzle'
+  | 'bike'
+  | 'dumbbell'
+  | 'trophy'
+  | 'alarm-clock'
+  | 'flower'
+  | 'gamepad'
+  | 'wand'
+  | 'egg'
+  | 'cookie'
+  | 'ice-cream'
+  | 'flame'
+  | 'fish'
+  | 'bird'
+  | 'snowflake'
+  | 'salad'
+  | 'pizza'
+  | 'cup-soda'
+  | 'biceps-flexed'
+  | 'baby';
 
 export type AgeBucket = '2-4' | '4-6' | '6-8';
 
@@ -46,24 +77,61 @@ export const AGE_BUCKETS: readonly { key: AgeBucket; label: string; description:
 ] as const;
 
 export const ICON_OPTIONS = [
+  // Core
   { key: 'bed', label: 'Bed', routines: ['morning'], category: 'core' },
-  { key: 'utensils', label: 'Eating', routines: ['morning', 'evening'], category: 'meal' },
-  { key: 'shirt', label: 'Clothes', routines: ['morning', 'evening'], category: 'prep' },
-  { key: 'bath', label: 'Bath', routines: ['evening'], category: 'self-care' },
-  { key: 'footprints', label: 'Shoes', routines: ['morning'], category: 'prep' },
-  { key: 'moon-star', label: 'Bedtime', routines: ['evening'], category: 'wind-down' },
-  { key: 'smile', label: 'Smile', routines: ['morning', 'evening'], category: 'comfort' },
   { key: 'sparkles', label: 'Sparkles', routines: ['morning', 'evening'], category: 'core' },
-  { key: 'brush', label: 'Brush', routines: ['morning', 'evening'], category: 'self-care' },
-  { key: 'scissors', label: 'Hair', routines: ['morning', 'evening'], category: 'self-care' },
-  { key: 'apple', label: 'Snack', routines: ['morning'], category: 'meal' },
-  { key: 'book-open', label: 'Reading', routines: ['evening'], category: 'wind-down' },
-  { key: 'music', label: 'Music', routines: ['morning', 'evening'], category: 'comfort' },
-  { key: 'heart', label: 'Love', routines: ['morning', 'evening'], category: 'comfort' },
-  { key: 'backpack', label: 'Backpack', routines: ['morning'], category: 'prep' },
-  { key: 'hand', label: 'Wash hands', routines: ['morning', 'evening'], category: 'self-care' },
   { key: 'package-open', label: 'Put away', routines: ['morning', 'evening'], category: 'core' },
+  { key: 'alarm-clock', label: 'Wake up', routines: ['morning'], category: 'core' },
+  { key: 'sun', label: 'Outside', routines: ['morning', 'evening'], category: 'core' },
+  { key: 'star', label: 'Star', routines: ['morning', 'evening'], category: 'core' },
+  { key: 'trophy', label: 'Trophy', routines: ['morning', 'evening'], category: 'core' },
+  { key: 'wand', label: 'Magic', routines: ['morning', 'evening'], category: 'core' },
+  // Self-care
+  { key: 'toilet', label: 'Toilet', routines: ['morning', 'evening'], category: 'self-care' },
+  { key: 'shower-head', label: 'Shower', routines: ['morning', 'evening'], category: 'self-care' },
+  { key: 'bath', label: 'Bath', routines: ['evening'], category: 'self-care' },
+  { key: 'brush', label: 'Brush teeth', routines: ['morning', 'evening'], category: 'self-care' },
+  { key: 'scissors', label: 'Hair', routines: ['morning', 'evening'], category: 'self-care' },
+  { key: 'hand', label: 'Wash hands', routines: ['morning', 'evening'], category: 'self-care' },
+  { key: 'pill', label: 'Medicine', routines: ['morning', 'evening'], category: 'self-care' },
+  { key: 'dumbbell', label: 'Exercise', routines: ['morning', 'evening'], category: 'self-care' },
+  { key: 'biceps-flexed', label: 'Strong', routines: ['morning', 'evening'], category: 'self-care' },
+  { key: 'snowflake', label: 'Winter gear', routines: ['morning'], category: 'self-care' },
+  // Meal
+  { key: 'utensils', label: 'Eating', routines: ['morning', 'evening'], category: 'meal' },
   { key: 'chef-hat', label: 'Kitchen', routines: ['morning', 'evening'], category: 'meal' },
+  { key: 'apple', label: 'Apple', routines: ['morning', 'evening'], category: 'meal' },
+  { key: 'banana', label: 'Banana', routines: ['morning', 'evening'], category: 'meal' },
+  { key: 'sandwich', label: 'Sandwich', routines: ['morning', 'evening'], category: 'meal' },
+  { key: 'salad', label: 'Salad', routines: ['morning', 'evening'], category: 'meal' },
+  { key: 'pizza', label: 'Pizza', routines: ['morning', 'evening'], category: 'meal' },
+  { key: 'egg', label: 'Egg', routines: ['morning'], category: 'meal' },
+  { key: 'milk', label: 'Milk', routines: ['morning', 'evening'], category: 'meal' },
+  { key: 'glass-water', label: 'Water', routines: ['morning', 'evening'], category: 'meal' },
+  { key: 'cup-soda', label: 'Drink', routines: ['morning', 'evening'], category: 'meal' },
+  { key: 'cookie', label: 'Snack', routines: ['morning', 'evening'], category: 'meal' },
+  { key: 'ice-cream', label: 'Ice cream', routines: ['morning', 'evening'], category: 'meal' },
+  // Prep
+  { key: 'shirt', label: 'Clothes', routines: ['morning', 'evening'], category: 'prep' },
+  { key: 'footprints', label: 'Shoes', routines: ['morning'], category: 'prep' },
+  { key: 'backpack', label: 'Backpack', routines: ['morning'], category: 'prep' },
+  { key: 'pencil', label: 'Homework', routines: ['morning', 'evening'], category: 'prep' },
+  { key: 'bike', label: 'Bike', routines: ['morning', 'evening'], category: 'prep' },
+  // Wind-down
+  { key: 'moon-star', label: 'Bedtime', routines: ['evening'], category: 'wind-down' },
+  { key: 'book-open', label: 'Reading', routines: ['evening'], category: 'wind-down' },
+  { key: 'flame', label: 'Candle', routines: ['evening'], category: 'wind-down' },
+  // Comfort / fun
+  { key: 'smile', label: 'Smile', routines: ['morning', 'evening'], category: 'comfort' },
+  { key: 'heart', label: 'Love', routines: ['morning', 'evening'], category: 'comfort' },
+  { key: 'music', label: 'Music', routines: ['morning', 'evening'], category: 'comfort' },
+  { key: 'palette', label: 'Art', routines: ['morning', 'evening'], category: 'comfort' },
+  { key: 'puzzle', label: 'Puzzle', routines: ['morning', 'evening'], category: 'comfort' },
+  { key: 'gamepad', label: 'Game', routines: ['morning', 'evening'], category: 'comfort' },
+  { key: 'flower', label: 'Flower', routines: ['morning', 'evening'], category: 'comfort' },
+  { key: 'bird', label: 'Bird', routines: ['morning', 'evening'], category: 'comfort' },
+  { key: 'fish', label: 'Fish', routines: ['morning', 'evening'], category: 'comfort' },
+  { key: 'baby', label: 'Baby', routines: ['morning', 'evening'], category: 'comfort' },
 ] as const satisfies readonly IconOption[];
 
 export const TASK_LIBRARY = [
