@@ -7,7 +7,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth/auth-context";
 import { APP_VERSION, getRefreshUrl, getVersionManifestUrl } from "@/lib/app-version";
-import DeepLinkBridge from "@/lib/capacitor/DeepLinkBridge";
 const AuthCallback = lazy(() => import("./pages/AuthCallback.tsx"));
 const Index = lazy(() => import("./pages/Index.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
@@ -66,7 +65,6 @@ const AppShell = () => {
       <Toaster />
       <Sonner />
       <BrowserRouter basename={import.meta.env.BASE_URL}>
-        <DeepLinkBridge />
         <Suspense
           fallback={
             <div className="flex min-h-svh items-center justify-center px-5 py-10">
