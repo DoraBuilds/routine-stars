@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { balloons } from 'balloons-js';
 import { PartyPopper, Star } from 'lucide-react';
@@ -53,20 +53,27 @@ const fireRealisticConfetti = () => {
 };
 
 export const CompletionCelebration = ({ variant, childName, onFinish }: CompletionCelebrationProps) => {
+  // Hold onFinish in a ref so the timer never restarts just because the parent
+  // re-rendered and created a new function reference (e.g. on every task toggle
+  // or every clock tick). The timer fires exactly once after the delay.
+  const onFinishRef = useRef(onFinish);
+  useEffect(() => { onFinishRef.current = onFinish; });
+
   useEffect(() => {
     if (variant === 'task') {
       fireRealisticConfetti();
-
-      const timer = window.setTimeout(onFinish, 1400);
+      const timer = window.setTimeout(() => onFinishRef.current(), 1400);
       return () => window.clearTimeout(timer);
     }
 
     fireRealisticConfetti();
     void balloons();
 
-    const timer = window.setTimeout(onFinish, 4500);
+    const timer = window.setTimeout(() => onFinishRef.current(), 4500);
     return () => window.clearTimeout(timer);
-  }, [onFinish, variant]);
+  // Only variant should restart the timer — not the callback reference.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [variant]);
 
   if (variant === 'task') {
     return null;

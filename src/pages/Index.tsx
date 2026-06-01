@@ -59,18 +59,31 @@ export const getDueRoutine = (child: Child, now: Date): RoutineType | null => {
 
 const getDisplayRoutine = (child: Child, now: Date): RoutineType => {
   const dueRoutine = getDueRoutine(child, now);
+  // If a schedule window is actively due, always honour it — even if that routine
+  // has no tasks yet (that's a parent config issue, not a display bug).
   if (dueRoutine) return dueRoutine;
 
+  // Time-based fallback: show the most recently started routine.
   const minutes = now.getHours() * 60 + now.getMinutes();
   const morningStart = child.schedule?.morning ? parseTime(child.schedule.morning.start) : null;
   const eveningStart = child.schedule?.evening ? parseTime(child.schedule.evening.start) : null;
 
-  if (eveningStart !== null && minutes >= eveningStart) return 'evening';
-  if (morningStart !== null && minutes >= morningStart) return 'morning';
-  if (morningStart !== null) return 'morning';
-  if (eveningStart !== null) return 'evening';
+  let candidate: RoutineType;
+  if (eveningStart !== null && minutes >= eveningStart) candidate = 'evening';
+  else if (morningStart !== null && minutes >= morningStart) candidate = 'morning';
+  else if (morningStart !== null) candidate = 'morning';
+  else if (eveningStart !== null) candidate = 'evening';
+  else candidate = 'morning';
 
-  return 'morning';
+  // Never show a routine with zero tasks when the other routine has tasks.
+  // This is the most common cause of "0/0 tasks" — both schedules exist by
+  // default, but a child may only have tasks in one of them.
+  const other: RoutineType = candidate === 'morning' ? 'evening' : 'morning';
+  if (child[candidate].length === 0 && child[other].length > 0) {
+    return other;
+  }
+
+  return candidate;
 };
 
 const createSetupChildren = (): Child[] => [];
@@ -128,6 +141,10 @@ const Index = () => {
   const [view, setView] = useState<AppView>('setup');
   const [children, setChildren] = useState<Child[]>(createSetupChildren);
   const [activeChildId, setActiveChildId] = useState<string | null>(null);
+  // Locked at the moment the child card is tapped — never re-derived from the live
+  // clock while the routine is in progress. This prevents the displayed routine from
+  // flipping mid-session when a schedule boundary is crossed.
+  const [activeRoutine, setActiveRoutine] = useState<RoutineType>('morning');
   const [setupComplete, setSetupComplete] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
@@ -761,7 +778,6 @@ const Index = () => {
   }, [authStatus, children, homeScene, isReady, setupComplete, user?.id]);
 
   const activeChild = children.find((c) => c.id === activeChildId);
-  const activeRoutine = activeChild ? getDisplayRoutine(activeChild, now) : 'morning';
 
   const toggleTask = useCallback(
     (taskId: string) => {
@@ -1193,12 +1209,10 @@ const Index = () => {
   }
 
   if (view === 'routine' && activeChild) {
-    // Use schedule-aware routine (falls back to 'morning' if no schedule)
-    const activeRoutineTheme = getDisplayRoutine(activeChild, now);
     return (
       <KidApp
         kid={activeChild}
-        theme={activeRoutineTheme}
+        theme={activeRoutine}
         onBack={() => setView('home')}
         onToggleTask={handleToggleTask}
         onSetMood={handleSetMood}
@@ -1236,8 +1250,11 @@ const Index = () => {
       kids={children}
       theme={kidTheme}
       onPick={(id) => {
-        setNow(new Date());
+        const freshNow = new Date();
+        setNow(freshNow);
         setActiveChildId(id);
+        const child = children.find((c) => c.id === id);
+        if (child) setActiveRoutine(getDisplayRoutine(child, freshNow));
         setView('routine');
       }}
       onParent={() => setView('parent')}
