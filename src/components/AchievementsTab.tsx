@@ -82,13 +82,13 @@ export const AchievementsTab = ({ kid }: AchievementsTabProps) => {
             🔥
           </div>
           <div style={{ position: 'relative', flex: 1 }}>
-            <div style={{ fontSize: 36, fontWeight: 700, color: '#7c2d12', lineHeight: 1 }}>{streak}</div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#9a3412', marginTop: 2 }}>day streak!</div>
+            <div style={{ fontSize: 44, fontWeight: 700, color: '#7c2d12', lineHeight: 1 }}>{streak}</div>
+            <div style={{ fontSize: 18, fontWeight: 600, color: '#9a3412', marginTop: 4 }}>day streak!</div>
           </div>
         </div>
 
         {/* Week chips */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, gap: 4 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, gap: 4 }}>
           {WEEK_DAYS.map((d, i) => {
             const filled = streak > 0 && i < Math.min(streak, 7);
             return (
@@ -97,16 +97,16 @@ export const AchievementsTab = ({ kid }: AchievementsTabProps) => {
                 style={{
                   flex: 1,
                   textAlign: 'center',
-                  padding: '6px 0',
-                  borderRadius: 10,
+                  padding: '8px 0',
+                  borderRadius: 12,
                   background: filled ? ROUTINES_ORANGE : 'rgba(180,120,80,0.1)',
                   color: filled ? '#fff' : INK_MUTE,
-                  fontSize: 10,
+                  fontSize: 14,
                   fontWeight: 700,
                 }}
               >
                 <div>{d[0]}</div>
-                <div style={{ fontSize: 12, marginTop: 1 }}>{filled ? '✓' : '·'}</div>
+                <div style={{ fontSize: 16, marginTop: 2 }}>{filled ? '✓' : '·'}</div>
               </div>
             );
           })}
@@ -115,17 +115,17 @@ export const AchievementsTab = ({ kid }: AchievementsTabProps) => {
         {/* Badges */}
         <div
           style={{
-            fontSize: 11,
+            fontSize: 18,
             fontWeight: 700,
             color: INK_MUTE,
-            margin: '16px 0 8px',
-            letterSpacing: '0.08em',
+            margin: '20px 0 10px',
+            letterSpacing: '0.06em',
             textTransform: 'uppercase',
           }}
         >
           Badges · {earnedCount} of {BADGE_CATALOG.length}
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
           {BADGE_CATALOG.map((b) => {
             const earned = Boolean(badges[b.id]);
             return (
@@ -133,28 +133,28 @@ export const AchievementsTab = ({ kid }: AchievementsTabProps) => {
                 key={b.id}
                 style={{
                   background: earned ? '#fff' : 'rgba(180,120,80,0.06)',
-                  borderRadius: 16,
-                  padding: '10px 4px',
+                  borderRadius: 18,
+                  padding: '14px 8px',
                   textAlign: 'center',
                   border: earned ? '1.5px solid #fed7aa' : '1.5px dashed rgba(180,120,80,0.2)',
                   opacity: earned ? 1 : 0.6,
                   position: 'relative',
                 }}
               >
-                <div style={{ fontSize: 26, filter: earned ? 'none' : 'grayscale(1)' }}>{b.icon}</div>
+                <div style={{ fontSize: 34, filter: earned ? 'none' : 'grayscale(1)' }}>{b.icon}</div>
                 <div
                   style={{
-                    fontSize: 9,
+                    fontSize: 14,
                     fontWeight: 700,
                     color: earned ? INK : INK_MUTE,
-                    marginTop: 2,
-                    lineHeight: 1.15,
+                    marginTop: 6,
+                    lineHeight: 1.2,
                   }}
                 >
                   {b.name}
                 </div>
                 {!earned && (
-                  <div style={{ position: 'absolute', top: 4, right: 4, fontSize: 9 }}>🔒</div>
+                  <div style={{ position: 'absolute', top: 6, right: 6, fontSize: 14 }}>🔒</div>
                 )}
               </div>
             );

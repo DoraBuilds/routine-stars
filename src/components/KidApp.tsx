@@ -33,7 +33,7 @@ const CATEGORIES: {
 }[] = [
   {
     id: 'routines',
-    emoji: '⭐',
+    emoji: '📋',
     label: 'Routines',
     desc: 'Your daily tasks',
     bg: 'linear-gradient(145deg,#4338ca,#818cf8)',

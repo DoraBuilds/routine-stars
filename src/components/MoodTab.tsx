@@ -62,8 +62,8 @@ export const MoodTab = ({ kid, onSetMood, onSaveNote }: MoodTabProps) => {
                 onClick={() => onSetMood(kid.id, todayIdx, mood.emoji)}
                 style={{
                   background: selected ? mood.color : '#fff',
-                  borderRadius: 18,
-                  padding: '12px 6px',
+                  borderRadius: 20,
+                  padding: '16px 6px',
                   textAlign: 'center',
                   border: selected ? `2.5px solid ${mood.color}` : '2px solid rgba(180,120,80,0.08)',
                   boxShadow: selected ? `0 4px 12px ${mood.color}55` : '0 2px 6px rgba(0,0,0,0.04)',
@@ -74,13 +74,13 @@ export const MoodTab = ({ kid, onSetMood, onSaveNote }: MoodTabProps) => {
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
-                <div style={{ fontSize: 32 }}>{mood.emoji}</div>
+                <div style={{ fontSize: 40 }}>{mood.emoji}</div>
                 <div
                   style={{
-                    fontSize: 10,
+                    fontSize: 18,
                     fontWeight: 700,
                     color: selected ? '#fff' : INK,
-                    marginTop: 2,
+                    marginTop: 6,
                   }}
                 >
                   {mood.label}
@@ -101,15 +101,15 @@ export const MoodTab = ({ kid, onSetMood, onSaveNote }: MoodTabProps) => {
             border: '1.5px solid rgba(180,120,80,0.08)',
           }}
         >
-          <div style={{ fontSize: 12, fontWeight: 700, color: INK_MUTE, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: INK_MUTE, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
             Tell me more (optional)
           </div>
 
           {/* Show today's saved note if it exists */}
           {todayNote && (
-            <div style={{ marginTop: 8, padding: '8px 10px', background: '#faf5ff', borderRadius: 12, border: '1.5px solid rgba(168,85,247,0.15)' }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: MOOD_PURPLE, marginBottom: 3 }}>Today you wrote:</div>
-              <div style={{ fontSize: 13, color: INK, fontStyle: 'italic' }}>"{todayNote}"</div>
+            <div style={{ marginTop: 10, padding: '10px 14px', background: '#faf5ff', borderRadius: 14, border: '1.5px solid rgba(168,85,247,0.15)' }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: MOOD_PURPLE, marginBottom: 4 }}>Today you wrote:</div>
+              <div style={{ fontSize: 18, color: INK, fontStyle: 'italic' }}>"{todayNote}"</div>
             </div>
           )}
 
@@ -124,19 +124,19 @@ export const MoodTab = ({ kid, onSetMood, onSaveNote }: MoodTabProps) => {
               outline: 'none',
               background: 'transparent',
               fontFamily: 'inherit',
-              fontSize: 13,
+              fontSize: 18,
               color: MOOD_PURPLE,
-              marginTop: 8,
+              marginTop: 10,
               fontStyle: 'italic',
-              minHeight: 36,
+              minHeight: 48,
               boxSizing: 'border-box',
             }}
           />
 
           {/* Save button — appears when there's text */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, marginTop: 6 }}>
             {saved && (
-              <span style={{ fontSize: 12, color: '#16a34a', fontWeight: 600 }}>✓ Saved!</span>
+              <span style={{ fontSize: 18, color: '#16a34a', fontWeight: 600 }}>✓ Saved!</span>
             )}
             {noteDraft.trim() && !saved && (
               <button
@@ -145,9 +145,9 @@ export const MoodTab = ({ kid, onSetMood, onSaveNote }: MoodTabProps) => {
                   background: MOOD_PURPLE,
                   color: '#fff',
                   border: 'none',
-                  borderRadius: 12,
-                  padding: '7px 18px',
-                  fontSize: 13,
+                  borderRadius: 14,
+                  padding: '10px 22px',
+                  fontSize: 18,
                   fontWeight: 700,
                   cursor: 'pointer',
                   fontFamily: 'inherit',
@@ -160,15 +160,15 @@ export const MoodTab = ({ kid, onSetMood, onSaveNote }: MoodTabProps) => {
             )}
           </div>
 
-          <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
             <button
               style={{
                 background: '#fef3c7',
                 color: '#92400e',
                 border: 'none',
-                borderRadius: 10,
-                padding: '5px 10px',
-                fontSize: 12,
+                borderRadius: 12,
+                padding: '8px 14px',
+                fontSize: 18,
                 fontWeight: 700,
                 cursor: 'not-allowed',
                 fontFamily: 'inherit',
@@ -182,9 +182,9 @@ export const MoodTab = ({ kid, onSetMood, onSaveNote }: MoodTabProps) => {
                 background: '#dbeafe',
                 color: '#1e40af',
                 border: 'none',
-                borderRadius: 10,
-                padding: '5px 10px',
-                fontSize: 12,
+                borderRadius: 12,
+                padding: '8px 14px',
+                fontSize: 18,
                 fontWeight: 700,
                 cursor: 'not-allowed',
                 fontFamily: 'inherit',
@@ -198,14 +198,14 @@ export const MoodTab = ({ kid, onSetMood, onSaveNote }: MoodTabProps) => {
       </div>
 
       {/* Week calendar */}
-      <div style={{ padding: '14px 16px 0' }}>
+      <div style={{ padding: '16px 16px 0' }}>
         <div
           style={{
-            fontSize: 11,
+            fontSize: 18,
             fontWeight: 700,
             color: INK_MUTE,
-            marginBottom: 6,
-            letterSpacing: '0.08em',
+            marginBottom: 10,
+            letterSpacing: '0.06em',
             textTransform: 'uppercase',
           }}
         >
@@ -218,16 +218,16 @@ export const MoodTab = ({ kid, onSetMood, onSaveNote }: MoodTabProps) => {
               style={{
                 flex: 1,
                 textAlign: 'center',
-                padding: '8px 0',
+                padding: '10px 0',
                 background: '#fff',
-                borderRadius: 12,
+                borderRadius: 14,
                 border: i === todayIdx ? `2px solid ${MOOD_PURPLE}` : '1.5px solid rgba(180,120,80,0.08)',
               }}
             >
-              <div style={{ fontSize: 18, opacity: moods[i]?.emoji ? 1 : 0.25 }}>
+              <div style={{ fontSize: 22, opacity: moods[i]?.emoji ? 1 : 0.25 }}>
                 {moods[i]?.emoji ?? '·'}
               </div>
-              <div style={{ fontSize: 9, fontWeight: 700, color: INK_MUTE, marginTop: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: INK_MUTE, marginTop: 4 }}>
                 {d[0]}
               </div>
             </div>

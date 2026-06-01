@@ -133,25 +133,25 @@ export const AffirmationsTab = ({ kid, onAddFavourite, onRemoveFavourite }: Affi
             {isFaved ? '♥' : '♡'}
           </button>
 
-          <div style={{ fontSize: 60, marginBottom: 12 }}>{m.emoji}</div>
+          <div style={{ fontSize: 60, marginBottom: 14 }}>{m.emoji}</div>
           <div
             style={{
-              fontSize: 22,
+              fontSize: 28,
               fontWeight: 600,
               color: '#831843',
-              lineHeight: 1.3,
+              lineHeight: 1.35,
               fontStyle: 'italic',
               margin: '0 4px',
             }}
           >
             "{text}"
           </div>
-          <div style={{ fontSize: 12, color: PINK_DARK, marginTop: 12, fontWeight: 500 }}>
+          <div style={{ fontSize: 18, color: PINK_DARK, marginTop: 14, fontWeight: 500 }}>
             {m.name} says: take a deep breath 🌸
           </div>
 
           {/* Controls */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 18 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 22 }}>
             {/* Play / Stop button */}
             <button
               onClick={handlePlay}
@@ -159,10 +159,10 @@ export const AffirmationsTab = ({ kid, onAddFavourite, onRemoveFavourite }: Affi
                 background: speaking ? PINK_DARK : PINK,
                 color: '#fff',
                 border: 'none',
-                width: 52,
-                height: 52,
+                width: 60,
+                height: 60,
                 borderRadius: '50%',
-                fontSize: 20,
+                fontSize: 24,
                 cursor: 'pointer',
                 fontFamily: 'inherit',
                 boxShadow: `0 4px 0 ${PINK_DARK}`,
@@ -181,10 +181,10 @@ export const AffirmationsTab = ({ kid, onAddFavourite, onRemoveFavourite }: Affi
                   background: '#fff',
                   color: PINK_DARK,
                   border: 'none',
-                  padding: '0 18px',
-                  height: 52,
-                  borderRadius: 26,
-                  fontSize: 13,
+                  padding: '0 22px',
+                  height: 60,
+                  borderRadius: 30,
+                  fontSize: 20,
                   fontWeight: 600,
                   cursor: 'pointer',
                   fontFamily: 'inherit',
@@ -222,14 +222,14 @@ export const AffirmationsTab = ({ kid, onAddFavourite, onRemoveFavourite }: Affi
       )}
 
       {/* Favourites list */}
-      <div style={{ padding: '18px 18px 0' }}>
+      <div style={{ padding: '20px 18px 0' }}>
         <div
           style={{
-            fontSize: 11,
+            fontSize: 18,
             fontWeight: 700,
             color: INK_MUTE,
-            marginBottom: 8,
-            letterSpacing: '0.08em',
+            marginBottom: 10,
+            letterSpacing: '0.06em',
             textTransform: 'uppercase',
           }}
         >
@@ -240,36 +240,36 @@ export const AffirmationsTab = ({ kid, onAddFavourite, onRemoveFavourite }: Affi
           <div
             style={{
               textAlign: 'center',
-              padding: '20px 14px',
+              padding: '24px 14px',
               color: 'rgba(236,72,153,0.4)',
-              fontSize: 13,
+              fontSize: 18,
               border: '1.5px dashed rgba(236,72,153,0.2)',
-              borderRadius: 16,
+              borderRadius: 18,
             }}
           >
             Tap 🤍 on a card to save a favourite!
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {favedList.map((aff, i) => (
               <div
                 key={aff}
                 style={{
                   background: FAVE_COLORS[i % FAVE_COLORS.length],
-                  borderRadius: 16,
-                  padding: '10px 14px',
+                  borderRadius: 18,
+                  padding: '14px 16px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 10,
+                  gap: 12,
                 }}
               >
-                <div style={{ fontSize: 18 }}>{FAVE_ICONS[i % FAVE_ICONS.length]}</div>
-                <div style={{ flex: 1, fontSize: 13, fontWeight: 500, fontStyle: 'italic' }}>
+                <div style={{ fontSize: 24 }}>{FAVE_ICONS[i % FAVE_ICONS.length]}</div>
+                <div style={{ flex: 1, fontSize: 18, fontWeight: 500, fontStyle: 'italic' }}>
                   "{aff}"
                 </div>
                 <button
                   onClick={() => onRemoveFavourite(aff)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: '#ef4444', padding: 2, WebkitTapHighlightColor: 'transparent', lineHeight: 1 }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 26, color: '#ef4444', padding: 4, WebkitTapHighlightColor: 'transparent', lineHeight: 1 }}
                 >
                   ♥
                 </button>
