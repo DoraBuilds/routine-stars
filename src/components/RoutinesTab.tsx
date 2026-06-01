@@ -98,26 +98,18 @@ export const RoutinesTab = ({ kid, theme, onToggleTask, onAllDone }: RoutinesTab
         palette={isMorning ? 'morning' : 'evening'}
       />
 
-      {/* Progress row */}
-      <div
-        style={{
-          padding: '0 20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 12,
-        }}
-      >
-        <div style={{ fontSize: 20, fontWeight: 700, color: isMorning ? INK_MUTE : 'rgba(255,255,255,0.45)' }}>
+      {/* Progress row — text on top, dots below, never wraps */}
+      <div style={{ padding: '0 20px', marginBottom: 16 }}>
+        <div style={{ fontSize: 22, fontWeight: 700, color: isMorning ? INK_MUTE : 'rgba(255,255,255,0.55)', marginBottom: 10 }}>
           {done} of {tasks.length} done
         </div>
-        <div style={{ display: 'flex', gap: 6 }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {tasks.map((t) => (
             <div
               key={t.id}
               style={{
                 width: 28,
-                height: 7,
+                height: 8,
                 borderRadius: 99,
                 background: t.completed
                   ? ROUTINES_ORANGE

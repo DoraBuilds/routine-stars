@@ -26,18 +26,18 @@ export const PainterlyBanner = ({ label, title, palette = 'morning' }: Painterly
         boxShadow: '0 4px 12px rgba(180,120,80,0.08)',
       }}
     >
-      <div style={{ background: p.bg, padding: '18px 16px', position: 'relative', minHeight: 80 }}>
-        <div style={{ position: 'absolute', left: 8, top: 8, fontSize: 28, opacity: 0.85 }}>{p.deco1}</div>
-        <div style={{ position: 'absolute', right: 10, bottom: 8, fontSize: 18, opacity: 0.7 }}>{p.deco2}</div>
-        <div style={{ position: 'absolute', left: 90, top: 14, fontSize: 11, color: p.sub, opacity: 0.6 }}>✦</div>
-        <div style={{ position: 'absolute', right: 50, top: 30, fontSize: 9, color: p.sub, opacity: 0.5 }}>✦</div>
+      <div style={{ background: p.bg, padding: '22px 20px', position: 'relative', minHeight: 110 }}>
+        <div style={{ position: 'absolute', left: 12, top: 10, fontSize: 36, opacity: 0.85 }}>{p.deco1}</div>
+        <div style={{ position: 'absolute', right: 14, bottom: 10, fontSize: 26, opacity: 0.7 }}>{p.deco2}</div>
+        <div style={{ position: 'absolute', left: 110, top: 18, fontSize: 14, color: p.sub, opacity: 0.6 }}>✦</div>
+        <div style={{ position: 'absolute', right: 60, top: 36, fontSize: 11, color: p.sub, opacity: 0.5 }}>✦</div>
         <div style={{ textAlign: 'center', position: 'relative', marginTop: 4 }}>
           <div
             style={{
-              fontSize: 11,
-              fontWeight: 600,
+              fontSize: 18,
+              fontWeight: 700,
               color: p.sub,
-              letterSpacing: '0.12em',
+              letterSpacing: '0.1em',
               textTransform: 'uppercase',
             }}
           >
@@ -45,10 +45,10 @@ export const PainterlyBanner = ({ label, title, palette = 'morning' }: Painterly
           </div>
           <div
             style={{
-              fontSize: 24,
-              fontWeight: 600,
+              fontSize: 36,
+              fontWeight: 700,
               color: p.main,
-              marginTop: 2,
+              marginTop: 4,
               fontStyle: 'italic',
             }}
           >

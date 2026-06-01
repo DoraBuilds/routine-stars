@@ -93,7 +93,7 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood, onSaveNote
             position: 'relative',
             zIndex: 2,
             width: '100%',
-            maxWidth: 540,
+            maxWidth: 900,
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
@@ -139,10 +139,10 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood, onSaveNote
             <div style={{ flex: 1 }}>
               <div
                 style={{
-                  fontSize: 12,
+                  fontSize: 18,
                   fontWeight: 600,
                   color: isNight ? 'rgba(255,255,255,0.55)' : '#8a7866',
-                  letterSpacing: '0.1em',
+                  letterSpacing: '0.08em',
                   textTransform: 'uppercase',
                 }}
               >
@@ -150,7 +150,7 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood, onSaveNote
               </div>
               <div
                 style={{
-                  fontSize: 22,
+                  fontSize: 32,
                   fontWeight: 700,
                   color: isNight ? '#fff' : '#3d2c1f',
                   lineHeight: 1.1,
@@ -232,12 +232,12 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood, onSaveNote
                     pointerEvents: 'none',
                   }}
                 />
-                <div style={{ fontSize: 48, lineHeight: 1, position: 'relative' }}>
+                <div style={{ fontSize: 56, lineHeight: 1, position: 'relative' }}>
                   {cat.emoji}
                 </div>
                 <div
                   style={{
-                    fontSize: 17,
+                    fontSize: 24,
                     fontWeight: 700,
                     textAlign: 'center',
                     lineHeight: 1.2,
@@ -248,7 +248,7 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood, onSaveNote
                 </div>
                 <div
                   style={{
-                    fontSize: 11,
+                    fontSize: 16,
                     opacity: 0.8,
                     textAlign: 'center',
                     position: 'relative',
@@ -280,7 +280,7 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood, onSaveNote
       <div
         style={{
           width: '100%',
-          maxWidth: 540,
+          maxWidth: 900,
           background: isNight ? '#312e81' : '#fff9f0',
           display: 'flex',
           flexDirection: 'column',
@@ -330,10 +330,10 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood, onSaveNote
           <div style={{ flex: 1 }}>
             <div
               style={{
-                fontSize: 11,
+                fontSize: 16,
                 fontWeight: 700,
                 color: isNight ? 'rgba(255,255,255,0.45)' : '#8a7866',
-                letterSpacing: '0.08em',
+                letterSpacing: '0.06em',
                 textTransform: 'uppercase',
               }}
             >
@@ -341,10 +341,10 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood, onSaveNote
             </div>
             <div
               style={{
-                fontSize: 14,
-                fontWeight: 600,
+                fontSize: 22,
+                fontWeight: 700,
                 color: isNight ? '#fff' : '#3d2c1f',
-                marginTop: -1,
+                marginTop: 1,
               }}
             >
               Hi, {kid.name}!

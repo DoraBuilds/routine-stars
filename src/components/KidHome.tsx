@@ -67,7 +67,7 @@ export const KidHome = ({ kids, theme, onPick, onParent }: KidHomeProps) => {
           position: 'relative',
           zIndex: 2,
           width: '100%',
-          maxWidth: 540,
+          maxWidth: 900,
           padding: '24px 20px 20px',
           height: '100%',
           display: 'flex',
@@ -79,10 +79,10 @@ export const KidHome = ({ kids, theme, onPick, onParent }: KidHomeProps) => {
         <div style={{ marginBottom: 24, flexShrink: 0, textAlign: 'center' }}>
           <div
             style={{
-              fontSize: 14,
+              fontSize: 18,
               fontWeight: 600,
               color: isMorning ? '#d97706' : '#fde68a',
-              letterSpacing: '0.14em',
+              letterSpacing: '0.1em',
               textTransform: 'uppercase',
             }}
           >
@@ -90,16 +90,16 @@ export const KidHome = ({ kids, theme, onPick, onParent }: KidHomeProps) => {
             {new Date().toLocaleDateString('en-US', { weekday: 'long' })}{' '}
             {isMorning ? 'morning' : 'evening'}
           </div>
-          <div style={{ fontSize: 28, fontWeight: 700, marginTop: 6, lineHeight: 1.15 }}>
+          <div style={{ fontSize: 40, fontWeight: 700, marginTop: 8, lineHeight: 1.15 }}>
             {greeting}
             <br />
             {tagline}
           </div>
           <div
             style={{
-              fontSize: 15,
+              fontSize: 20,
               color: isMorning ? INK_MUTE : 'rgba(255,255,255,0.7)',
-              marginTop: 6,
+              marginTop: 8,
             }}
           >
             {sub}
@@ -212,16 +212,16 @@ export const KidHome = ({ kids, theme, onPick, onParent }: KidHomeProps) => {
                 />
 
                 {/* Name */}
-                <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1 }}>
+                <div style={{ fontSize: 28, fontWeight: 700, lineHeight: 1 }}>
                   {k.name}
                 </div>
 
                 {/* Mascot label */}
                 <div
                   style={{
-                    fontSize: 14,
+                    fontSize: 20,
                     color: isMorning ? INK_MUTE : 'rgba(255,255,255,0.65)',
-                    marginTop: -4,
+                    marginTop: -2,
                   }}
                 >
                   {allDone ? '🌟 All done!' : `${done} / ${total} done`}
@@ -277,7 +277,7 @@ export const KidHome = ({ kids, theme, onPick, onParent }: KidHomeProps) => {
             flexShrink: 0,
           }}
         >
-          <span style={{ fontSize: 14, fontWeight: 500 }}>⚙️ Hold to open parent settings</span>
+          <span style={{ fontSize: 18, fontWeight: 500 }}>⚙️ Hold to open parent settings</span>
           <div
             style={{
               width: 90,
