@@ -73,37 +73,40 @@ const normalizeLocalAppState = (value: unknown): LocalAppState | null => {
   };
 };
 
-const findLegacyScopedData = (): string | null => {
-  // Old versions stored data under scoped keys like routine_stars_data::anon
-  // or routine_stars_data::user:XXX. Scan and migrate the first valid one found.
+const findBestLocalAppState = (): LocalAppState | null => {
+  // Gather all candidate states: base key + any scoped keys from old builds
+  const candidates: LocalAppState[] = [];
+
+  const tryParse = (raw: string | null) => {
+    if (!raw) return;
+    try {
+      const parsed = normalizeLocalAppState(JSON.parse(raw));
+      if (parsed) candidates.push(parsed);
+    } catch { /* ignore */ }
+  };
+
+  tryParse(localStorage.getItem(LOCAL_APP_STATE_STORAGE_KEY));
+
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (key && key !== LOCAL_APP_STATE_STORAGE_KEY && key.startsWith(`${LOCAL_APP_STATE_STORAGE_KEY}::`)) {
-      const value = localStorage.getItem(key);
-      if (value) return value;
+      tryParse(localStorage.getItem(key));
     }
   }
-  return null;
+
+  if (candidates.length === 0) return null;
+
+  // Pick the state with the most children (most complete data)
+  const best = candidates.reduce((a, b) => b.children.length > a.children.length ? b : a);
+
+  // Persist it under the base key so future loads are direct
+  localStorage.setItem(LOCAL_APP_STATE_STORAGE_KEY, JSON.stringify({ version: CURRENT_LOCAL_APP_STATE_VERSION, ...best }));
+
+  return best;
 };
 
 export const loadLocalAppState = (): LocalAppState | null => {
-  let saved = localStorage.getItem(LOCAL_APP_STATE_STORAGE_KEY);
-
-  if (!saved) {
-    saved = findLegacyScopedData();
-    if (saved) {
-      // Migrate to the base key so future reads work normally
-      localStorage.setItem(LOCAL_APP_STATE_STORAGE_KEY, saved);
-    }
-  }
-
-  if (!saved) return null;
-
-  try {
-    return normalizeLocalAppState(JSON.parse(saved));
-  } catch {
-    return null;
-  }
+  return findBestLocalAppState();
 };
 
 export const saveLocalAppState = (state: Omit<LocalAppState, 'version'>) => {
