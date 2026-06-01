@@ -28,6 +28,14 @@ export interface ChildProfileRecord {
   ageBucket: AgeBucket | null;
   avatarAnimal: string | null;
   avatarSeed: string | null;
+  // Cozy Pastel redesign fields
+  mascotId: string | null;
+  streak: number;
+  affirmations: string[];
+  badges: Record<string, boolean>;
+  moods: Array<{ day: string; emoji: string | null; note?: string | null }>;
+  /** date-keyed map of completed task titles, e.g. { "2026-05-31": { morning: ["Brush teeth"], evening: [] } } */
+  taskCompletion: Record<string, { morning: string[]; evening: string[] }>;
   createdAt: string;
   updatedAt: string;
 }

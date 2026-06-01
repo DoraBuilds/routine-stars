@@ -10,12 +10,15 @@ import type {
 } from './models';
 
 export interface HouseholdRepository {
-  getCurrentHousehold(): Promise<HouseholdRecord | null>;
+  getCurrentHousehold(userId: string): Promise<HouseholdRecord | null>;
   createInitialHousehold(input: {
     householdName: string;
     timezone: string;
+    userId: string;
   }): Promise<HouseholdRecord>;
   listMembers(householdId: string): Promise<HouseholdMemberRecord[]>;
+  updateHomeScene(householdId: string, homeScene: HouseholdRecord['homeScene']): Promise<HouseholdRecord>;
+  remove(householdId: string): Promise<void>;
 }
 
 export interface ChildProfileRepository {

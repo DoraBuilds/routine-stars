@@ -1,7 +1,31 @@
 import type { Child, HomeScene } from '@/lib/types';
+import { getSafeStorage } from './safe-storage';
 
 export const LOCAL_APP_STATE_STORAGE_KEY = 'routine_stars_data';
 export const CURRENT_LOCAL_APP_STATE_VERSION = 1;
+
+type LocalAppStateScope =
+  | { userId: string }
+  | { householdId: string }
+  | { mode: 'anonymous' }
+  | undefined;
+
+const getScopedStorageKey = (scope: LocalAppStateScope) => {
+  if (!scope) {
+    // Backwards-compat: legacy key for older builds.
+    return LOCAL_APP_STATE_STORAGE_KEY;
+  }
+
+  if ('mode' in scope) {
+    return `${LOCAL_APP_STATE_STORAGE_KEY}::anon`;
+  }
+
+  if ('householdId' in scope) {
+    return `${LOCAL_APP_STATE_STORAGE_KEY}::household:${scope.householdId}`;
+  }
+
+  return `${LOCAL_APP_STATE_STORAGE_KEY}::user:${scope.userId}`;
+};
 
 export interface LocalAppState {
   version: number;
@@ -18,106 +42,75 @@ type LegacyLocalAppState = Partial<Omit<LocalAppState, 'version'>> & {
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
 
-const normalizeTask = (raw: unknown) => {
-  if (!isObject(raw)) return null;
-  if (typeof raw.id !== 'string' || !raw.id) return null;
-  if (typeof raw.title !== 'string' || !raw.title) return null;
-  return {
-    id: raw.id,
-    title: raw.title,
-    icon: typeof raw.icon === 'string' ? raw.icon : 'smile',
-    completed: raw.completed === true,
-  };
-};
-
-const normalizeChild = (raw: unknown) => {
-  if (!isObject(raw)) return null;
-  if (typeof raw.id !== 'string' || !raw.id) return null;
-  if (typeof raw.name !== 'string' || !raw.name) return null;
-
-  const morning = Array.isArray(raw.morning)
-    ? raw.morning.map(normalizeTask).filter(Boolean)
-    : [];
-  const evening = Array.isArray(raw.evening)
-    ? raw.evening.map(normalizeTask).filter(Boolean)
-    : [];
-
-  return {
-    ...raw,
-    id: raw.id,
-    name: raw.name,
-    morning,
-    evening,
-  };
-};
-
 const normalizeLocalAppState = (value: unknown): LocalAppState | null => {
   if (!isObject(value) || !Array.isArray(value.children)) {
     return null;
   }
 
   const legacy = value as LegacyLocalAppState;
-  const children = legacy.children
-    ?.map(normalizeChild)
-    .filter(Boolean) ?? [];
 
   return {
     version:
       typeof value.version === 'number' && Number.isFinite(value.version)
         ? value.version
         : CURRENT_LOCAL_APP_STATE_VERSION,
-    children: children as LocalAppState['children'],
+    children: legacy.children,
     homeScene: legacy.homeScene ?? 'bike',
     lastReset: legacy.lastReset ?? new Date().toDateString(),
     setupComplete: legacy.setupComplete ?? true,
   };
 };
 
-const findBestLocalAppState = (): LocalAppState | null => {
-  // Gather all candidate states: base key + any scoped keys from old builds
+const loadBestState = (storage: { getItem: (k: string) => string | null; setItem: (k: string, v: string) => void; length: number; key: (i: number) => string | null }): LocalAppState | null => {
   const candidates: LocalAppState[] = [];
-
   const tryParse = (raw: string | null) => {
     if (!raw) return;
-    try {
-      const parsed = normalizeLocalAppState(JSON.parse(raw));
-      if (parsed) candidates.push(parsed);
-    } catch { /* ignore */ }
+    try { const p = normalizeLocalAppState(JSON.parse(raw)); if (p) candidates.push(p); } catch { /* ignore */ }
   };
-
-  tryParse(localStorage.getItem(LOCAL_APP_STATE_STORAGE_KEY));
-
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
+  tryParse(storage.getItem(LOCAL_APP_STATE_STORAGE_KEY));
+  for (let i = 0; i < storage.length; i++) {
+    const key = storage.key(i);
     if (key && key !== LOCAL_APP_STATE_STORAGE_KEY && key.startsWith(`${LOCAL_APP_STATE_STORAGE_KEY}::`)) {
-      tryParse(localStorage.getItem(key));
+      tryParse(storage.getItem(key));
     }
   }
-
-  if (candidates.length === 0) return null;
-
-  // Pick the state with the most children (most complete data)
+  if (!candidates.length) return null;
   const best = candidates.reduce((a, b) => b.children.length > a.children.length ? b : a);
-
-  // Persist it under the base key so future loads are direct
-  localStorage.setItem(LOCAL_APP_STATE_STORAGE_KEY, JSON.stringify({ version: CURRENT_LOCAL_APP_STATE_VERSION, ...best }));
-
+  // Migrate to base key so future loads are direct
+  storage.setItem(LOCAL_APP_STATE_STORAGE_KEY, JSON.stringify({ version: CURRENT_LOCAL_APP_STATE_VERSION, ...best }));
   return best;
 };
 
-export const loadLocalAppState = (): LocalAppState | null => {
-  return findBestLocalAppState();
+export const loadLocalAppState = (scope?: LocalAppStateScope): LocalAppState | null => {
+  const storage = getSafeStorage('__routine_stars_local_app_state_test__');
+  // When no scope given, scan all candidate keys and use the one with most children
+  if (!scope) return loadBestState(storage);
+  const saved = storage.getItem(getScopedStorageKey(scope));
+  if (!saved) return null;
+  try {
+    return normalizeLocalAppState(JSON.parse(saved));
+  } catch {
+    return null;
+  }
 };
 
-export const saveLocalAppState = (state: Omit<LocalAppState, 'version'>) => {
+export const saveLocalAppState = (state: Omit<LocalAppState, 'version'>, scope?: LocalAppStateScope) => {
   const payload: LocalAppState = {
     version: CURRENT_LOCAL_APP_STATE_VERSION,
     ...state,
   };
 
-  localStorage.setItem(LOCAL_APP_STATE_STORAGE_KEY, JSON.stringify(payload));
+  const storage = getSafeStorage('__routine_stars_local_app_state_test__');
+  storage.setItem(getScopedStorageKey(scope), JSON.stringify(payload));
 };
 
-export const clearLocalAppState = () => {
-  localStorage.removeItem(LOCAL_APP_STATE_STORAGE_KEY);
+export const clearLocalAppState = (scope?: LocalAppStateScope) => {
+  const storage = getSafeStorage('__routine_stars_local_app_state_test__');
+  // Always clear the legacy key so older builds don't resurrect state.
+  storage.removeItem(LOCAL_APP_STATE_STORAGE_KEY);
+  storage.removeItem(`${LOCAL_APP_STATE_STORAGE_KEY}::anon`);
+
+  if (scope) {
+    storage.removeItem(getScopedStorageKey(scope));
+  }
 };

@@ -53,9 +53,9 @@ const fireRealisticConfetti = () => {
 };
 
 export const CompletionCelebration = ({ variant, childName, onFinish }: CompletionCelebrationProps) => {
-  // Keep onFinish in a ref so the timer never restarts just because the parent
-  // re-rendered and produced a new function reference (e.g. on every task toggle
-  // or every clock tick that causes Index to re-render).
+  // Hold onFinish in a ref so the timer never restarts just because the parent
+  // re-rendered and created a new function reference (e.g. on every task toggle
+  // or every clock tick). The timer fires exactly once after the delay.
   const onFinishRef = useRef(onFinish);
   useEffect(() => { onFinishRef.current = onFinish; });
 
@@ -71,7 +71,7 @@ export const CompletionCelebration = ({ variant, childName, onFinish }: Completi
 
     const timer = window.setTimeout(() => onFinishRef.current(), 4500);
     return () => window.clearTimeout(timer);
-  // variant is the only thing that should restart the timer — not onFinish.
+  // Only variant should restart the timer — not the callback reference.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [variant]);
 

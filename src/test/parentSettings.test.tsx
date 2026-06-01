@@ -1,10 +1,19 @@
 import { createElement, useState } from "react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { ParentSettings } from "@/components/ParentSettings";
-import { AuthProvider } from "@/lib/auth/auth-context";
 import type { Child, HomeScene } from "@/lib/types";
+
+const signOut = vi.fn();
+const authState = {
+  status: "signed_out",
+  signOut,
+};
+
+vi.mock("@/lib/auth/use-auth", () => ({
+  useAuth: () => authState,
+}));
 
 vi.mock("framer-motion", () => ({
   motion: new Proxy(
@@ -51,28 +60,28 @@ const Harness = ({ seedChildren = initialChildren }: { seedChildren?: Child[] })
   const [resetCount, setResetCount] = useState(0);
 
   return (
-    <AuthProvider>
-      <div>
-        <pre data-testid="state">{JSON.stringify(children)}</pre>
-        <div data-testid="restart-count">{restartCount}</div>
-        <div data-testid="reset-count">{resetCount}</div>
-        <ParentSettings
-          children={children}
-          homeScene={homeScene}
-          onChange={setChildren}
-          onHomeSceneChange={setHomeScene}
-          onRestartSetup={() => setRestartCount((count) => count + 1)}
-          onResetAppData={() => setResetCount((count) => count + 1)}
-          onBack={() => {}}
-        />
-      </div>
-    </AuthProvider>
+    <div>
+      <pre data-testid="state">{JSON.stringify(children)}</pre>
+      <div data-testid="restart-count">{restartCount}</div>
+      <div data-testid="reset-count">{resetCount}</div>
+      <ParentSettings
+        children={children}
+        homeScene={homeScene}
+        onChange={setChildren}
+        onHomeSceneChange={setHomeScene}
+        onRestartSetup={() => setRestartCount((count) => count + 1)}
+        onResetAppData={() => setResetCount((count) => count + 1)}
+        onBack={() => {}}
+      />
+    </div>
   );
 };
 
 describe("ParentSettings", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    signOut.mockReset();
+    authState.status = "signed_out";
   });
 
   it("renames a child in place", () => {
@@ -184,7 +193,7 @@ describe("ParentSettings", () => {
     expect(screen.getByRole("button", { name: /^reset everything$/i })).toBeInTheDocument();
   });
 
-  it("requires confirmation before resetting all app data", () => {
+  it("requires confirmation before resetting all app data", async () => {
     render(<Harness />);
 
     fireEvent.click(screen.getByRole("button", { name: /admin/i }));
@@ -193,9 +202,28 @@ describe("ParentSettings", () => {
     expect(screen.getByText(/this clears everything saved in this browser/i)).toBeInTheDocument();
     expect(screen.getByTestId("reset-count")).toHaveTextContent("0");
 
-    fireEvent.click(screen.getByRole("button", { name: /yes, reset everything/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /yes, reset everything/i }));
+    });
 
     expect(screen.getByTestId("reset-count")).toHaveTextContent("1");
+  });
+
+  it("warns signed-in parents that reset deletes the cloud household too", () => {
+    authState.status = "signed_in";
+
+    render(<Harness />);
+
+    fireEvent.click(screen.getByRole("button", { name: /admin/i }));
+    expect(
+      screen.getByText(/permanently delete the signed-in household, all child profiles, routines, schedules, and progress/i)
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /^reset everything$/i }));
+
+    expect(
+      screen.getByText(/this permanently deletes the signed-in household everywhere and clears this browser/i)
+    ).toBeInTheDocument();
   });
 
   it("fires restart setup without clearing the current children immediately", () => {
@@ -206,5 +234,26 @@ describe("ParentSettings", () => {
 
     expect(screen.getByTestId("restart-count")).toHaveTextContent("1");
     expect(readState()).toHaveLength(2);
+  });
+
+  it("explains sign-in requirements when the parent account is not connected", () => {
+    render(<Harness />);
+
+    expect(screen.getByText(/sign-in required/i)).toBeInTheDocument();
+    expect(screen.getByText(/sign in from the parents section/i)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^logout$/i })).toBeNull();
+    expect(screen.getByRole("button", { name: /parents/i })).toHaveTextContent("Sign in for sync");
+  });
+
+  it("shows logout only when the parent account is signed in", () => {
+    authState.status = "signed_in";
+
+    render(<Harness />);
+
+    fireEvent.click(screen.getByRole("button", { name: /^logout$/i }));
+
+    expect(signOut).toHaveBeenCalledTimes(1);
+    expect(screen.getByText(/parent account connected/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /parents/i })).toHaveTextContent("Account connected");
   });
 });

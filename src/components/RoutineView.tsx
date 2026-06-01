@@ -65,27 +65,6 @@ export const RoutineView = ({ child, routine, onToggleTask, onBack }: RoutineVie
     | null
   >(null);
 
-  // Keep the screen awake while a child is doing their routine
-  useEffect(() => {
-    if (!('wakeLock' in navigator)) return;
-    let lock: WakeLockSentinel | null = null;
-
-    const acquire = () => {
-      navigator.wakeLock.request('screen').then((l) => { lock = l; }).catch(() => {});
-    };
-
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') acquire();
-    };
-
-    acquire();
-    document.addEventListener('visibilitychange', handleVisibility);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibility);
-      lock?.release().catch(() => {});
-    };
-  }, []);
-
   const tasks = child[routine];
   const isComplete = tasks.length > 0 && tasks.every((t) => t.completed);
   const completedCount = tasks.filter((task) => task.completed).length;
@@ -119,11 +98,11 @@ export const RoutineView = ({ child, routine, onToggleTask, onBack }: RoutineVie
         <nav className="mb-8 flex items-center justify-start md:mb-10">
           <button
             onClick={onBack}
-            className={`rounded-2xl p-4 shadow-sm transition-transform active:scale-95 md:p-5 ${
+            className={`rounded-2xl p-3 shadow-sm transition-transform active:scale-95 md:p-4 ${
               routine === 'morning' ? 'bg-white/90 text-muted-foreground' : 'bg-slate-900/65 text-slate-100'
             }`}
           >
-            <ArrowLeft size={32} />
+            <ArrowLeft size={26} />
           </button>
         </nav>
 
@@ -135,40 +114,40 @@ export const RoutineView = ({ child, routine, onToggleTask, onBack }: RoutineVie
         >
           <div className="mb-5 flex flex-wrap items-center gap-3">
             <span
-              className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-base font-black uppercase tracking-[0.18em] ${
+              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-black uppercase tracking-[0.24em] ${
                 routine === 'morning'
                   ? 'bg-white/85 text-primary'
                   : 'bg-slate-950/45 text-yellow-100'
               }`}
             >
-              {routine === 'morning' ? <Sparkles size={18} /> : <MoonStar size={18} />}
+              {routine === 'morning' ? <Sparkles size={16} /> : <MoonStar size={16} />}
               {routine === 'morning' ? 'Morning routine' : 'Evening routine'}
             </span>
             {tasks.length > 0 && (
               <span
-                className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-base font-black uppercase tracking-[0.18em] ${
+                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-black uppercase tracking-[0.24em] ${
                   routine === 'morning'
                     ? 'bg-primary/10 text-primary'
                     : 'bg-white/10 text-yellow-100'
                 }`}
               >
-                <Star size={18} />
+                <Star size={16} />
                 {completedCount}/{tasks.length}
               </span>
             )}
           </div>
           <h2
-            className={`text-4xl font-bold sm:text-5xl md:text-6xl ${
+            className={`text-2xl font-bold sm:text-3xl md:text-4xl ${
               routine === 'morning' ? 'text-foreground' : 'text-white'
             }`}
           >
             Good {routine === 'morning' ? 'Morning' : 'Evening'}, {child.name}!
           </h2>
-          <div className="mt-5 flex flex-wrap gap-3">
+          <div className="mt-4 flex flex-wrap gap-2">
             {tasks.map((task) => (
               <span
                 key={`progress-${task.id}`}
-                className={`flex h-12 w-12 items-center justify-center rounded-full border-2 ${
+                className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
                   task.completed
                     ? 'border-success bg-success text-success-foreground'
                     : routine === 'morning'
@@ -177,7 +156,7 @@ export const RoutineView = ({ child, routine, onToggleTask, onBack }: RoutineVie
                 }`}
                 aria-label={task.completed ? 'Task finished' : 'Task to do'}
               >
-                {task.completed ? <Star size={22} fill="currentColor" /> : <span className="text-sm font-black">{tasks.indexOf(task) + 1}</span>}
+                {task.completed ? <Star size={18} fill="currentColor" /> : <span className="text-xs font-black">{tasks.indexOf(task) + 1}</span>}
               </span>
             ))}
           </div>

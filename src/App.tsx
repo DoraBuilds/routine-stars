@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RefreshCw } from "lucide-react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
@@ -7,8 +7,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth/auth-context";
 import { APP_VERSION, getRefreshUrl, getVersionManifestUrl } from "@/lib/app-version";
-import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import DeepLinkBridge from "@/lib/capacitor/DeepLinkBridge";
+const AuthCallback = lazy(() => import("./pages/AuthCallback.tsx"));
+const Index = lazy(() => import("./pages/Index.tsx"));
+const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -64,11 +66,27 @@ const AppShell = () => {
       <Toaster />
       <Sonner />
       <BrowserRouter basename={import.meta.env.BASE_URL}>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <DeepLinkBridge />
+        <Suspense
+          fallback={
+            <div className="flex min-h-svh items-center justify-center px-5 py-10">
+              <div className="w-full max-w-lg rounded-[32px] border border-border bg-card p-8 text-center shadow-card">
+                <p className="text-sm font-black uppercase tracking-[0.22em] text-primary">Loading Routine Stars</p>
+                <h1 className="mt-4 text-3xl font-bold text-foreground">Getting everything ready</h1>
+                <p className="mt-3 text-sm text-muted-foreground">
+                  This should only take a moment.
+                </p>
+              </div>
+            </div>
+          }
+        >
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
 
       {latestVersion && (
