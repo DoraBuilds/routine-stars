@@ -4,6 +4,7 @@ interface BottomNavProps {
   active: KidTab;
   onChange: (tab: KidTab) => void;
   theme?: 'morning' | 'evening';
+  placement?: 'side' | 'bottom';
 }
 
 const TABS: { id: KidTab; icon: string; label: string; tint: string }[] = [
@@ -13,10 +14,67 @@ const TABS: { id: KidTab; icon: string; label: string; tint: string }[] = [
   { id: 'mood',         icon: '😌', label: 'Mood',     tint: '#a855f7' },
 ];
 
-export const BottomNav = ({ active, onChange, theme = 'morning' }: BottomNavProps) => {
+export const BottomNav = ({ active, onChange, theme = 'morning', placement = 'side' }: BottomNavProps) => {
   const isNight = theme === 'evening';
   const activeTint = TABS.find((t) => t.id === active)?.tint ?? '#f97316';
+  const isBottom = placement === 'bottom';
 
+  if (isBottom) {
+    return (
+      <div
+        style={{
+          width: '100%',
+          height: 74,
+          flexShrink: 0,
+          background: isNight ? 'rgba(40,32,110,0.97)' : 'rgba(255,250,243,0.97)',
+          backdropFilter: 'blur(12px)',
+          borderTop: `1px solid ${isNight ? 'rgba(255,255,255,0.07)' : 'rgba(180,120,80,0.08)'}`,
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'stretch',
+          zIndex: 30,
+          fontFamily: "'Fredoka', system-ui, sans-serif",
+        }}
+      >
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => onChange(t.id)}
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 4,
+              padding: '8px 4px',
+              background: t.id === active ? `${activeTint}18` : 'transparent',
+              border: 'none',
+              borderTop: t.id === active ? `3px solid ${activeTint}` : '3px solid transparent',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              WebkitTapHighlightColor: 'transparent',
+              transition: 'background 0.2s',
+            }}
+          >
+            <div
+              style={{
+                fontSize: 32,
+                lineHeight: 1,
+                filter: t.id === active ? 'none' : 'grayscale(0.5)',
+                opacity: t.id === active ? 1 : isNight ? 0.4 : 0.5,
+                transition: 'all 0.2s',
+              }}
+            >
+              {t.icon}
+            </div>
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  // Side placement (tablet / desktop)
   return (
     <div
       style={{

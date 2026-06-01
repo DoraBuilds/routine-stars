@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MascotBubble } from './MascotBubble';
 import { BottomNav, type KidTab } from './BottomNav';
 import { RoutinesTab } from './RoutinesTab';
@@ -67,9 +67,16 @@ const CATEGORIES: {
 
 export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood, onSaveNote, onAddAffirmation, onRemoveAffirmation }: KidAppProps) => {
   const [view, setView] = useState<KidView>('hub');
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   const m = getMascot(kid.mascotId ?? kid.avatarAnimal);
   const streak = kid.streak ?? 0;
   const isNight = theme === 'evening';
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   // ── Hub (category picker) ──────────────────────────────────────────────────
   if (view === 'hub') {
@@ -296,7 +303,7 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood, onSaveNote
             display: 'flex',
             alignItems: 'center',
             gap: 10,
-            padding: '10px 14px',
+            padding: isMobile ? '8px 12px' : '10px 14px',
             background: isNight ? 'rgba(44,38,120,0.97)' : 'rgba(255,249,240,0.95)',
             backdropFilter: 'blur(8px)',
             borderBottom: `1px solid ${isNight ? 'rgba(255,255,255,0.06)' : 'rgba(180,120,80,0.07)'}`,
@@ -308,14 +315,14 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood, onSaveNote
           <button
             onClick={() => setView('hub')}
             style={{
-              width: 34,
-              height: 34,
+              width: isMobile ? 40 : 34,
+              height: isMobile ? 40 : 34,
               borderRadius: 12,
               background: isNight ? 'rgba(255,255,255,0.1)' : '#fff',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 16,
+              fontSize: isMobile ? 20 : 16,
               color: isNight ? '#fff' : '#3d2c1f',
               border: 'none',
               cursor: 'pointer',
@@ -326,11 +333,11 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood, onSaveNote
           >
             ‹
           </button>
-          <MascotBubble mascotId={kid.mascotId ?? kid.avatarAnimal} size={34} />
+          <MascotBubble mascotId={kid.mascotId ?? kid.avatarAnimal} size={isMobile ? 40 : 34} />
           <div style={{ flex: 1 }}>
             <div
               style={{
-                fontSize: 16,
+                fontSize: isMobile ? 13 : 16,
                 fontWeight: 700,
                 color: isNight ? 'rgba(255,255,255,0.45)' : '#8a7866',
                 letterSpacing: '0.06em',
@@ -341,7 +348,7 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood, onSaveNote
             </div>
             <div
               style={{
-                fontSize: 22,
+                fontSize: isMobile ? 18 : 22,
                 fontWeight: 700,
                 color: isNight ? '#fff' : '#3d2c1f',
                 marginTop: 1,
@@ -356,7 +363,7 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood, onSaveNote
                 background: isNight ? 'rgba(255,255,255,0.1)' : '#fff',
                 borderRadius: 10,
                 padding: '5px 10px',
-                fontSize: 11,
+                fontSize: isMobile ? 14 : 11,
                 fontWeight: 700,
                 color: '#f97316',
                 display: 'flex',
@@ -370,9 +377,18 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood, onSaveNote
           )}
         </div>
 
-        {/* Side nav + tab content */}
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-          <BottomNav active={view as KidTab} onChange={setView} theme={theme} />
+        {/* Tab content + nav — column on mobile (content above, nav below),
+            row on tablet (sidebar left, content right) */}
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          overflow: 'hidden',
+        }}>
+          {/* Side nav — tablet only */}
+          {!isMobile && (
+            <BottomNav active={view as KidTab} onChange={setView} theme={theme} placement="side" />
+          )}
 
           {/* Tab content */}
           <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
@@ -396,6 +412,11 @@ export const KidApp = ({ kid, theme, onBack, onToggleTask, onSetMood, onSaveNote
               {view === 'mood' && <MoodTab kid={kid} onSetMood={onSetMood} onSaveNote={onSaveNote} />}
             </div>
           </div>
+
+          {/* Bottom nav — mobile only */}
+          {isMobile && (
+            <BottomNav active={view as KidTab} onChange={setView} theme={theme} placement="bottom" />
+          )}
         </div>
       </div>
     </div>
