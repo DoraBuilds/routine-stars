@@ -7,7 +7,7 @@ interface BottomNavProps {
 }
 
 const TABS: { id: KidTab; icon: string; label: string; tint: string }[] = [
-  { id: 'routines',     icon: '✅', label: 'Routines', tint: '#f97316' },
+  { id: 'routines',     icon: '📋', label: 'Routines', tint: '#f97316' },
   { id: 'affirmations', icon: '💫', label: 'Affirm.',  tint: '#ec4899' },
   { id: 'achievements', icon: '🏆', label: 'Awards',   tint: '#f59e0b' },
   { id: 'mood',         icon: '😌', label: 'Mood',     tint: '#a855f7' },
@@ -20,7 +20,7 @@ export const BottomNav = ({ active, onChange, theme = 'morning' }: BottomNavProp
   return (
     <div
       style={{
-        width: 84,
+        width: 160,
         flexShrink: 0,
         background: isNight ? 'rgba(40,32,110,0.97)' : 'rgba(255,250,243,0.97)',
         backdropFilter: 'blur(12px)',
@@ -29,8 +29,8 @@ export const BottomNav = ({ active, onChange, theme = 'morning' }: BottomNavProp
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 2,
-        padding: '16px 4px',
+        gap: 4,
+        padding: '16px 8px',
         zIndex: 30,
         fontFamily: "'Fredoka', system-ui, sans-serif",
       }}
@@ -43,10 +43,10 @@ export const BottomNav = ({ active, onChange, theme = 'morning' }: BottomNavProp
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: 5,
-            padding: '12px 8px',
-            borderRadius: 18,
-            width: 72,
+            gap: 8,
+            padding: '16px 10px',
+            borderRadius: 24,
+            width: 144,
             background: t.id === active ? `${activeTint}22` : 'transparent',
             border: 'none',
             cursor: 'pointer',
@@ -57,7 +57,8 @@ export const BottomNav = ({ active, onChange, theme = 'morning' }: BottomNavProp
         >
           <div
             style={{
-              fontSize: 30,
+              fontSize: 52,
+              lineHeight: 1,
               filter: t.id === active ? 'none' : 'grayscale(0.6)',
               opacity: t.id === active ? 1 : isNight ? 0.4 : 0.45,
               transition: 'all 0.2s',
@@ -67,9 +68,9 @@ export const BottomNav = ({ active, onChange, theme = 'morning' }: BottomNavProp
           </div>
           <div
             style={{
-              fontSize: 10,
+              fontSize: 18,
               fontWeight: 700,
-              letterSpacing: '0.03em',
+              letterSpacing: '0.02em',
               color: t.id === active ? activeTint : isNight ? 'rgba(255,255,255,0.45)' : '#8a7866',
               transition: 'color 0.2s',
             }}

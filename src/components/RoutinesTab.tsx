@@ -101,23 +101,23 @@ export const RoutinesTab = ({ kid, theme, onToggleTask, onAllDone }: RoutinesTab
       {/* Progress row */}
       <div
         style={{
-          padding: '0 16px',
+          padding: '0 20px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: 8,
+          marginBottom: 12,
         }}
       >
-        <div style={{ fontSize: 12, fontWeight: 600, color: isMorning ? INK_MUTE : 'rgba(255,255,255,0.45)' }}>
+        <div style={{ fontSize: 20, fontWeight: 700, color: isMorning ? INK_MUTE : 'rgba(255,255,255,0.45)' }}>
           {done} of {tasks.length} done
         </div>
-        <div style={{ display: 'flex', gap: 4 }}>
+        <div style={{ display: 'flex', gap: 6 }}>
           {tasks.map((t) => (
             <div
               key={t.id}
               style={{
-                width: 16,
-                height: 4,
+                width: 28,
+                height: 7,
                 borderRadius: 99,
                 background: t.completed
                   ? ROUTINES_ORANGE
@@ -129,7 +129,7 @@ export const RoutinesTab = ({ kid, theme, onToggleTask, onAllDone }: RoutinesTab
       </div>
 
       {/* Task cards */}
-      <div style={{ padding: '4px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ padding: '4px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
         {tasks.map((t, i) => {
           const cardBg = isMorning
             ? (t.completed ? LAVENDER : i % 2 === 0 ? PEACH : '#fff1e1')
@@ -142,11 +142,11 @@ export const RoutinesTab = ({ kid, theme, onToggleTask, onAllDone }: RoutinesTab
               onClick={() => handleTap(t.id)}
               style={{
                 background: cardBg,
-                borderRadius: 18,
-                padding: '13px 14px',
+                borderRadius: 26,
+                padding: '20px 20px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 12,
+                gap: 20,
                 opacity: t.completed ? 0.7 : 1,
                 border: `1px solid ${isMorning ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.06)'}`,
                 cursor: 'pointer',
@@ -160,13 +160,13 @@ export const RoutinesTab = ({ kid, theme, onToggleTask, onAllDone }: RoutinesTab
             >
               <div
                 style={{
-                  width: 46,
-                  height: 46,
-                  borderRadius: 15,
+                  width: 80,
+                  height: 80,
+                  borderRadius: 24,
                   background: t.completed
                     ? (isMorning ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.08)')
                     : `${iconColor}28`,
-                  border: `1.5px solid ${t.completed ? 'rgba(255,255,255,0.35)' : `${iconColor}50`}`,
+                  border: `2px solid ${t.completed ? 'rgba(255,255,255,0.35)' : `${iconColor}50`}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -174,33 +174,34 @@ export const RoutinesTab = ({ kid, theme, onToggleTask, onAllDone }: RoutinesTab
                   transition: 'all 0.3s',
                 }}
               >
-                <TaskIcon iconKey={t.icon} size={24} />
+                <TaskIcon iconKey={t.icon} size={44} />
               </div>
               <div
                 style={{
                   flex: 1,
-                  fontSize: 15,
-                  fontWeight: 600,
+                  fontSize: 26,
+                  fontWeight: 700,
                   textDecoration: t.completed ? 'line-through' : 'none',
                   opacity: t.completed ? 0.6 : 1,
+                  lineHeight: 1.2,
                 }}
               >
                 {t.title}
               </div>
               <div
                 style={{
-                  width: 28,
-                  height: 28,
+                  width: 52,
+                  height: 52,
                   borderRadius: '50%',
                   background: t.completed ? (isMorning ? MOOD_PURPLE : '#7c3aed') : 'transparent',
                   border: t.completed
                     ? 'none'
-                    : `2px solid ${isMorning ? 'rgba(180,120,80,0.3)' : 'rgba(255,255,255,0.2)'}`,
+                    : `3px solid ${isMorning ? 'rgba(180,120,80,0.3)' : 'rgba(255,255,255,0.2)'}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#fff',
-                  fontSize: 14,
+                  fontSize: 26,
                   fontWeight: 700,
                   flexShrink: 0,
                   transition: 'all 0.2s',
@@ -215,9 +216,9 @@ export const RoutinesTab = ({ kid, theme, onToggleTask, onAllDone }: RoutinesTab
           <div
             style={{
               textAlign: 'center',
-              padding: '32px 16px',
+              padding: '48px 16px',
               color: isMorning ? INK_MUTE : 'rgba(255,255,255,0.35)',
-              fontSize: 13,
+              fontSize: 20,
             }}
           >
             No tasks yet — ask a parent to add some! 🌟
