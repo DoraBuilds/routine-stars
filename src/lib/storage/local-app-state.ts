@@ -73,8 +73,30 @@ const normalizeLocalAppState = (value: unknown): LocalAppState | null => {
   };
 };
 
+const findLegacyScopedData = (): string | null => {
+  // Old versions stored data under scoped keys like routine_stars_data::anon
+  // or routine_stars_data::user:XXX. Scan and migrate the first valid one found.
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key !== LOCAL_APP_STATE_STORAGE_KEY && key.startsWith(`${LOCAL_APP_STATE_STORAGE_KEY}::`)) {
+      const value = localStorage.getItem(key);
+      if (value) return value;
+    }
+  }
+  return null;
+};
+
 export const loadLocalAppState = (): LocalAppState | null => {
-  const saved = localStorage.getItem(LOCAL_APP_STATE_STORAGE_KEY);
+  let saved = localStorage.getItem(LOCAL_APP_STATE_STORAGE_KEY);
+
+  if (!saved) {
+    saved = findLegacyScopedData();
+    if (saved) {
+      // Migrate to the base key so future reads work normally
+      localStorage.setItem(LOCAL_APP_STATE_STORAGE_KEY, saved);
+    }
+  }
+
   if (!saved) return null;
 
   try {
