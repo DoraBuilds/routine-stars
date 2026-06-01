@@ -1,1 +1,0 @@
-import{M as e,P as t,R as n,n as r}from"./index-Bv1edLj7.js";var i=e(`LoaderCircle`,[[`path`,{d:`M21 12a9 9 0 1 1-6.219-8.56`,key:`13zald`}]]),a=n(t(),1),o=()=>{let e=(0,a.useContext)(r);if(!e)throw Error(`useAuth must be used inside AuthProvider`);return e};export{i as n,o as t};

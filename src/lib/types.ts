@@ -1,6 +1,5 @@
 import type { AgeBucket, IconKey } from './task-catalog';
 import { AGE_BUCKETS, DEFAULT_CHILDREN, groupTasksByAge, ICON_OPTIONS, TASK_CATALOG, TASK_CATALOG_BY_ID, TASK_LIBRARY } from './task-catalog';
-import type { MoodEntry } from './mascots';
 
 export type Task = {
   id: string;
@@ -22,21 +21,13 @@ export type Child = {
   name: string;
   age?: number;
   ageBucket?: AgeBucket;
-  // Legacy avatar fields (kept for cloud compat)
   avatarSeed?: string;
   avatarAnimal?: string;
-  // New mascot system
-  mascotId?: string;
-  // New feature data (stored locally for now)
-  streak?: number;
-  affirmations?: string[];
-  moods?: MoodEntry[];
-  badges?: Record<string, boolean>;
   schedule?: Record<RoutineType, RoutineSchedule>;
   morning: Task[];
   evening: Task[];
 };
 
-export type AppView = 'account' | 'import' | 'recovery' | 'setup' | 'home' | 'routine' | 'parent' | 'advanced-settings' | 'bootstrap-error';
+export type AppView = 'setup' | 'home' | 'routine' | 'parent';
 
 export { AGE_BUCKETS, DEFAULT_CHILDREN, groupTasksByAge, ICON_OPTIONS, TASK_CATALOG, TASK_CATALOG_BY_ID, TASK_LIBRARY };

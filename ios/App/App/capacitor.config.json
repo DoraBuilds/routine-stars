@@ -1,9 +1,0 @@
-{
-	"appId": "com.routinestars.app",
-	"appName": "Routine Stars",
-	"webDir": "dist",
-	"bundledWebRuntime": false,
-	"packageClassList": [
-		"AppPlugin"
-	]
-}

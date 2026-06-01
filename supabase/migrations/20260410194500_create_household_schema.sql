@@ -8,8 +8,7 @@ create table if not exists public.households (
   created_by_user_id uuid not null references auth.users(id) on delete cascade,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
-  constraint households_home_scene_check check (home_scene in ('bike', 'school', 'kite', 'sandcastle')),
-  constraint households_one_per_creator unique (created_by_user_id)
+  constraint households_home_scene_check check (home_scene in ('bike', 'school', 'kite', 'sandcastle'))
 );
 
 create table if not exists public.household_members (
@@ -149,30 +148,12 @@ begin
     raise exception 'Not authenticated';
   end if;
 
-  select *
-  into created_household
-  from public.households h
-  where h.created_by_user_id = auth.uid()
-  limit 1;
-
-  if created_household.id is null then
-    begin
-      insert into public.households (name, timezone, created_by_user_id)
-      values (p_name, p_timezone, auth.uid())
-      returning * into created_household;
-    exception
-      when unique_violation then
-        select *
-        into created_household
-        from public.households h
-        where h.created_by_user_id = auth.uid()
-        limit 1;
-    end;
-  end if;
+  insert into public.households (name, timezone, created_by_user_id)
+  values (p_name, p_timezone, auth.uid())
+  returning * into created_household;
 
   insert into public.household_members (household_id, user_id, role)
-  values (created_household.id, auth.uid(), 'owner')
-  on conflict (household_id, user_id) do nothing;
+  values (created_household.id, auth.uid(), 'owner');
 
   return created_household;
 end;

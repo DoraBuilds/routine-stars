@@ -1,31 +1,7 @@
 import type { Child, HomeScene } from '@/lib/types';
-import { getSafeStorage } from './safe-storage';
 
 export const LOCAL_APP_STATE_STORAGE_KEY = 'routine_stars_data';
 export const CURRENT_LOCAL_APP_STATE_VERSION = 1;
-
-type LocalAppStateScope =
-  | { userId: string }
-  | { householdId: string }
-  | { mode: 'anonymous' }
-  | undefined;
-
-const getScopedStorageKey = (scope: LocalAppStateScope) => {
-  if (!scope) {
-    // Backwards-compat: legacy key for older builds.
-    return LOCAL_APP_STATE_STORAGE_KEY;
-  }
-
-  if ('mode' in scope) {
-    return `${LOCAL_APP_STATE_STORAGE_KEY}::anon`;
-  }
-
-  if ('householdId' in scope) {
-    return `${LOCAL_APP_STATE_STORAGE_KEY}::household:${scope.householdId}`;
-  }
-
-  return `${LOCAL_APP_STATE_STORAGE_KEY}::user:${scope.userId}`;
-};
 
 export interface LocalAppState {
   version: number;
@@ -42,28 +18,63 @@ type LegacyLocalAppState = Partial<Omit<LocalAppState, 'version'>> & {
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
 
+const normalizeTask = (raw: unknown) => {
+  if (!isObject(raw)) return null;
+  if (typeof raw.id !== 'string' || !raw.id) return null;
+  if (typeof raw.title !== 'string' || !raw.title) return null;
+  return {
+    id: raw.id,
+    title: raw.title,
+    icon: typeof raw.icon === 'string' ? raw.icon : 'smile',
+    completed: raw.completed === true,
+  };
+};
+
+const normalizeChild = (raw: unknown) => {
+  if (!isObject(raw)) return null;
+  if (typeof raw.id !== 'string' || !raw.id) return null;
+  if (typeof raw.name !== 'string' || !raw.name) return null;
+
+  const morning = Array.isArray(raw.morning)
+    ? raw.morning.map(normalizeTask).filter(Boolean)
+    : [];
+  const evening = Array.isArray(raw.evening)
+    ? raw.evening.map(normalizeTask).filter(Boolean)
+    : [];
+
+  return {
+    ...raw,
+    id: raw.id,
+    name: raw.name,
+    morning,
+    evening,
+  };
+};
+
 const normalizeLocalAppState = (value: unknown): LocalAppState | null => {
   if (!isObject(value) || !Array.isArray(value.children)) {
     return null;
   }
 
   const legacy = value as LegacyLocalAppState;
+  const children = legacy.children
+    ?.map(normalizeChild)
+    .filter(Boolean) ?? [];
 
   return {
     version:
       typeof value.version === 'number' && Number.isFinite(value.version)
         ? value.version
         : CURRENT_LOCAL_APP_STATE_VERSION,
-    children: legacy.children,
+    children: children as LocalAppState['children'],
     homeScene: legacy.homeScene ?? 'bike',
     lastReset: legacy.lastReset ?? new Date().toDateString(),
     setupComplete: legacy.setupComplete ?? true,
   };
 };
 
-export const loadLocalAppState = (scope?: LocalAppStateScope): LocalAppState | null => {
-  const storage = getSafeStorage('__routine_stars_local_app_state_test__');
-  const saved = storage.getItem(getScopedStorageKey(scope));
+export const loadLocalAppState = (): LocalAppState | null => {
+  const saved = localStorage.getItem(LOCAL_APP_STATE_STORAGE_KEY);
   if (!saved) return null;
 
   try {
@@ -73,23 +84,15 @@ export const loadLocalAppState = (scope?: LocalAppStateScope): LocalAppState | n
   }
 };
 
-export const saveLocalAppState = (state: Omit<LocalAppState, 'version'>, scope?: LocalAppStateScope) => {
+export const saveLocalAppState = (state: Omit<LocalAppState, 'version'>) => {
   const payload: LocalAppState = {
     version: CURRENT_LOCAL_APP_STATE_VERSION,
     ...state,
   };
 
-  const storage = getSafeStorage('__routine_stars_local_app_state_test__');
-  storage.setItem(getScopedStorageKey(scope), JSON.stringify(payload));
+  localStorage.setItem(LOCAL_APP_STATE_STORAGE_KEY, JSON.stringify(payload));
 };
 
-export const clearLocalAppState = (scope?: LocalAppStateScope) => {
-  const storage = getSafeStorage('__routine_stars_local_app_state_test__');
-  // Always clear the legacy key so older builds don't resurrect state.
-  storage.removeItem(LOCAL_APP_STATE_STORAGE_KEY);
-  storage.removeItem(`${LOCAL_APP_STATE_STORAGE_KEY}::anon`);
-
-  if (scope) {
-    storage.removeItem(getScopedStorageKey(scope));
-  }
+export const clearLocalAppState = () => {
+  localStorage.removeItem(LOCAL_APP_STATE_STORAGE_KEY);
 };

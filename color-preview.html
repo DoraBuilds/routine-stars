@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Color Options</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #1a1245;
+    font-family: 'Fredoka', sans-serif;
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 40px 24px 60px; gap: 48px;
+  }
+  h1 { color: rgba(255,255,255,0.45); font-size: 12px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; }
+  .option { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .option-label { display: flex; align-items: center; gap: 12px; }
+  .option-letter {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: rgba(255,255,255,0.1); border: 1.5px solid rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; color: #fff;
+  }
+  .option-name { font-size: 18px; font-weight: 700; color: rgba(255,255,255,0.9); }
+  .option-tagline { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .card {
+    width: 148px; height: 148px; border-radius: 26px;
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%;
+    background: rgba(255,255,255,0.14); border-radius: 26px 26px 60% 60%; pointer-events: none;
+  }
+  .card-emoji { font-size: 44px; line-height: 1; position: relative; z-index: 1; filter: drop-shadow(0 3px 8px rgba(0,0,0,0.3)); }
+  .card-label { font-size: 14px; font-weight: 700; color: #fff; position: relative; z-index: 1; text-shadow: 0 1px 4px rgba(0,0,0,0.35); }
+
+  /* D — Candy Shop */
+  .d-routines     { background: linear-gradient(145deg, #16a34a, #4ade80); }
+  .d-affirmations { background: linear-gradient(145deg, #dc2626, #f87171); }
+  .d-awards       { background: linear-gradient(145deg, #2563eb, #60a5fa); }
+  .d-mood         { background: linear-gradient(145deg, #b45309, #fcd34d); }
+
+  /* E — Blossom */
+  .e-routines     { background: linear-gradient(145deg, #4338ca, #818cf8); }
+  .e-affirmations { background: linear-gradient(145deg, #c2410c, #fdba74); }
+  .e-awards       { background: linear-gradient(145deg, #047857, #6ee7b7); }
+  .e-mood         { background: linear-gradient(145deg, #9d174d, #fda4af); }
+
+  /* F — Neon Night */
+  .f-routines     { background: linear-gradient(145deg, #0e7490, #22d3ee); }
+  .f-affirmations { background: linear-gradient(145deg, #be185d, #f472b6); }
+  .f-awards       { background: linear-gradient(145deg, #4d7c0f, #a3e635); }
+  .f-mood         { background: linear-gradient(145deg, #6d28d9, #a855f7); }
+
+  .divider { width: 180px; height: 1px; background: rgba(255,255,255,0.07); }
+</style>
+</head>
+<body>
+
+<h1>Pick a colour combo</h1>
+
+<!-- D -->
+<div class="option">
+  <div class="option-label">
+    <div class="option-letter">D</div>
+    <div><div class="option-name">Candy Shop</div><div class="option-tagline">Lime · Red · Blue · Sunshine</div></div>
+  </div>
+  <div class="grid">
+    <div class="card d-routines"><div class="card-emoji">⭐</div><div class="card-label">Routines</div></div>
+    <div class="card d-affirmations"><div class="card-emoji">💫</div><div class="card-label">Affirmations</div></div>
+    <div class="card d-awards"><div class="card-emoji">🏆</div><div class="card-label">Awards</div></div>
+    <div class="card d-mood"><div class="card-emoji">💗</div><div class="card-label">Mood</div></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- E -->
+<div class="option">
+  <div class="option-label">
+    <div class="option-letter">E</div>
+    <div><div class="option-name">Blossom</div><div class="option-tagline">Periwinkle · Peach · Mint · Blush</div></div>
+  </div>
+  <div class="grid">
+    <div class="card e-routines"><div class="card-emoji">⭐</div><div class="card-label">Routines</div></div>
+    <div class="card e-affirmations"><div class="card-emoji">💫</div><div class="card-label">Affirmations</div></div>
+    <div class="card e-awards"><div class="card-emoji">🏆</div><div class="card-label">Awards</div></div>
+    <div class="card e-mood"><div class="card-emoji">💗</div><div class="card-label">Mood</div></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- F -->
+<div class="option">
+  <div class="option-label">
+    <div class="option-letter">F</div>
+    <div><div class="option-name">Neon Night</div><div class="option-tagline">Cyan · Hot Pink · Lime · Purple</div></div>
+  </div>
+  <div class="grid">
+    <div class="card f-routines"><div class="card-emoji">⭐</div><div class="card-label">Routines</div></div>
+    <div class="card f-affirmations"><div class="card-emoji">💫</div><div class="card-label">Affirmations</div></div>
+    <div class="card f-awards"><div class="card-emoji">🏆</div><div class="card-label">Awards</div></div>
+    <div class="card f-mood"><div class="card-emoji">💗</div><div class="card-label">Mood</div></div>
+  </div>
+</div>
+
+</body>
+</html>

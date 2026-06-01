@@ -1,18 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Clock3, Settings, Sparkles, Sun, MoonStar, PartyPopper, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { ArrowRight, Clock3, Settings, Sparkles, Sun, MoonStar, PartyPopper } from 'lucide-react';
 import type { Child, HomeScene, RoutineType } from '@/lib/types';
 import { ChildProfileAvatar } from './ChildProfileAvatar';
 import { HomeSceneBackdrop } from './HomeSceneBackdrop';
-
-type CloudSyncStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 interface ChildSelectorProps {
   children: Child[];
   globalTheme: 'morning' | 'evening' | 'free';
   homeScene: HomeScene;
   dueRoutineByChild: Record<string, RoutineType | null>;
-  cloudSyncStatus?: CloudSyncStatus;
   onSelectChild: (id: string) => void;
   onOpenSettings: () => void;
 }
@@ -21,7 +18,6 @@ export const ChildSelector = ({
   children,
   globalTheme,
   homeScene,
-  cloudSyncStatus,
   dueRoutineByChild,
   onSelectChild,
   onOpenSettings,
@@ -285,82 +281,46 @@ export const ChildSelector = ({
         })}
       </div>
 
-      <div className="relative z-10 mt-10 md:mt-12 flex flex-col items-center gap-4">
-        {cloudSyncStatus && cloudSyncStatus !== 'idle' && (
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.55 }}
-            className={`flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold ${
-              cloudSyncStatus === 'error'
-                ? globalTheme === 'evening'
-                  ? 'bg-red-900/50 text-red-200'
-                  : 'bg-destructive/10 text-destructive'
-                : cloudSyncStatus === 'saving'
-                  ? globalTheme === 'evening'
-                    ? 'bg-slate-800/60 text-slate-300'
-                    : 'bg-primary/10 text-primary'
-                  : globalTheme === 'evening'
-                    ? 'bg-slate-800/60 text-emerald-300'
-                    : 'bg-success/10 text-success'
-            }`}
-          >
-            {cloudSyncStatus === 'error' ? (
-              <AlertCircle size={13} />
-            ) : cloudSyncStatus === 'saving' ? (
-              <Loader2 size={13} className="animate-spin" />
-            ) : (
-              <CheckCircle2 size={13} />
-            )}
-            {cloudSyncStatus === 'error'
-              ? 'Sync error — open Parent Settings'
-              : cloudSyncStatus === 'saving'
-                ? 'Saving…'
-                : 'Synced'}
-          </motion.div>
-        )}
-
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="flex flex-col items-center mx-auto text-muted-foreground hover:text-foreground transition-colors gap-3 text-lg"
-          type="button"
-          onPointerDown={startParentGateHold}
-          onPointerUp={cancelParentGateHold}
-          onPointerLeave={cancelParentGateHold}
-          onPointerCancel={cancelParentGateHold}
-          onKeyDown={(event) => {
-            if ((event.key === 'Enter' || event.key === ' ') && !isHoldingParentGate) {
-              event.preventDefault();
-              startParentGateHold();
-            }
-          }}
-          onKeyUp={(event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault();
-              cancelParentGateHold();
-            }
-          }}
-          aria-label="Press and hold to open Parent Settings"
-        >
-          <div className="flex items-center gap-2">
-            <Settings size={20} />
-            Parent Settings
+      <motion.button
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="relative z-10 mt-10 md:mt-12 flex flex-col items-center mx-auto text-muted-foreground hover:text-foreground transition-colors gap-3 text-lg"
+        type="button"
+        onPointerDown={startParentGateHold}
+        onPointerUp={cancelParentGateHold}
+        onPointerLeave={cancelParentGateHold}
+        onPointerCancel={cancelParentGateHold}
+        onKeyDown={(event) => {
+          if ((event.key === 'Enter' || event.key === ' ') && !isHoldingParentGate) {
+            event.preventDefault();
+            startParentGateHold();
+          }
+        }}
+        onKeyUp={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            cancelParentGateHold();
+          }
+        }}
+        aria-label="Press and hold to open Parent Settings"
+      >
+        <div className="flex items-center gap-2">
+          <Settings size={20} />
+          Parent Settings
+        </div>
+        <div className="w-56 max-w-full">
+          <div className="h-2 overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-75"
+              style={{ width: `${parentGateProgress}%` }}
+            />
           </div>
-          <div className="w-56 max-w-full">
-            <div className="h-2 overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-primary transition-[width] duration-75"
-                style={{ width: `${parentGateProgress}%` }}
-              />
-            </div>
-            <p className="mt-2 text-xs font-bold uppercase tracking-[0.24em] text-muted-foreground">
-              {isHoldingParentGate ? 'Keep holding...' : 'Press and hold to open'}
-            </p>
-          </div>
-        </motion.button>
-      </div>
+          <p className="mt-2 text-xs font-bold uppercase tracking-[0.24em] text-muted-foreground">
+            {isHoldingParentGate ? 'Keep holding...' : 'Press and hold to open'}
+          </p>
+        </div>
+      </motion.button>
     </div>
   );
 };
