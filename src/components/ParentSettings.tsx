@@ -1,60 +1,26 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Reorder } from 'framer-motion';
+import {
+  Sun, Moon, Trash2, Plus, GripVertical, UserPlus, ArrowLeft, X, Check, Shuffle, Clock3, Palette, ChevronDown,
+  Users, House, Shield, CreditCard, LogOut, UserRound,
+} from 'lucide-react';
 import { TaskIcon } from './TaskIcon';
 import { TaskSuggestionPicker } from './TaskSuggestionPicker';
+import { ChildProfileAvatar } from './ChildProfileAvatar';
 import { AccountSettingsCard } from './AccountSettingsCard';
-import { AdminAffirmations } from './admin/AdminAffirmations';
-import { AdminAchievements } from './admin/AdminAchievements';
-import { AdminMood } from './admin/AdminMood';
-import { getMascot, MASCOTS } from '@/lib/mascots';
+import { ANIMAL_AVATARS } from './animal-avatars';
 import { useAuth } from '@/lib/auth/use-auth';
 import type { Child, HomeScene, RoutineType } from '@/lib/types';
 import { AGE_BUCKETS, groupTasksByAge, ICON_OPTIONS, TASK_CATALOG } from '@/lib/types';
 import type { TaskCatalogItem } from '@/lib/task-catalog';
 
-// ── Design tokens ──────────────────────────────────────────
-const T = {
-  fonts: `'Fredoka', system-ui, sans-serif`,
-  ink: '#3d2c1f',
-  inkMute: '#8a7866',
-  cream: '#fff9f0',
-  peach: '#ffe8d6',
-  white: '#ffffff',
-  border: 'rgba(180,120,80,0.10)',
-  borderMed: 'rgba(180,120,80,0.18)',
-  orange: '#f97316',
-  orangeLight: '#fff1e8',
-  shadow: '0 4px 14px rgba(180,120,80,0.08)',
-  shadowMd: '0 6px 20px rgba(180,120,80,0.12)',
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '10px 14px',
-  borderRadius: 14,
-  border: `1.5px solid ${T.borderMed}`,
-  background: T.cream,
-  fontFamily: T.fonts,
-  fontSize: 14,
-  fontWeight: 500,
-  color: T.ink,
-  outline: 'none',
-  boxSizing: 'border-box',
-};
-
-// ── Types ──────────────────────────────────────────────────
-type CloudSyncStatus = 'idle' | 'saving' | 'saved' | 'error';
-
 interface ParentSettingsProps {
   children: Child[];
   homeScene: HomeScene;
-  cloudConfigSyncStatus?: CloudSyncStatus;
-  cloudConfigSyncError?: string | null;
-  onRetryCloudConfigSync?: () => void;
   onChange: (children: Child[]) => void;
   onHomeSceneChange: (scene: HomeScene) => void;
   onRestartSetup: () => void;
-  onResetAppData: () => Promise<void> | void;
+  onResetAppData: () => void;
   onBack: () => void;
 }
 
@@ -63,10 +29,7 @@ const DEFAULT_SCHEDULE = {
   evening: { start: '17:00', end: '20:00' },
 } as const;
 
-type ParentSection = 'kids' | 'parents' | 'household' | 'admin' | 'billing';
-type KidEditorTab = 'profile' | 'routines' | 'affirmations' | 'awards' | 'mood';
-
-// ── Task Modal ─────────────────────────────────────────────
+/* ---- Add / Edit Task Modal ---- */
 interface TaskModalProps {
   initial?: { title: string; icon: string };
   routine: RoutineType;
@@ -75,6 +38,14 @@ interface TaskModalProps {
   onSave: (title: string, icon: string) => void;
   onClose: () => void;
 }
+
+interface TaskAgeGroupProps {
+  group: ReturnType<typeof groupTasksByAge>[number];
+  onQuickAdd: (task: TaskCatalogItem) => void;
+}
+
+type ParentSection = 'kids' | 'parents' | 'household' | 'admin' | 'billing';
+type KidEditorTab = 'profile' | 'routines';
 
 const TaskModal = ({ initial, routine, mode, suggestions, onSave, onClose }: TaskModalProps) => {
   const [title, setTitle] = useState(initial?.title ?? '');
@@ -88,24 +59,24 @@ const TaskModal = ({ initial, routine, mode, suggestions, onSave, onClose }: Tas
   };
 
   return (
-    <div
-      style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(61,44,31,0.4)', backdropFilter: 'blur(6px)' }}
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-sm" onClick={onClose}>
       <div
-        style={{ background: T.white, borderRadius: 28, padding: '28px 24px', maxWidth: 560, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', maxHeight: '90vh', overflowY: 'auto', fontFamily: T.fonts, color: T.ink }}
+        className="bg-card rounded-[32px] p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <div style={{ fontSize: 18, fontWeight: 700 }}>{mode === 'edit' ? 'Edit Task' : 'New Task'}</div>
-            <div style={{ fontSize: 15, color: T.inkMute, marginTop: 3 }}>
-              {mode === 'edit' ? 'Tweak the task for this child.' : `Start with a ${routine === 'morning' ? 'morning' : 'bedtime'} suggestion or build your own.`}
-            </div>
+            <h3 className="text-2xl font-bold text-foreground">
+              {mode === 'edit' ? 'Edit Task' : 'New Task'}
+            </h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {mode === 'edit'
+                ? 'Tweak the task for this child.'
+                : `Start with a ${routine === 'morning' ? 'morning' : 'bedtime'} suggestion or build your own.`}
+            </p>
           </div>
-          <button onClick={onClose} style={{ background: T.cream, border: `1.5px solid ${T.border}`, borderRadius: 10, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', color: T.inkMute, flexShrink: 0 }}>
-            ×
+          <button onClick={onClose} className="p-2 text-muted-foreground hover:text-foreground">
+            <X size={22} />
           </button>
         </div>
 
@@ -117,61 +88,48 @@ const TaskModal = ({ initial, routine, mode, suggestions, onSave, onClose }: Tas
           />
         )}
 
-        {/* Task name */}
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Task Name</div>
-          <input
-            style={inputStyle}
-            placeholder="e.g. Brush teeth"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            autoFocus
-          />
-        </div>
+        <label className="block mb-2 text-sm font-semibold text-muted-foreground">Task Name</label>
+        <input
+          className="w-full px-4 py-3 rounded-xl bg-muted text-foreground text-lg font-medium outline-none focus:ring-2 focus:ring-primary mb-6"
+          placeholder="e.g. Brush teeth"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          autoFocus
+        />
 
-        {/* Icon picker */}
-        <div style={{ marginBottom: 22 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Icon</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
-            {ICON_OPTIONS.map((opt) => (
-              <button
-                key={opt.key}
-                onClick={() => setIcon(opt.key)}
-                style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 6px',
-                  borderRadius: 14, border: icon === opt.key ? `2px solid ${T.orange}` : `1.5px solid ${T.border}`,
-                  background: icon === opt.key ? T.orangeLight : T.cream,
-                  cursor: 'pointer', fontFamily: 'inherit', color: icon === opt.key ? T.orange : T.inkMute,
-                  gap: 4, transition: 'all 0.15s',
-                }}
-              >
-                <TaskIcon iconKey={opt.key} size={22} strokeWidth={2.5} />
-                <span style={{ fontSize: 15, fontWeight: 700 }}>{opt.label}</span>
-              </button>
-            ))}
-          </div>
+        <label className="block mb-2 text-sm font-semibold text-muted-foreground">Icon</label>
+        <div className="grid grid-cols-4 gap-2 mb-8">
+          {ICON_OPTIONS.map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => setIcon(opt.key)}
+              className={`flex flex-col items-center p-3 rounded-xl transition-all text-sm gap-1 ${
+                icon === opt.key
+                  ? 'bg-primary/15 text-primary ring-2 ring-primary'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              }`}
+            >
+              <span className="text-2xl leading-none">{opt.emoji}</span>
+              <span className="text-xs">{opt.label}</span>
+            </button>
+          ))}
         </div>
 
         <button
-          onClick={() => { if (title.trim()) onSave(title.trim(), icon); }}
-          disabled={!title.trim()}
-          style={{
-            width: '100%', padding: '13px 0', borderRadius: 16, border: 'none',
-            background: title.trim() ? T.orange : '#fdba74',
-            color: '#fff', fontSize: 15, fontWeight: 700,
-            cursor: title.trim() ? 'pointer' : 'not-allowed', fontFamily: 'inherit',
-            boxShadow: title.trim() ? '0 3px 0 rgba(194,65,12,0.35)' : 'none',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          onClick={() => {
+            if (title.trim()) onSave(title.trim(), icon);
           }}
+          disabled={!title.trim()}
+          className="w-full py-3.5 bg-primary text-primary-foreground rounded-xl text-lg font-bold disabled:opacity-40 shadow-button active:translate-y-0.5 transition-transform flex items-center justify-center gap-2"
         >
-          ✓ Save
+          <Check size={20} /> Save
         </button>
       </div>
     </div>
   );
 };
 
-// ── Routine Column ─────────────────────────────────────────
+/* ---- Routine Column ---- */
 interface RoutineColumnProps {
   type: RoutineType;
   tasks: Child['morning'];
@@ -188,87 +146,87 @@ const RoutineColumn = ({ type, tasks, onReorder, onDelete, onQuickAdd, onAdd, on
     (suggestion) => !tasks.some((task) => task.title === suggestion.title)
   );
 
+  const TaskAgeGroup = ({ group, onQuickAdd }: TaskAgeGroupProps) => (
+    <details className="rounded-2xl border border-border bg-background/80">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-left">
+        <div>
+          <h6 className="text-xs font-black uppercase tracking-[0.22em] text-muted-foreground">
+            {group.label}
+          </h6>
+          <p className="mt-1 text-xs text-muted-foreground">{group.description}</p>
+        </div>
+        <ChevronDown size={16} className="text-muted-foreground transition-transform duration-200" />
+      </summary>
+      <div className="border-t border-border px-4 py-4">
+        <div className="flex flex-wrap gap-2">
+          {group.tasks.map((task) => (
+            <button
+              key={`${type}-${task.id}`}
+              type="button"
+              onClick={() => onQuickAdd(task)}
+              className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+            >
+              <TaskIcon iconKey={task.icon} size={16} strokeWidth={2.5} />
+              {task.title}
+              <Plus size={14} />
+            </button>
+          ))}
+        </div>
+      </div>
+    </details>
+  );
+
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-        <span style={{ fontSize: 18 }}>{isMorning ? '☀️' : '🌙'}</span>
-        <span style={{ fontSize: 16, fontWeight: 700, color: T.ink }}>{isMorning ? 'Morning' : 'Evening'}</span>
-      </div>
+      <h4 className="flex items-center font-bold text-foreground mb-4 text-lg gap-2">
+        {isMorning ? (
+          <Sun size={18} className="text-primary" />
+        ) : (
+          <Moon size={18} className="text-indigo-500" />
+        )}
+        {isMorning ? 'Morning' : 'Evening'}
+      </h4>
 
-      <Reorder.Group
-        axis="y"
-        values={tasks}
-        onReorder={onReorder}
-        style={{ display: 'flex', flexDirection: 'column', gap: 6, listStyle: 'none', padding: 0, margin: 0 }}
-      >
+      <Reorder.Group axis="y" values={tasks} onReorder={onReorder} className="space-y-2">
         {tasks.map((task) => (
-          <Reorder.Item
-            key={task.id}
-            value={task}
-            style={{
-              display: 'flex', alignItems: 'center',
-              background: T.white, padding: '10px 12px', borderRadius: 14,
-              border: `1.5px solid ${T.border}`, cursor: 'grab',
-              userSelect: 'none',
-            }}
-          >
-            <span style={{ fontSize: 14, color: T.inkMute, marginRight: 8, cursor: 'grab' }}>⠿</span>
-            <span style={{ marginRight: 8, color: T.inkMute, flexShrink: 0 }}>
-              <TaskIcon iconKey={task.icon} size={16} strokeWidth={2.5} />
-            </span>
+          <Reorder.Item key={task.id} value={task} className="flex items-center bg-muted p-3 rounded-xl group cursor-grab active:cursor-grabbing">
+            <GripVertical size={16} className="text-muted-foreground/40 mr-2 shrink-0" />
+            <TaskIcon iconKey={task.icon} size={18} strokeWidth={2.5} className="text-muted-foreground mr-2 shrink-0" />
             <button
               onClick={() => onEdit(task.id)}
-              style={{ flex: 1, background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', fontSize: 15, fontWeight: 500, color: T.ink, padding: 0 }}
+              className="flex-1 text-foreground text-left hover:text-primary transition-colors"
             >
               {task.title}
             </button>
             <button
               onClick={() => onDelete(task.id)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: T.inkMute, padding: '0 4px', fontFamily: 'inherit' }}
+              className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all p-1 min-w-[28px]"
             >
-              ×
+              <Trash2 size={16} />
             </button>
           </Reorder.Item>
         ))}
       </Reorder.Group>
 
-      {/* Age bucket task suggestions */}
       {otherTasks.length > 0 && (
-        <div style={{ marginTop: 12, borderRadius: 16, border: `2px dashed ${T.border}`, background: T.cream, padding: '12px 14px' }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
-            More tasks to add
+        <div className="mt-4 rounded-2xl border border-dashed border-border bg-background/70 p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <h5 className="text-sm font-black uppercase tracking-[0.24em] text-muted-foreground">
+                Age Buckets
+              </h5>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Expand a bucket to add tasks to this routine.
+              </p>
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className="space-y-3">
             {groupTasksByAge(otherTasks).map((group) => (
-              <details key={`${type}-${group.key}`} style={{ borderRadius: 14, border: `1.5px solid ${T.border}`, background: T.white, overflow: 'hidden' }}>
-                <summary style={{ display: 'flex', cursor: 'pointer', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 14px', listStyle: 'none' }}>
-                  <div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{group.label}</div>
-                    <div style={{ fontSize: 15, color: T.inkMute, marginTop: 1 }}>{group.description}</div>
-                  </div>
-                  <span style={{ fontSize: 15, color: T.inkMute }}>›</span>
-                </summary>
-                <div style={{ borderTop: `1px solid ${T.border}`, padding: '10px 14px' }}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {group.tasks.map((task) => (
-                      <button
-                        key={`${type}-${task.id}`}
-                        onClick={() => onQuickAdd(task)}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 6, borderRadius: 99,
-                          border: `1.5px solid ${T.border}`, background: T.white,
-                          padding: '5px 10px', fontSize: 15, fontWeight: 500, color: T.ink,
-                          cursor: 'pointer', fontFamily: 'inherit',
-                        }}
-                      >
-                        <TaskIcon iconKey={task.icon} size={13} strokeWidth={2.5} />
-                        {task.title}
-                        <span style={{ fontSize: 14, color: T.orange }}>+</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </details>
+              <TaskAgeGroup
+                key={`${type}-${group.key}`}
+                group={group}
+                onQuickAdd={onQuickAdd}
+              />
             ))}
           </div>
         </div>
@@ -276,81 +234,52 @@ const RoutineColumn = ({ type, tasks, onReorder, onDelete, onQuickAdd, onAdd, on
 
       <button
         onClick={onAdd}
-        style={{
-          marginTop: 10, width: '100%', padding: '11px 0', borderRadius: 14,
-          border: `2px dashed ${isMorning ? T.orange + '55' : '#7c3aed55'}`,
-          background: 'transparent', color: isMorning ? T.orange : '#7c3aed',
-          fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-        }}
+        className={`mt-3 w-full py-3 border-2 border-dashed rounded-xl flex items-center justify-center gap-2 transition-all font-medium ${
+          isMorning
+            ? 'border-primary/30 text-primary/60 hover:border-primary hover:text-primary'
+            : 'border-indigo-300/50 text-indigo-400 hover:border-indigo-400 hover:text-indigo-500'
+        }`}
       >
-        + Add Task
+        <Plus size={18} /> Add Task
       </button>
     </div>
   );
 };
 
-// ── Home scene options ─────────────────────────────────────
 const HOME_SCENE_OPTIONS: { key: HomeScene; label: string; preview: string; description: string }[] = [
-  { key: 'bike',       label: 'Bike ride',    preview: '🚲', description: 'Sunny grass and a playful bicycle sketch.' },
-  { key: 'school',     label: 'School time',  preview: '📚', description: 'Books, stars, and notebook doodles.' },
-  { key: 'kite',       label: 'Fly a kite',   preview: '🪁', description: 'A breezy sky with a colorful kite.' },
-  { key: 'sandcastle', label: 'Sandcastle',   preview: '🏖️', description: 'Beach colors, towers, and a happy umbrella.' },
+  { key: 'bike', label: 'Bike ride', preview: '🚲', description: 'Sunny grass and a playful bicycle sketch.' },
+  { key: 'school', label: 'School time', preview: '📚', description: 'Books, stars, and notebook doodles.' },
+  { key: 'kite', label: 'Fly a kite', preview: '🪁', description: 'A breezy sky with a colorful kite.' },
+  { key: 'sandcastle', label: 'Sandcastle', preview: '🏖️', description: 'Beach colors, towers, and a happy umbrella.' },
 ];
 
-const SECTION_META: Record<ParentSection, { emoji: string; label: string }> = {
-  kids:      { emoji: '👧', label: 'Kids' },
-  parents:   { emoji: '👤', label: 'Parents' },
-  household: { emoji: '🏠', label: 'Household setup' },
-  admin:     { emoji: '⚙️', label: 'Admin' },
-  billing:   { emoji: '💳', label: 'Billing' },
-};
-
-// ── Card wrapper ───────────────────────────────────────────
-function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return (
-    <div style={{ background: T.white, borderRadius: 22, padding: '20px 18px', border: `1.5px solid ${T.border}`, boxShadow: T.shadow, ...style }}>
-      {children}
-    </div>
-  );
-}
-
-// ── Main Component ─────────────────────────────────────────
+/* ---- Main Component ---- */
 export const ParentSettings = ({
   children,
   homeScene,
-  cloudConfigSyncStatus = 'idle',
-  cloudConfigSyncError,
-  onRetryCloudConfigSync,
   onChange,
   onHomeSceneChange,
   onRestartSetup,
   onResetAppData,
   onBack,
 }: ParentSettingsProps) => {
-  const [viewportWidth, setViewportWidth] = React.useState(() =>
-    typeof window !== 'undefined' ? window.innerWidth : 1024
-  );
-  React.useEffect(() => {
-    const onResize = () => setViewportWidth(window.innerWidth);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
-  const isMobile = viewportWidth < 768;
   const { status: authStatus, signOut } = useAuth();
-  const isSignedIn = authStatus === 'signed_in';
   const [confirmReset, setConfirmReset] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
-  const [modal, setModal] = useState<{ childId: string; routine: RoutineType; taskId?: string } | null>(null);
+  const [modal, setModal] = useState<{
+    childId: string;
+    routine: RoutineType;
+    taskId?: string;
+  } | null>(null);
   const [activeSection, setActiveSection] = useState<ParentSection>('kids');
   const [kidEditorTab, setKidEditorTab] = useState<KidEditorTab>('profile');
   const [editorChildId, setEditorChildId] = useState<string>(children[0]?.id ?? '');
   const [editorRoutine, setEditorRoutine] = useState<RoutineType>('morning');
 
-  const updateChild = (id: string, updater: (c: Child) => Child) =>
+  const updateChild = (id: string, updater: (c: Child) => Child) => {
     onChange(children.map((c) => (c.id === id ? updater(c) : c)));
+  };
 
-  const addChild = () =>
+  const addChild = () => {
     onChange([
       ...children,
       {
@@ -359,557 +288,563 @@ export const ParentSettings = ({
         age: 5,
         ageBucket: '4-6',
         avatarSeed: crypto.randomUUID(),
-        avatarAnimal: MASCOTS[(children.length) % MASCOTS.length]?.id,
-        mascotId: MASCOTS[(children.length) % MASCOTS.length]?.id,
-        streak: 0,
-        affirmations: [],
-        badges: {},
-        moods: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((day) => ({ day, emoji: null })),
-        schedule: { morning: DEFAULT_SCHEDULE.morning, evening: DEFAULT_SCHEDULE.evening },
+        avatarAnimal: undefined,
+        schedule: {
+          morning: DEFAULT_SCHEDULE.morning,
+          evening: DEFAULT_SCHEDULE.evening,
+        },
         morning: [],
         evening: [],
       },
     ]);
+  };
 
   const handleSaveTask = (title: string, icon: string) => {
     if (!modal) return;
     const { childId, routine, taskId } = modal;
+
     updateChild(childId, (c) => ({
       ...c,
       [routine]: taskId
         ? c[routine].map((t) => (t.id === taskId ? { ...t, title, icon } : t))
-        : [...c[routine], { id: crypto.randomUUID(), title, icon, completed: false }],
+        : [
+            ...c[routine],
+            { id: crypto.randomUUID(), title, icon, completed: false },
+          ],
     }));
     setModal(null);
   };
 
   const editingTask = modal?.taskId
-    ? children.find((c) => c.id === modal.childId)?.[modal.routine]?.find((t) => t.id === modal.taskId)
+    ? children
+        .find((c) => c.id === modal.childId)
+        ?.[modal.routine]?.find((t) => t.id === modal.taskId)
     : undefined;
   const selectedSuggestions = modal ? TASK_CATALOG[modal.routine] : [];
-  const editorChild = children.find((c) => c.id === editorChildId) ?? children[0];
+  const editorChild = children.find((child) => child.id === editorChildId) ?? children[0];
+  const sections: Array<{
+    key: ParentSection;
+    label: string;
+    description: string;
+    icon: typeof Users;
+  }> = [
+    { key: 'kids', label: 'Kids', description: `${children.length} profile${children.length === 1 ? '' : 's'}`, icon: Users },
+    { key: 'parents', label: 'Parents', description: 'Account access', icon: UserRound },
+    { key: 'household', label: 'Household setup', description: 'Scenes and family home', icon: House },
+    { key: 'admin', label: 'Admin', description: 'Reset and restart', icon: Shield },
+    { key: 'billing', label: 'Billing', description: 'Coming soon', icon: CreditCard },
+  ];
 
   return (
-    <div style={{ minHeight: '100svh', background: T.cream, fontFamily: T.fonts, color: T.ink, padding: '24px 16px 48px' }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button
-              onClick={onBack}
-              style={{ width: 38, height: 38, borderRadius: 12, background: T.white, border: `1.5px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: T.ink, cursor: 'pointer', fontFamily: 'inherit', boxShadow: T.shadow }}
-            >
-              ‹
-            </button>
-            <div>
-              <div style={{ fontSize: 20, fontWeight: 700 }}>Parent Settings</div>
-              <div style={{ fontSize: 15, color: T.inkMute }}>Manage children and their daily routines.</div>
-            </div>
-          </div>
+    <div className="mx-auto min-h-svh max-w-7xl px-4 py-8 sm:px-5 md:px-6 md:py-12">
+      <header className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between md:mb-12">
+        <div className="flex items-start gap-4">
           <button
             onClick={onBack}
-            style={{ background: T.ink, color: T.cream, border: 'none', borderRadius: 14, padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 3px 0 rgba(0,0,0,0.2)' }}
+            className="rounded-2xl bg-card p-3 text-muted-foreground shadow-sm transition-transform active:scale-95"
           >
-            Done
+            <ArrowLeft size={24} />
           </button>
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground">Parent Settings</h2>
+            <p className="text-muted-foreground text-sm md:text-base">Manage children and their daily routines.</p>
+          </div>
         </div>
+        <button
+          onClick={onBack}
+          className="w-full rounded-xl bg-foreground px-5 py-2.5 text-base font-bold text-background shadow-button transition-transform active:translate-y-0.5 sm:w-auto"
+        >
+          Done
+        </button>
+      </header>
 
-        {/* Two-column layout — sidebar on left, content on right; stacks on mobile */}
-        <div style={{ display: 'grid', gap: 16, gridTemplateColumns: isMobile ? '1fr' : '240px minmax(0,1fr)', alignItems: 'start' }}>
+      <div className="grid gap-8 xl:grid-cols-[250px_minmax(0,1fr)]">
+        <aside className="rounded-[32px] border border-border bg-card p-5 shadow-sm">
+          <div className="space-y-2">
+            {sections.map((section) => {
+              const Icon = section.icon;
+              const isActive = activeSection === section.key;
 
-          {/* ── Sidebar ── */}
-          <Card>
-            {/* Section nav */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 18 }}>
-              {(['kids', 'parents', 'household', 'admin', 'billing'] as ParentSection[]).map((key) => {
-                const meta = SECTION_META[key];
-                const isActive = activeSection === key;
-                const desc =
-                  key === 'kids' ? `${children.length} profile${children.length === 1 ? '' : 's'}` :
-                  key === 'parents' ? (isSignedIn ? 'Account connected' : 'Sign in for sync') :
-                  key === 'household' ? 'Scenes and family home' :
-                  key === 'admin' ? 'Reset and restart' : 'Coming soon';
-
-                return (
-                  <button
-                    key={key}
-                    onClick={() => setActiveSection(key)}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 10, width: '100%',
-                      padding: '10px 12px', borderRadius: 14, border: 'none', textAlign: 'left',
-                      background: isActive ? T.orange : 'transparent',
-                      color: isActive ? '#fff' : T.ink,
-                      cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
-                    }}
-                  >
-                    <span style={{ fontSize: 16 }}>{meta.emoji}</span>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{meta.label}</div>
-                      <div style={{ fontSize: 15, opacity: 0.75, marginTop: 1 }}>{desc}</div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Quick view */}
-            <div style={{ background: T.cream, borderRadius: 14, padding: '10px 12px', marginBottom: 14 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Quick view</div>
-              <div style={{ fontSize: 17, fontWeight: 700 }}>{children.length} kids</div>
-              <div style={{ fontSize: 14, color: T.inkMute, marginTop: 3 }}>Choose a section on the left instead of scrolling through everything at once.</div>
-            </div>
-
-            {/* Account status */}
-            <div style={{ background: T.white, borderRadius: 14, padding: '10px 12px', border: `1.5px solid ${T.border}`, marginBottom: isSignedIn ? 14 : 0 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>
-                {isSignedIn ? 'Account status' : 'Sign-in required'}
-              </div>
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>
-                {isSignedIn ? 'Parent account connected' : 'Parent account not connected'}
-              </div>
-              <div style={{ fontSize: 14, color: T.inkMute, marginBottom: isSignedIn ? 10 : 0 }}>
-                {isSignedIn
-                  ? 'This browser is signed in. Manage sync from the Parents section.'
-                  : 'Sign in from the Parents section to load and manage the household saved to this account.'}
-              </div>
-              {isSignedIn && (
+              return (
                 <button
-                  onClick={() => void signOut()}
-                  style={{ width: '100%', background: T.white, border: `1.5px solid ${T.border}`, borderRadius: 10, padding: '7px 0', fontSize: 15, fontWeight: 700, color: T.ink, cursor: 'pointer', fontFamily: 'inherit' }}
+                  key={section.key}
+                  type="button"
+                  onClick={() => setActiveSection(section.key)}
+                  className={`flex w-full items-center gap-3 rounded-[24px] px-4 py-3 text-left transition-all ${
+                    isActive
+                      ? 'bg-primary text-primary-foreground shadow-button'
+                      : 'bg-background text-foreground hover:border-primary/40 hover:bg-primary/5'
+                  }`}
                 >
-                  Logout
+                  <Icon size={18} />
+                  <div>
+                    <p className="text-sm font-black uppercase tracking-[0.18em]">{section.label}</p>
+                    <p className={`text-xs ${isActive ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
+                      {section.description}
+                    </p>
+                  </div>
                 </button>
-              )}
-            </div>
+              );
+            })}
+          </div>
 
-            {/* Cloud sync — only surface errors, normal sync is silent */}
-            {isSignedIn && cloudConfigSyncError && (
-              <div style={{ background: '#fff5f5', borderRadius: 14, padding: '10px 12px', border: '1.5px solid rgba(220,38,38,0.18)' }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#dc2626', marginBottom: 4 }}>⚠️ Sync issue</div>
-                <div style={{ fontSize: 13, color: '#dc2626', lineHeight: 1.5, marginBottom: 8 }}>
-                  {cloudConfigSyncError.length > 120 ? cloudConfigSyncError.slice(0, 120) + '…' : cloudConfigSyncError}
+          <div className="mt-8 rounded-[24px] bg-muted/50 p-4">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-muted-foreground">Quick view</p>
+            <p className="mt-3 text-lg font-bold text-foreground">{children.length} kids</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Choose a section on the left instead of scrolling through everything at once.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (authStatus === 'signed_in') {
+                void signOut();
+              }
+            }}
+            disabled={authStatus !== 'signed_in'}
+            className="mt-8 flex w-full items-center justify-center gap-2 rounded-full border border-border px-4 py-3 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <LogOut size={16} />
+            Logout
+          </button>
+        </aside>
+
+        <div className="space-y-8">
+          {activeSection === 'kids' && (
+            <section className="rounded-[32px] border border-border bg-card p-6 shadow-sm md:p-8">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h3 className="text-2xl font-bold text-foreground">Kids</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Pick one child, then switch between profile details and routine setup.
+                  </p>
                 </div>
-                {onRetryCloudConfigSync && (
+                {children.length < 3 && (
                   <button
-                    onClick={onRetryCloudConfigSync}
-                    style={{ width: '100%', background: T.white, border: '1.5px solid rgba(220,38,38,0.2)', borderRadius: 10, padding: '7px 0', fontSize: 13, fontWeight: 700, color: '#dc2626', cursor: 'pointer', fontFamily: 'inherit' }}
+                    onClick={addChild}
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-button transition-transform active:translate-y-0.5"
                   >
-                    🔄 Retry
+                    <UserPlus size={18} /> Add another child
                   </button>
                 )}
               </div>
-            )}
-          </Card>
 
-          {/* ── Main panel ── */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-            {/* KIDS */}
-            {activeSection === 'kids' && (
-              <Card>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 18 }}>
-                  <div>
-                    <div style={{ fontSize: 18, fontWeight: 700 }}>Kids</div>
-                    <div style={{ fontSize: 15, color: T.inkMute, marginTop: 2 }}>Pick one child, then switch between profile details and routine setup.</div>
+              {children.length === 0 ? (
+                <div className="mt-8 rounded-[28px] border border-dashed border-primary/35 bg-primary/5 p-8 text-center">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <UserRound size={26} />
                   </div>
-                  {children.length < 3 && (
-                    <button
-                      onClick={addChild}
-                      style={{ background: T.orange, color: '#fff', border: 'none', borderRadius: 14, padding: '9px 18px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 3px 0 rgba(194,65,12,0.35)' }}
-                    >
-                      Add another child
-                    </button>
-                  )}
+                  <h4 className="mt-4 text-2xl font-bold text-foreground">Create the first child profile</h4>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Add a child here first, then you can switch over to routines when you are ready.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={addChild}
+                    className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-button transition-transform active:translate-y-0.5"
+                  >
+                    <Plus size={16} /> Create first profile
+                  </button>
                 </div>
-
-                {children.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '32px 16px', border: `2px dashed rgba(249,115,22,0.3)`, borderRadius: 18, background: T.orangeLight }}>
-                    <div style={{ fontSize: 36, marginBottom: 12 }}>🐣</div>
-                    <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Create the first child profile</div>
-                    <div style={{ fontSize: 15, color: T.inkMute, marginBottom: 18 }}>Add a child here first, then switch over to routines when you're ready.</div>
-                    <button onClick={addChild} style={{ background: T.orange, color: '#fff', border: 'none', borderRadius: 14, padding: '10px 22px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 3px 0 rgba(194,65,12,0.35)' }}>
-                      + Create first profile
-                    </button>
+              ) : editorChild ? (
+                <div className="mt-8 space-y-6">
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {children.map((child) => (
+                      <button
+                        key={`kid-tab-child-${child.id}`}
+                        type="button"
+                        onClick={() => setEditorChildId(child.id)}
+                        className={`flex items-center gap-3 rounded-[24px] border px-4 py-3 text-left transition-all ${
+                          editorChild.id === child.id
+                            ? 'border-primary bg-primary/10 ring-2 ring-primary'
+                            : 'border-border bg-background hover:border-primary/40'
+                        }`}
+                      >
+                        <ChildProfileAvatar
+                          name={child.name}
+                          seed={child.avatarSeed ?? child.id}
+                          animalKey={child.avatarAnimal}
+                          size="sm"
+                        />
+                        <div>
+                          <p className="text-xs font-black uppercase tracking-[0.22em] text-muted-foreground">Child</p>
+                          <p className="text-xl font-bold text-foreground">{child.name}</p>
+                        </div>
+                      </button>
+                    ))}
                   </div>
-                ) : editorChild ? (
-                  <div>
-                    {/* Child selector tabs */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 18 }}>
-                      {children.map((child) => {
-                        const m = getMascot(child.mascotId ?? child.avatarAnimal);
-                        const isActive = editorChild.id === child.id;
-                        return (
-                          <button
-                            key={child.id}
-                            onClick={() => setEditorChildId(child.id)}
-                            style={{
-                              display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px',
-                              borderRadius: 16, border: isActive ? `2px solid ${T.orange}` : `1.5px solid ${T.border}`,
-                              background: isActive ? T.orangeLight : T.cream,
-                              cursor: 'pointer', fontFamily: 'inherit', color: T.ink, transition: 'all 0.15s',
-                            }}
-                          >
-                            <div style={{ width: 32, height: 32, borderRadius: 10, background: `linear-gradient(135deg,${m.light},${m.color}33)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, border: `1.5px solid ${m.color}44` }}>
-                              {m.emoji}
-                            </div>
-                            <div>
-                              <div style={{ fontSize: 15, fontWeight: 600 }}>{child.name}</div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
 
-                    {/* Profile / Routines / Affirmations / Awards / Mood tabs */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, background: T.cream, borderRadius: 14, padding: 4, border: `1.5px solid ${T.border}`, marginBottom: 18 }}>
-                      {([
-                        { key: 'profile',      label: '👤 Profile' },
-                        { key: 'routines',     label: '📋 Routines' },
-                        { key: 'affirmations', label: '💫 Affirmations' },
-                        { key: 'awards',       label: '🏆 Awards' },
-                        { key: 'mood',         label: '💗 Mood' },
-                      ] as const).map(({ key, label }) => (
-                        <button
-                          key={key}
-                          onClick={() => setKidEditorTab(key)}
-                          style={{
-                            padding: '8px 14px', borderRadius: 10, border: 'none',
-                            background: kidEditorTab === key ? T.white : 'transparent',
-                            color: kidEditorTab === key ? T.ink : T.inkMute,
-                            fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                            boxShadow: kidEditorTab === key ? T.shadow : 'none', transition: 'all 0.15s',
-                          }}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
+                  <div className="inline-flex rounded-full bg-muted p-1">
+                    {([
+                      ['profile', 'Profile'],
+                      ['routines', 'Routines'],
+                    ] as const).map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setKidEditorTab(value)}
+                        className={`rounded-full px-5 py-3 text-sm font-black uppercase tracking-[0.22em] transition-colors ${
+                          kidEditorTab === value ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
 
-                    {/* PROFILE tab */}
-                    {kidEditorTab === 'profile' && (
-                      <div style={{ background: T.cream, borderRadius: 18, padding: '16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '200px minmax(0,1fr)', gap: 14, alignItems: 'start' }}>
-                          {/* Mascot picker */}
-                          <div style={{ background: T.white, borderRadius: 18, padding: '14px 12px', border: `1.5px solid ${T.border}`, textAlign: 'center' }}>
-                            {(() => {
-                              const m = getMascot(editorChild.mascotId ?? editorChild.avatarAnimal);
-                              return (
-                                <div style={{ width: 60, height: 60, borderRadius: '50%', background: `linear-gradient(135deg,${m.light},${m.color}33)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, margin: '0 auto 10px', border: `2px solid ${m.color}44` }}>
-                                  {m.emoji}
-                                </div>
-                              );
-                            })()}
-                            <div style={{ fontSize: 14, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>Pick mascot</div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 4 }}>
-                              {MASCOTS.map((opt) => {
-                                const selected = opt.id === (editorChild.mascotId ?? editorChild.avatarAnimal);
+                  {kidEditorTab === 'profile' ? (
+                    <section className="rounded-[28px] bg-muted/35 p-5 md:p-6">
+                      <div className="grid gap-6 md:grid-cols-[240px_minmax(0,1fr)] md:items-start">
+                        <div className="rounded-[28px] bg-card p-5 text-center">
+                          <ChildProfileAvatar
+                            name={editorChild.name}
+                            seed={editorChild.avatarSeed ?? editorChild.id}
+                            animalKey={editorChild.avatarAnimal}
+                            size="md"
+                            className="mx-auto"
+                          />
+                          <div className="mt-5 flex justify-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateChild(editorChild.id, (c) => ({
+                                  ...c,
+                                  avatarSeed: crypto.randomUUID(),
+                                  avatarAnimal: undefined,
+                                }))
+                              }
+                              className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                            >
+                              <Shuffle size={16} /> Shuffle avatar
+                            </button>
+                          </div>
+                          <div className="mt-4">
+                            <p className="text-sm font-medium text-muted-foreground">Choose animal avatar</p>
+                            <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-5">
+                              {ANIMAL_AVATARS.map((avatar) => {
+                                const isSelected = (editorChild.avatarAnimal ?? '') === avatar.key;
+
                                 return (
                                   <button
-                                    key={opt.id}
-                                    onClick={() => updateChild(editorChild.id, (c) => ({ ...c, mascotId: opt.id, avatarAnimal: opt.id }))}
-                                    style={{
-                                      background: selected ? opt.light : T.cream,
-                                      borderRadius: 10, padding: '6px 2px',
-                                      border: selected ? `2px solid ${opt.color}` : `1px solid ${T.border}`,
-                                      cursor: 'pointer', textAlign: 'center', fontFamily: 'inherit',
-                                    }}
+                                    key={`${editorChild.id}-${avatar.key}`}
+                                    type="button"
+                                    onClick={() =>
+                                      updateChild(editorChild.id, (c) => ({
+                                        ...c,
+                                        avatarAnimal: avatar.key,
+                                      }))
+                                    }
+                                    className={`rounded-2xl border p-3 text-center transition-all ${
+                                      isSelected
+                                        ? 'border-primary bg-primary/10 ring-2 ring-primary'
+                                        : 'border-border bg-background hover:border-primary/40'
+                                    }`}
+                                    aria-label={`Choose ${avatar.label} avatar`}
                                   >
-                                    <div style={{ fontSize: 18 }}>{opt.emoji}</div>
+                                    <div className="text-2xl">{avatar.emoji}</div>
                                   </button>
                                 );
                               })}
                             </div>
                           </div>
+                        </div>
 
-                          {/* Name / age / schedule */}
-                          <div style={{ background: T.white, borderRadius: 18, padding: '14px', border: `1.5px solid ${T.border}`, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'space-between' }}>
+                        <div className="rounded-[28px] bg-card p-5 md:p-6">
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <input
+                              className="w-full border-b-2 border-transparent bg-transparent text-xl font-bold text-foreground outline-none focus:border-primary sm:max-w-xs md:text-2xl"
+                              value={editorChild.name}
+                              onChange={(e) =>
+                                updateChild(editorChild.id, (c) => ({ ...c, name: e.target.value }))
+                              }
+                            />
+                            {children.length > 1 && (
+                              <button
+                                onClick={() => onChange(children.filter((c) => c.id !== editorChild.id))}
+                                className="self-start p-2 text-destructive/50 transition-colors hover:text-destructive sm:self-auto"
+                              >
+                                <Trash2 size={20} />
+                              </button>
+                            )}
+                          </div>
+
+                          <div className="mt-5 grid gap-4 md:grid-cols-2">
+                            <label className="text-sm font-semibold text-muted-foreground">
+                              Age
                               <input
-                                style={{ ...inputStyle, fontSize: 17, fontWeight: 700, flex: 1, padding: '8px 12px' }}
-                                value={editorChild.name}
-                                onChange={(e) => updateChild(editorChild.id, (c) => ({ ...c, name: e.target.value }))}
-                                placeholder="Child name"
+                                type="number"
+                                min={2}
+                                max={12}
+                                value={editorChild.age ?? 5}
+                                onChange={(event) =>
+                                  updateChild(editorChild.id, (c) => ({
+                                    ...c,
+                                    age: Number(event.target.value),
+                                  }))
+                                }
+                                className="mt-2 w-full rounded-xl bg-muted px-4 py-3 text-base font-medium text-foreground outline-none focus:ring-2 focus:ring-primary"
                               />
-                              {children.length > 1 && (
-                                <button
-                                  onClick={() => onChange(children.filter((c) => c.id !== editorChild.id))}
-                                  style={{ background: '#fff5f5', border: '1.5px solid rgba(220,38,38,0.2)', borderRadius: 10, padding: '8px 12px', fontSize: 15, fontWeight: 700, color: '#dc2626', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                >
-                                  🗑️
-                                </button>
-                              )}
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                              <div>
-                                <div style={{ fontSize: 14, fontWeight: 700, color: T.inkMute, marginBottom: 4 }}>Age</div>
-                                <input
-                                  type="number" min={2} max={12}
-                                  style={inputStyle}
-                                  value={editorChild.age ?? 5}
-                                  onChange={(e) => updateChild(editorChild.id, (c) => ({ ...c, age: Number(e.target.value) }))}
-                                />
-                              </div>
-                              <div>
-                                <div style={{ fontSize: 14, fontWeight: 700, color: T.inkMute, marginBottom: 4 }}>Age group</div>
-                                <select
-                                  style={inputStyle}
-                                  value={editorChild.ageBucket ?? '4-6'}
-                                  onChange={(e) => updateChild(editorChild.id, (c) => ({ ...c, ageBucket: e.target.value as Child['ageBucket'] }))}
-                                >
-                                  {AGE_BUCKETS.map((b) => <option key={b.key} value={b.key}>{b.label}</option>)}
-                                </select>
-                              </div>
-                            </div>
-
-                            {/* Schedule */}
-                            <div style={{ background: T.cream, borderRadius: 14, padding: '10px 12px', border: `1.5px solid ${T.border}` }}>
-                              <div style={{ fontSize: 14, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>⏰ Routine schedule</div>
-                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                                {(['morning', 'evening'] as const).map((routine) => (
-                                  <div key={`${editorChild.id}-${routine}`} style={{ background: T.white, borderRadius: 12, padding: '8px 10px', border: `1.5px solid ${T.border}` }}>
-                                    <div style={{ fontSize: 15, fontWeight: 700, color: T.inkMute, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
-                                      {routine === 'morning' ? '☀️' : '🌙'} {routine}
-                                    </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
-                                      {(['start', 'end'] as const).map((bound) => (
-                                        <div key={bound}>
-                                          <div style={{ fontSize: 15, color: T.inkMute, marginBottom: 2 }}>{bound}</div>
-                                          <input
-                                            type="time"
-                                            style={{ ...inputStyle, fontSize: 14, padding: '4px 6px', borderRadius: 8 }}
-                                            value={editorChild.schedule?.[routine]?.[bound] ?? DEFAULT_SCHEDULE[routine][bound]}
-                                            onChange={(e) =>
-                                              updateChild(editorChild.id, (c) => ({
-                                                ...c,
-                                                schedule: {
-                                                  morning: c.schedule?.morning ?? DEFAULT_SCHEDULE.morning,
-                                                  evening: c.schedule?.evening ?? DEFAULT_SCHEDULE.evening,
-                                                  [routine]: {
-                                                    start: c.schedule?.[routine].start ?? DEFAULT_SCHEDULE[routine].start,
-                                                    end: c.schedule?.[routine].end ?? DEFAULT_SCHEDULE[routine].end,
-                                                    [bound]: e.target.value,
-                                                  },
-                                                },
-                                              }))
-                                            }
-                                          />
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
+                            </label>
+                            <label className="text-sm font-semibold text-muted-foreground">
+                              Suggested age bucket
+                              <select
+                                value={editorChild.ageBucket ?? '4-6'}
+                                onChange={(event) =>
+                                  updateChild(editorChild.id, (c) => ({
+                                    ...c,
+                                    ageBucket: event.target.value as Child['ageBucket'],
+                                  }))
+                                }
+                                className="mt-2 w-full rounded-xl bg-muted px-4 py-3 text-base font-medium text-foreground outline-none focus:ring-2 focus:ring-primary"
+                              >
+                                {AGE_BUCKETS.map((bucket) => (
+                                  <option key={bucket.key} value={bucket.key}>
+                                    {bucket.label}
+                                  </option>
                                 ))}
-                              </div>
+                              </select>
+                            </label>
+                          </div>
+
+                          <div className="mt-5 rounded-[24px] bg-background p-4">
+                            <div className="flex items-center gap-2 text-foreground">
+                              <Clock3 size={18} />
+                              <p className="text-sm font-black uppercase tracking-[0.18em]">Routine schedule</p>
+                            </div>
+                            <div className="mt-4 grid gap-4 md:grid-cols-2">
+                              {(['morning', 'evening'] as const).map((routine) => (
+                                <div key={`${editorChild.id}-${routine}`} className="rounded-2xl bg-muted/55 p-4">
+                                  <p className="text-xs font-black uppercase tracking-[0.22em] text-muted-foreground">
+                                    {routine}
+                                  </p>
+                                  <div className="mt-3 grid grid-cols-2 gap-3">
+                                    <input
+                                      type="time"
+                                      value={editorChild.schedule?.[routine].start ?? (routine === 'morning' ? '07:00' : '17:00')}
+                                      onChange={(event) =>
+                                        updateChild(editorChild.id, (c) => ({
+                                          ...c,
+                                          schedule: {
+                                            morning: c.schedule?.morning ?? DEFAULT_SCHEDULE.morning,
+                                            evening: c.schedule?.evening ?? DEFAULT_SCHEDULE.evening,
+                                            [routine]: {
+                                              start: event.target.value,
+                                              end: c.schedule?.[routine].end ?? (routine === 'morning' ? '09:00' : '20:00'),
+                                            },
+                                          },
+                                        }))
+                                      }
+                                      className="rounded-xl bg-card px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
+                                    />
+                                    <input
+                                      type="time"
+                                      value={editorChild.schedule?.[routine].end ?? (routine === 'morning' ? '09:00' : '20:00')}
+                                      onChange={(event) =>
+                                        updateChild(editorChild.id, (c) => ({
+                                          ...c,
+                                          schedule: {
+                                            morning: c.schedule?.morning ?? DEFAULT_SCHEDULE.morning,
+                                            evening: c.schedule?.evening ?? DEFAULT_SCHEDULE.evening,
+                                            [routine]: {
+                                              start: c.schedule?.[routine].start ?? (routine === 'morning' ? '07:00' : '17:00'),
+                                              end: event.target.value,
+                                            },
+                                          },
+                                        }))
+                                      }
+                                      className="rounded-xl bg-card px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary"
+                                    />
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           </div>
                         </div>
                       </div>
-                    )}
-
-                    {/* AFFIRMATIONS tab */}
-                    {kidEditorTab === 'affirmations' && (
-                      <AdminAffirmations
-                        kid={editorChild}
-                        onBack={() => setKidEditorTab('profile')}
-                        onAdd={(kidId, text) =>
-                          updateChild(kidId, (c) => ({ ...c, affirmations: [...(c.affirmations ?? []), text] }))
-                        }
-                        onRemove={(kidId, idx) =>
-                          updateChild(kidId, (c) => ({ ...c, affirmations: (c.affirmations ?? []).filter((_, i) => i !== idx) }))
-                        }
-                      />
-                    )}
-
-                    {/* AWARDS tab */}
-                    {kidEditorTab === 'awards' && (
-                      <AdminAchievements
-                        kid={editorChild}
-                        onBack={() => setKidEditorTab('profile')}
-                        onToggleBadge={(kidId, badgeId) =>
-                          updateChild(kidId, (c) => ({ ...c, badges: { ...(c.badges ?? {}), [badgeId]: !(c.badges ?? {})[badgeId] } }))
-                        }
-                      />
-                    )}
-
-                    {/* MOOD tab */}
-                    {kidEditorTab === 'mood' && (
-                      <AdminMood
-                        kid={editorChild}
-                        onBack={() => setKidEditorTab('profile')}
-                      />
-                    )}
-
-                    {/* ROUTINES tab */}
-                    {kidEditorTab === 'routines' && (
-                      <div style={{ background: T.cream, borderRadius: 18, padding: '16px' }}>
-                        {/* Morning / Evening selector */}
-                        <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
-                          {(['morning', 'evening'] as const).map((routine) => (
-                            <button
-                              key={routine}
-                              onClick={() => setEditorRoutine(routine)}
-                              style={{
-                                padding: '9px 20px', borderRadius: 14, border: 'none',
-                                background: editorRoutine === routine
-                                  ? (routine === 'morning' ? 'linear-gradient(135deg,#fed7aa,#fdba74)' : 'linear-gradient(135deg,#a78bfa,#7c3aed)')
-                                  : T.white,
-                                color: editorRoutine === routine ? (routine === 'morning' ? '#7c2d12' : '#fff') : T.inkMute,
-                                fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                                border: `1.5px solid ${T.border}`, transition: 'all 0.15s',
-                              }}
-                            >
-                              {routine === 'morning' ? '☀️ Morning' : '🌙 Evening'}
-                            </button>
-                          ))}
-                        </div>
-
-                        <div style={{ background: T.white, borderRadius: 18, padding: '14px 14px', border: `1.5px solid ${T.border}` }}>
-                          <RoutineColumn
-                            type={editorRoutine}
-                            tasks={editorChild[editorRoutine]}
-                            onReorder={(newOrder) => updateChild(editorChild.id, (c) => ({ ...c, [editorRoutine]: newOrder }))}
-                            onDelete={(taskId) => updateChild(editorChild.id, (c) => ({ ...c, [editorRoutine]: c[editorRoutine].filter((t) => t.id !== taskId) }))}
-                            onQuickAdd={(task) => updateChild(editorChild.id, (c) => ({ ...c, [editorRoutine]: [...c[editorRoutine], { id: crypto.randomUUID(), title: task.title, icon: task.icon, completed: false }] }))}
-                            onAdd={() => setModal({ childId: editorChild.id, routine: editorRoutine })}
-                            onEdit={(taskId) => setModal({ childId: editorChild.id, routine: editorRoutine, taskId })}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : null}
-              </Card>
-            )}
-
-            {/* PARENTS */}
-            {activeSection === 'parents' && <AccountSettingsCard />}
-
-            {/* HOUSEHOLD */}
-            {activeSection === 'household' && (
-              <Card>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 14, background: T.orangeLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>🎨</div>
-                  <div>
-                    <div style={{ fontSize: 17, fontWeight: 700 }}>Household setup</div>
-                    <div style={{ fontSize: 15, color: T.inkMute }}>Pick the scene that appears when no routine is due.</div>
-                  </div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(140px,1fr))', gap: 10 }}>
-                  {HOME_SCENE_OPTIONS.map((option) => (
-                    <button
-                      key={option.key}
-                      onClick={() => onHomeSceneChange(option.key)}
-                      style={{
-                        borderRadius: 18, padding: '14px 12px', textAlign: 'left',
-                        border: homeScene === option.key ? `2.5px solid ${T.orange}` : `1.5px solid ${T.border}`,
-                        background: homeScene === option.key ? T.orangeLight : T.cream,
-                        cursor: 'pointer', fontFamily: 'inherit', color: T.ink, transition: 'all 0.15s',
-                        boxShadow: homeScene === option.key ? `0 4px 12px rgba(249,115,22,0.15)` : 'none',
-                      }}
-                    >
-                      <div style={{ fontSize: 32, marginBottom: 8 }}>{option.preview}</div>
-                      <div style={{ fontSize: 15, fontWeight: 700 }}>{option.label}</div>
-                      <div style={{ fontSize: 14, color: T.inkMute, marginTop: 4, lineHeight: 1.4 }}>{option.description}</div>
-                    </button>
-                  ))}
-                </div>
-              </Card>
-            )}
-
-            {/* ADMIN */}
-            {activeSection === 'admin' && (
-              <Card>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 14, background: '#fff5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>⚙️</div>
-                  <div>
-                    <div style={{ fontSize: 17, fontWeight: 700 }}>Admin</div>
-                    <div style={{ fontSize: 15, color: T.inkMute }}>Restart setup or clear everything and start over.</div>
-                  </div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 12 }}>
-                  {/* Restart setup */}
-                  <div style={{ background: T.cream, borderRadius: 18, padding: '16px', border: `1.5px solid ${T.border}` }}>
-                    <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Restart setup</div>
-                    <div style={{ fontSize: 15, color: T.inkMute, lineHeight: 1.6, marginBottom: 14 }}>
-                      Keep the current children and open the setup flow again to review profiles and routines.
-                    </div>
-                    <button
-                      onClick={onRestartSetup}
-                      style={{ background: T.white, border: `1.5px solid ${T.border}`, borderRadius: 12, padding: '9px 18px', fontSize: 15, fontWeight: 700, color: T.ink, cursor: 'pointer', fontFamily: 'inherit' }}
-                    >
-                      Restart setup
-                    </button>
-                  </div>
-
-                  {/* Reset app data */}
-                  <div style={{ background: '#fff5f5', borderRadius: 18, padding: '16px', border: '1.5px solid rgba(220,38,38,0.15)' }}>
-                    <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Reset app data</div>
-                    <div style={{ fontSize: 15, color: T.inkMute, lineHeight: 1.6, marginBottom: 14 }}>
-                      {isSignedIn
-                        ? 'Permanently delete the signed-in household, all child profiles, routines, schedules, and progress from Supabase and this browser.'
-                        : 'This clears everything saved in this browser. Remove all saved children, routines, schedules, and progress and return to a fresh start.'}
-                    </div>
-
-                    {confirmReset ? (
-                      <div>
-                        <div style={{ fontSize: 15, fontWeight: 700, color: '#dc2626', marginBottom: 10 }}>
-                          {isSignedIn
-                            ? 'This permanently deletes the signed-in household everywhere and clears this browser. Are you sure?'
-                            : 'This clears everything. Are you sure?'}
-                        </div>
-                        <div style={{ display: 'flex', gap: 8 }}>
+                    </section>
+                  ) : (
+                    <section className="rounded-[28px] bg-muted/35 p-5 md:p-6">
+                      <div className="mb-5 flex flex-wrap gap-3">
+                        {(['morning', 'evening'] as const).map((routine) => (
                           <button
-                            disabled={isResetting}
-                            onClick={async () => {
-                              setIsResetting(true);
-                              try { await onResetAppData(); } finally { setIsResetting(false); setConfirmReset(false); }
-                            }}
-                            style={{ flex: 1, background: '#dc2626', color: '#fff', border: 'none', borderRadius: 12, padding: '9px 0', fontSize: 15, fontWeight: 700, cursor: isResetting ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
+                            key={`editor-routine-${routine}`}
+                            type="button"
+                            onClick={() => setEditorRoutine(routine)}
+                            className={`rounded-full px-5 py-3 text-sm font-black uppercase tracking-[0.24em] transition-all ${
+                              editorRoutine === routine
+                                ? routine === 'morning'
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'bg-indigo-500 text-white'
+                                : 'bg-card text-muted-foreground'
+                            }`}
                           >
-                            {isResetting ? 'Deleting…' : 'Yes, reset everything'}
+                            {routine}
                           </button>
-                          <button
-                            disabled={isResetting}
-                            onClick={() => setConfirmReset(false)}
-                            style={{ flex: 1, background: T.white, border: `1.5px solid ${T.border}`, borderRadius: 12, padding: '9px 0', fontSize: 15, fontWeight: 700, color: T.ink, cursor: 'pointer', fontFamily: 'inherit' }}
-                          >
-                            Cancel
-                          </button>
-                        </div>
+                        ))}
                       </div>
-                    ) : (
-                      <button
-                        disabled={isResetting}
-                        onClick={() => setConfirmReset(true)}
-                        style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: 12, padding: '9px 18px', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-                      >
-                        Reset everything
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            )}
 
-            {/* BILLING */}
-            {activeSection === 'billing' && (
-              <Card>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 14, background: T.orangeLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>💳</div>
-                  <div>
-                    <div style={{ fontSize: 17, fontWeight: 700 }}>Billing</div>
-                    <div style={{ fontSize: 15, color: T.inkMute }}>Subscriptions and paid family features when we're ready.</div>
-                  </div>
+                      <div className="rounded-[28px] bg-card p-4 md:p-5">
+                        <RoutineColumn
+                          type={editorRoutine}
+                          tasks={editorChild[editorRoutine]}
+                          onReorder={(newOrder) => updateChild(editorChild.id, (c) => ({ ...c, [editorRoutine]: newOrder }))}
+                          onDelete={(taskId) =>
+                            updateChild(editorChild.id, (c) => ({
+                              ...c,
+                              [editorRoutine]: c[editorRoutine].filter((t) => t.id !== taskId),
+                            }))
+                          }
+                          onQuickAdd={(task) =>
+                            updateChild(editorChild.id, (c) => ({
+                              ...c,
+                              [editorRoutine]: [
+                                ...c[editorRoutine],
+                                { id: crypto.randomUUID(), title: task.title, icon: task.icon, completed: false },
+                              ],
+                            }))
+                          }
+                          onAdd={() => setModal({ childId: editorChild.id, routine: editorRoutine })}
+                          onEdit={(taskId) => setModal({ childId: editorChild.id, routine: editorRoutine, taskId })}
+                        />
+                      </div>
+                    </section>
+                  )}
                 </div>
-                <div style={{ textAlign: 'center', padding: '32px 16px', border: `2px dashed rgba(249,115,22,0.3)`, borderRadius: 18, background: T.orangeLight }}>
-                  <div style={{ fontSize: 32, marginBottom: 10 }}>🚀</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Coming soon</div>
-                  <div style={{ fontSize: 15, color: T.inkMute }}>For the MVP, there is nothing to configure here yet.</div>
+              ) : null}
+            </section>
+          )}
+
+          {activeSection === 'parents' && <AccountSettingsCard />}
+
+          {activeSection === 'household' && (
+            <section className="rounded-[32px] border border-border bg-card p-6 shadow-sm md:p-8">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <Palette size={22} />
                 </div>
-              </Card>
-            )}
-          </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-foreground">Household setup</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Pick the child-like doodle scene that appears when no routine is due.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {HOME_SCENE_OPTIONS.map((option) => (
+                  <button
+                    key={option.key}
+                    type="button"
+                    onClick={() => onHomeSceneChange(option.key)}
+                    className={`rounded-[28px] border p-4 text-left transition-all ${
+                      homeScene === option.key
+                        ? 'border-primary bg-primary/10 ring-2 ring-primary'
+                        : 'border-border bg-background hover:border-primary/40'
+                    }`}
+                  >
+                    <div className="text-4xl">{option.preview}</div>
+                    <p className="mt-3 text-lg font-black text-foreground">{option.label}</p>
+                    <p className="mt-2 text-sm text-muted-foreground">{option.description}</p>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {activeSection === 'admin' && (
+            <section className="rounded-[32px] border border-destructive/20 bg-card p-6 shadow-sm md:p-8">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-destructive/10 text-destructive">
+                  <Trash2 size={22} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-foreground">Admin</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Restart setup if you want to walk through profiles and routines again, or clear everything and start over.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                <div className="rounded-[28px] border border-border bg-background p-5">
+                  <h4 className="text-lg font-bold text-foreground">Restart setup</h4>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Keep the current children and open the setup flow again so you can review profiles and routines from the start.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={onRestartSetup}
+                    className="mt-5 rounded-full border border-border px-4 py-2 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                  >
+                    Restart setup
+                  </button>
+                </div>
+
+                <div className="rounded-[28px] border border-destructive/20 bg-destructive/5 p-5">
+                  <h4 className="text-lg font-bold text-foreground">Reset app data</h4>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Remove all saved children, routines, schedules, and progress from this browser and return to a fresh start.
+                  </p>
+                  {confirmReset ? (
+                    <div className="mt-5 space-y-3">
+                      <p className="text-sm font-medium text-destructive">
+                        This clears everything saved in this browser. Are you sure?
+                      </p>
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          type="button"
+                          onClick={onResetAppData}
+                          className="rounded-full bg-destructive px-4 py-2 text-sm font-bold text-destructive-foreground transition-transform active:translate-y-0.5"
+                        >
+                          Yes, reset everything
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmReset(false)}
+                          className="rounded-full border border-border px-4 py-2 text-sm font-bold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmReset(true)}
+                      className="mt-5 rounded-full bg-destructive px-4 py-2 text-sm font-bold text-destructive-foreground transition-transform active:translate-y-0.5"
+                    >
+                      Reset everything
+                    </button>
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {activeSection === 'billing' && (
+            <section className="rounded-[32px] border border-border bg-card p-6 shadow-sm md:p-8">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <CreditCard size={22} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-foreground">Billing</h3>
+                  <p className="text-sm text-muted-foreground">
+                    This will be the home for subscriptions and paid family features when we are ready for them.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 rounded-[28px] border border-dashed border-primary/25 bg-primary/5 p-6">
+                <p className="text-lg font-bold text-foreground">Coming soon</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  For the MVP, there is nothing to configure here yet.
+                </p>
+              </div>
+            </section>
+          )}
         </div>
       </div>
 
