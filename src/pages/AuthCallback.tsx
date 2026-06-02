@@ -7,28 +7,35 @@ import { finalizeSupabaseAuthFromUrl } from '@/lib/supabase/client';
 const CALLBACK_SLOW_MS = 20000;
 const CALLBACK_FAILURE_MS = 60000;
 
+const KNOWN_ERROR_MESSAGES: Record<string, string> = {
+  otp_expired: 'This sign-in link expired. Please request a new link and try again.',
+  token_expired: 'This sign-in link expired. Please request a new link and try again.',
+  access_denied: 'Access was denied. Please try signing in again.',
+  unauthorized: 'This sign-in link is no longer valid. Please request a new one.',
+  invalid_grant: 'This sign-in link is no longer valid. Please request a new one.',
+  email_not_confirmed: 'Please confirm your email address before signing in.',
+  user_not_found: 'No account was found for this sign-in link. Please try again.',
+  server_error: 'Something went wrong on our end. Please try again in a moment.',
+};
+
+const FALLBACK_ERROR = 'This sign-in link did not finish cleanly. Please request a new one.';
+
 const getCallbackErrorFromUrl = () => {
   try {
     const url = new URL(window.location.href);
     const error = url.searchParams.get('error');
     const errorCode = url.searchParams.get('error_code');
-    const description =
-      url.searchParams.get('error_description') ??
-      url.searchParams.get('error_description'.toUpperCase()) ??
-      url.searchParams.get('message');
+    const description = url.searchParams.get('error_description') ?? url.searchParams.get('message');
 
     if (!error && !errorCode && !description) {
       return null;
     }
 
-    const normalizedCode = (errorCode ?? '').toLowerCase();
+    // Log raw params for debugging without exposing them to the user.
+    console.error('[auth-callback] url error params', { error, errorCode, description });
 
-    if (normalizedCode === 'otp_expired') {
-      return 'This sign-in link expired. Please request a new link and try again.';
-    }
-
-    const parts = [description, errorCode, error].filter(Boolean).map(String);
-    return parts.length ? parts.join(' • ') : 'This sign-in link did not finish cleanly.';
+    const normalizedCode = (errorCode ?? error ?? '').toLowerCase().replace(/\+/g, '_');
+    return KNOWN_ERROR_MESSAGES[normalizedCode] ?? FALLBACK_ERROR;
   } catch {
     return null;
   }
