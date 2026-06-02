@@ -151,26 +151,28 @@ export const AccountSettingsCard = () => {
               This browser is connected to the household saved under this parent account.
             </div>
 
-            {/* Debug info */}
-            <div style={{ background: T.white, borderRadius: 12, padding: '10px 12px', border: `1.5px solid ${T.border}`, fontSize: 11, color: T.inkMute, marginBottom: 12 }}>
-              <div><strong style={{ color: T.ink }}>User</strong>: {user.id}</div>
-              <div style={{ marginTop: 3 }}><strong style={{ color: T.ink }}>Household</strong>: {household?.id ?? 'loading'}</div>
-              <button
-                onClick={() => {
-                  const payload = [
-                    `email=${user.email ?? ''}`,
-                    `user_id=${user.id}`,
-                    `household_id=${household?.id ?? ''}`,
-                    `household_status=${householdStatus}`,
-                    `ts=${new Date().toISOString()}`,
-                  ].join('\n');
-                  void navigator.clipboard?.writeText(payload);
-                }}
-                style={{ marginTop: 8, background: T.white, border: `1.5px solid ${T.border}`, borderRadius: 10, padding: '4px 10px', fontSize: 10, fontWeight: 700, color: T.inkMute, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}
-              >
-                ✉️ Copy debug info
-              </button>
-            </div>
+            {/* Debug info — dev only */}
+            {import.meta.env.DEV && (
+              <div style={{ background: T.white, borderRadius: 12, padding: '10px 12px', border: `1.5px solid ${T.border}`, fontSize: 11, color: T.inkMute, marginBottom: 12 }}>
+                <div><strong style={{ color: T.ink }}>User</strong>: {user.id}</div>
+                <div style={{ marginTop: 3 }}><strong style={{ color: T.ink }}>Household</strong>: {household?.id ?? 'loading'}</div>
+                <button
+                  onClick={() => {
+                    const payload = [
+                      `email=${user.email ?? ''}`,
+                      `user_id=${user.id}`,
+                      `household_id=${household?.id ?? ''}`,
+                      `household_status=${householdStatus}`,
+                      `ts=${new Date().toISOString()}`,
+                    ].join('\n');
+                    void navigator.clipboard?.writeText(payload);
+                  }}
+                  style={{ marginTop: 8, background: T.white, border: `1.5px solid ${T.border}`, borderRadius: 10, padding: '4px 10px', fontSize: 10, fontWeight: 700, color: T.inkMute, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}
+                >
+                  ✉️ Copy debug info
+                </button>
+              </div>
+            )}
 
             <button
               onClick={() => void signOut()}
