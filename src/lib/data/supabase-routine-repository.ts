@@ -88,6 +88,43 @@ export class SupabaseRoutineRepository implements RoutineRepository {
     routineId: string;
     tasks: Array<Omit<RoutineTaskRecord, 'id' | 'routineId' | 'createdAt' | 'updatedAt'>>;
   }) {
+    // Read existing tasks first. If the definitions haven't changed, skip the
+    // dangerous delete-then-insert entirely. This prevents task loss when the
+    // cloud sync fires on task completions (which don't change definitions).
+    const { data: existingRows } = await this.supabase
+      .from(ROUTINE_TASKS_TABLE)
+      .select('*')
+      .eq('routine_id', input.routineId)
+      .order('sort_order', { ascending: true });
+
+    const existingTasks = (existingRows ?? [])
+      .map(mapRoutineTask)
+      .filter((t) => !t.isArchived);
+
+    const definitionsUnchanged =
+      existingTasks.length === input.tasks.length &&
+      input.tasks.every((next, i) => {
+        const cur = existingTasks[i];
+        return (
+          cur &&
+          cur.taskTemplateId === next.taskTemplateId &&
+          cur.customTitle === next.customTitle &&
+          String(cur.customIcon ?? '') === String(next.customIcon ?? '') &&
+          cur.sortOrder === (next.sortOrder ?? i) &&
+          cur.isArchived === next.isArchived
+        );
+      });
+
+    if (definitionsUnchanged) {
+      return existingTasks;
+    }
+
+    // Guard: never delete all tasks if there is nothing to replace them with.
+    // A zero-length insert after a successful delete would permanently erase tasks.
+    if (input.tasks.length === 0) {
+      return existingTasks;
+    }
+
     const { error: deleteError } = await this.supabase
       .from(ROUTINE_TASKS_TABLE)
       .delete()
@@ -95,10 +132,6 @@ export class SupabaseRoutineRepository implements RoutineRepository {
 
     if (deleteError) {
       throw deleteError;
-    }
-
-    if (input.tasks.length === 0) {
-      return [];
     }
 
     const payload = input.tasks.map((task, index) => ({
@@ -116,6 +149,19 @@ export class SupabaseRoutineRepository implements RoutineRepository {
       .select('*');
 
     if (error) {
+      // Insert failed after the delete succeeded. Try to restore the previous
+      // tasks so the child's routine isn't permanently empty.
+      if (existingTasks.length > 0) {
+        const restorePayload = existingTasks.map((t) => ({
+          routine_id: input.routineId,
+          task_template_id: t.taskTemplateId,
+          custom_title: t.customTitle,
+          custom_icon: t.customIcon,
+          sort_order: t.sortOrder,
+          is_archived: t.isArchived,
+        }));
+        await this.supabase.from(ROUTINE_TASKS_TABLE).insert(restorePayload);
+      }
       throw error;
     }
 
