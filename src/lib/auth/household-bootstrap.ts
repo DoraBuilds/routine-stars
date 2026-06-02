@@ -22,21 +22,11 @@ const getSuggestedHouseholdName = (user: User) => {
 };
 
 const getBootstrapErrorMessage = (error: unknown) => {
-  // Always capture the raw message — code, details, and hint from PostgREST errors are
-  // useful for debugging and are surfaced to the user so they can be shared with support.
-  let message = '';
-  if (error instanceof Error) {
-    message = error.message;
-  } else if (typeof error === 'object' && error !== null) {
-    const e = error as Record<string, unknown>;
-    const parts = [e.message, e.code, e.details, e.hint].filter(Boolean);
-    message = parts.map(String).join(' — ') || JSON.stringify(error);
-  }
+  // Log full details (code, hint, constraint names) for debugging without
+  // exposing them to the user.
+  console.error('[household-bootstrap]', error);
 
-  return (
-    `Could not set up the family space. Please tap "Try again". ` +
-    `If it keeps failing, send this to support: ${message || 'no error detail'}`
-  );
+  return 'Could not set up the family space. Please tap "Try again", or contact support if it keeps failing.';
 };
 
 export const ensureHousehold = async (user: User): Promise<HouseholdRecord> => {
