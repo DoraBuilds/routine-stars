@@ -175,14 +175,16 @@ const TaskModal = ({ initial, routine, mode, suggestions, onSave, onClose }: Tas
 interface RoutineColumnProps {
   type: RoutineType;
   tasks: Child['morning'];
+  otherKids: Child[];
   onReorder: (tasks: Child['morning']) => void;
   onDelete: (taskId: string) => void;
   onQuickAdd: (task: TaskCatalogItem) => void;
   onAdd: () => void;
   onEdit: (taskId: string) => void;
+  onCopyFrom: (sourceKid: Child) => void;
 }
 
-const RoutineColumn = ({ type, tasks, onReorder, onDelete, onQuickAdd, onAdd, onEdit }: RoutineColumnProps) => {
+const RoutineColumn = ({ type, tasks, otherKids, onReorder, onDelete, onQuickAdd, onAdd, onEdit, onCopyFrom }: RoutineColumnProps) => {
   const isMorning = type === 'morning';
   const otherTasks = TASK_CATALOG[type].filter(
     (suggestion) => !tasks.some((task) => task.title === suggestion.title)
@@ -231,6 +233,39 @@ const RoutineColumn = ({ type, tasks, onReorder, onDelete, onQuickAdd, onAdd, on
           </Reorder.Item>
         ))}
       </Reorder.Group>
+
+      {/* Copy tasks from another child */}
+      {otherKids.filter((k) => k[type].length > 0).length > 0 && (
+        <div style={{ marginTop: 10, borderRadius: 14, border: `1.5px solid ${T.border}`, background: T.cream, padding: '10px 12px' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: T.inkMute, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
+            Copy task list from
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {otherKids.filter((k) => k[type].length > 0).map((k) => (
+              <button
+                key={k.id}
+                onClick={() => {
+                  if (tasks.length === 0 || window.confirm(`Replace ${type} tasks with ${k.name}'s list?`)) {
+                    onCopyFrom(k);
+                  }
+                }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  borderRadius: 99, border: `1.5px solid ${T.border}`,
+                  background: T.white, padding: '5px 12px',
+                  fontSize: 15, fontWeight: 600, color: T.ink,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                {k.name}
+                <span style={{ fontSize: 13, color: T.inkMute }}>
+                  ({k[type].length} tasks)
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Age bucket task suggestions */}
       {otherTasks.length > 0 && (
@@ -768,11 +803,22 @@ export const ParentSettings = ({
                           <RoutineColumn
                             type={editorRoutine}
                             tasks={editorChild[editorRoutine]}
+                            otherKids={children.filter((c) => c.id !== editorChild.id)}
                             onReorder={(newOrder) => updateChild(editorChild.id, (c) => ({ ...c, [editorRoutine]: newOrder }))}
                             onDelete={(taskId) => updateChild(editorChild.id, (c) => ({ ...c, [editorRoutine]: c[editorRoutine].filter((t) => t.id !== taskId) }))}
                             onQuickAdd={(task) => updateChild(editorChild.id, (c) => ({ ...c, [editorRoutine]: [...c[editorRoutine], { id: crypto.randomUUID(), title: task.title, icon: task.icon, completed: false }] }))}
                             onAdd={() => setModal({ childId: editorChild.id, routine: editorRoutine })}
                             onEdit={(taskId) => setModal({ childId: editorChild.id, routine: editorRoutine, taskId })}
+                            onCopyFrom={(sourceKid) =>
+                              updateChild(editorChild.id, (c) => ({
+                                ...c,
+                                [editorRoutine]: sourceKid[editorRoutine].map((t) => ({
+                                  ...t,
+                                  id: crypto.randomUUID(),
+                                  completed: false,
+                                })),
+                              }))
+                            }
                           />
                         </div>
                       </div>
