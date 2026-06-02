@@ -87,6 +87,9 @@ export const saveHouseholdConfigToCloud = async (input: {
             morning: child.morning.filter((t) => t.completed).map((t) => t.title),
             evening: child.evening.filter((t) => t.completed).map((t) => t.title),
           },
+          // Special sentinel: last day the streak was incremented.
+          // Stored alongside the date-keyed completion entries so no schema change is needed.
+          _streakDate: child.streakDate ?? null,
         },
       });
     } catch (error) {

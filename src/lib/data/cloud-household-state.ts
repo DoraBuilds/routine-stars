@@ -60,9 +60,26 @@ export const mapCloudHouseholdToChildren = (input: {
 
     // Restore today's completion from the title-based task_completion field
     const todayKey = getLocalProgressDate(new Date());
-    const todayCompletion = profile.taskCompletion?.[todayKey];
+    const todayEntry = profile.taskCompletion?.[todayKey];
+    const todayCompletion = (typeof todayEntry === 'object' && todayEntry !== null)
+      ? todayEntry as { morning: string[]; evening: string[] }
+      : null;
     const morningCompleted = new Set(todayCompletion?.morning ?? []);
     const eveningCompleted = new Set(todayCompletion?.evening ?? []);
+
+    // Restore streakDate from the special _streakDate sentinel key.
+    const streakDate = typeof profile.taskCompletion?.['_streakDate'] === 'string'
+      ? profile.taskCompletion['_streakDate'] as string
+      : undefined;
+
+    // Streak reset: if the last recorded streak day is neither today nor
+    // yesterday, the child missed at least one day → reset to 0.
+    const yesterday = getLocalProgressDate(new Date(Date.now() - 86_400_000));
+    const streakIsStale =
+      streakDate !== undefined &&
+      streakDate !== todayKey &&
+      streakDate !== yesterday;
+    const resolvedStreak = streakIsStale ? 0 : profile.streak;
 
     return {
       id: profile.id,
@@ -72,7 +89,8 @@ export const mapCloudHouseholdToChildren = (input: {
       avatarAnimal: profile.avatarAnimal ?? undefined,
       avatarSeed: profile.avatarSeed ?? profile.id,
       mascotId: profile.mascotId ?? undefined,
-      streak: profile.streak,
+      streak: resolvedStreak,
+      streakDate,
       affirmations: profile.affirmations,
       badges: profile.badges,
       moods: profile.moods,

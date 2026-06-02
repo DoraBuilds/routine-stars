@@ -29,6 +29,8 @@ export type Child = {
   mascotId?: string;
   // New feature data (stored locally for now)
   streak?: number;
+  /** ISO date string (YYYY-MM-DD) of the last day the streak was incremented */
+  streakDate?: string;
   affirmations?: string[];
   moods?: MoodEntry[];
   badges?: Record<string, boolean>;

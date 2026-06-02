@@ -34,8 +34,11 @@ export interface ChildProfileRecord {
   affirmations: string[];
   badges: Record<string, boolean>;
   moods: Array<{ day: string; emoji: string | null; note?: string | null }>;
-  /** date-keyed map of completed task titles, e.g. { "2026-05-31": { morning: ["Brush teeth"], evening: [] } } */
-  taskCompletion: Record<string, { morning: string[]; evening: string[] }>;
+  /**
+   * date-keyed map of completed task titles, e.g. { "2026-05-31": { morning: ["Brush teeth"], evening: [] } }
+   * Also carries a special "_streakDate" key (string) that records the last day the streak was incremented.
+   */
+  taskCompletion: Record<string, { morning: string[]; evening: string[] } | string | null>;
   createdAt: string;
   updatedAt: string;
 }

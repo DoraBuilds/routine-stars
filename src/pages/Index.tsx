@@ -105,6 +105,7 @@ const serializeHouseholdConfig = (input: {
       avatarSeed: child.avatarSeed ?? null,
       mascotId: child.mascotId ?? null,
       streak: child.streak ?? 0,
+      streakDate: child.streakDate ?? null,
       affirmations: child.affirmations ?? [],
       badges: child.badges ?? {},
       moods: (child.moods ?? []).map((m) => ({ day: m.day, emoji: m.emoji, note: m.note ?? null })),
@@ -331,12 +332,26 @@ const Index = () => {
         }
 
         const today = new Date().toDateString();
+        const todayIso = getLocalProgressDate(new Date());
+        const yesterdayIso = getLocalProgressDate(new Date(Date.now() - 86_400_000));
         if (recoverableLocalState.lastReset !== today) {
-          const reset = recoverableLocalState.children.map((c: Child) => ({
-            ...c,
-            morning: c.morning.map((t: Child['morning'][0]) => ({ ...t, completed: false })),
-            evening: c.evening.map((t: Child['evening'][0]) => ({ ...t, completed: false })),
-          }));
+          const reset = recoverableLocalState.children.map((c: Child) => {
+            // Reset task completions for the new day.
+            const updated = {
+              ...c,
+              morning: c.morning.map((t: Child['morning'][0]) => ({ ...t, completed: false })),
+              evening: c.evening.map((t: Child['evening'][0]) => ({ ...t, completed: false })),
+            };
+            // Reset streak if a day was missed (streakDate is neither today nor yesterday).
+            if (
+              c.streakDate !== undefined &&
+              c.streakDate !== todayIso &&
+              c.streakDate !== yesterdayIso
+            ) {
+              return { ...updated, streak: 0 };
+            }
+            return updated;
+          });
           if (isMounted) {
             setChildren(reset);
           }
@@ -640,10 +655,12 @@ const Index = () => {
           return;
         }
 
-        // Merge cloud data with local completion state so a cloud refresh never
-        // erases tasks the child has already ticked off during this session.
-        // (The daily_routine_progress write is not yet implemented, so completion
-        // lives only in local state. This merge preserves it across cloud reads.)
+        // Merge cloud data with local state, preferring the more-complete local
+        // values for fields that are written frequently from the client:
+        //   • task completions — toggled locally, cloud may lag by one sync cycle
+        //   • affirmations — local is authoritative within the session
+        //   • streak / streakDate — incremented locally; cloud value may be one
+        //     sync behind. Keep the higher streak to avoid rollback on refresh.
         setChildren((prev) =>
           cloudState.children.map((cloudChild) => {
             const local = prev.find((c) => c.id === cloudChild.id);
@@ -656,10 +673,26 @@ const Index = () => {
                 const lt = localTasks.find((t) => t.id === ct.id);
                 return lt ? { ...ct, completed: lt.completed } : ct;
               });
+            // Prefer local affirmations when non-empty (guards against stale cloud overwrite).
+            const mergedAffirmations =
+              (local.affirmations ?? []).length > 0
+                ? local.affirmations
+                : cloudChild.affirmations;
+            // Prefer the higher streak value and the more-recent streakDate.
+            const mergedStreak = Math.max(local.streak ?? 0, cloudChild.streak ?? 0);
+            const mergedStreakDate =
+              local.streakDate && cloudChild.streakDate
+                ? local.streakDate > cloudChild.streakDate
+                  ? local.streakDate
+                  : cloudChild.streakDate
+                : local.streakDate ?? cloudChild.streakDate;
             return {
               ...cloudChild,
               morning: mergeCompletion(cloudChild.morning, local.morning),
               evening: mergeCompletion(cloudChild.evening, local.evening),
+              affirmations: mergedAffirmations,
+              streak: mergedStreak,
+              streakDate: mergedStreakDate,
             };
           })
         );
@@ -881,6 +914,7 @@ const Index = () => {
       if (!child) return;
 
       const toggledAt = new Date().toISOString();
+      const today = getLocalProgressDate(new Date());
       const nextRoutine = child[routine].map((task) => {
         if (task.id !== taskId) return task;
         return { ...task, completed: !task.completed };
@@ -888,8 +922,20 @@ const Index = () => {
       const completed = nextRoutine.find((t) => t.id === taskId)?.completed ?? false;
       const routineCompleted = nextRoutine.length > 0 && nextRoutine.every((t) => t.completed);
 
+      // Increment streak when the routine becomes fully complete — but only
+      // once per calendar day per child (guard via streakDate).
+      const streakAlreadyCounted = child.streakDate === today;
+      const shouldIncrementStreak = routineCompleted && !streakAlreadyCounted;
+
       setChildren((prev) =>
-        prev.map((c) => (c.id !== kidId ? c : { ...c, [routine]: nextRoutine }))
+        prev.map((c) => {
+          if (c.id !== kidId) return c;
+          const updated: typeof c = { ...c, [routine]: nextRoutine };
+          if (shouldIncrementStreak) {
+            return { ...updated, streak: (c.streak ?? 0) + 1, streakDate: today };
+          }
+          return updated;
+        })
       );
 
       if (authStatus === 'signed_in' && householdStatus === 'ready' && household) {

@@ -27,7 +27,7 @@ const mapChildProfile = (row: Record<string, unknown>): ChildProfileRecord => ({
     row.task_completion !== null &&
     typeof row.task_completion === 'object' &&
     !Array.isArray(row.task_completion)
-      ? (row.task_completion as Record<string, { morning: string[]; evening: string[] }>)
+      ? (row.task_completion as Record<string, { morning: string[]; evening: string[] } | string | null>)
       : {},
   createdAt: String(row.created_at),
   updatedAt: String(row.updated_at),
