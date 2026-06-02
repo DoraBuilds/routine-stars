@@ -764,6 +764,9 @@ export const ParentSettings = ({
                         onToggleBadge={(kidId, badgeId) =>
                           updateChild(kidId, (c) => ({ ...c, badges: { ...(c.badges ?? {}), [badgeId]: !(c.badges ?? {})[badgeId] } }))
                         }
+                        onToggleCelebration={(kidId) =>
+                          updateChild(kidId, (c) => ({ ...c, celebrateStreaks: !(c.celebrateStreaks ?? true) }))
+                        }
                       />
                     )}
 

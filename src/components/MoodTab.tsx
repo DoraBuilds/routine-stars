@@ -160,40 +160,6 @@ export const MoodTab = ({ kid, onSetMood, onSaveNote }: MoodTabProps) => {
             )}
           </div>
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-            <button
-              style={{
-                background: '#fef3c7',
-                color: '#92400e',
-                border: 'none',
-                borderRadius: 12,
-                padding: '8px 14px',
-                fontSize: 18,
-                fontWeight: 700,
-                cursor: 'not-allowed',
-                fontFamily: 'inherit',
-                opacity: 0.5,
-              }}
-            >
-              ✏️ Draw
-            </button>
-            <button
-              style={{
-                background: '#dbeafe',
-                color: '#1e40af',
-                border: 'none',
-                borderRadius: 12,
-                padding: '8px 14px',
-                fontSize: 18,
-                fontWeight: 700,
-                cursor: 'not-allowed',
-                fontFamily: 'inherit',
-                opacity: 0.5,
-              }}
-            >
-              🎤 Voice
-            </button>
-          </div>
         </div>
       </div>
 

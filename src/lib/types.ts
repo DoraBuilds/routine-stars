@@ -31,6 +31,8 @@ export type Child = {
   streak?: number;
   /** ISO date string (YYYY-MM-DD) of the last day the streak was incremented */
   streakDate?: string;
+  /** Whether to fire confetti + balloons on routine completion (default true) */
+  celebrateStreaks?: boolean;
   affirmations?: string[];
   moods?: MoodEntry[];
   badges?: Record<string, boolean>;

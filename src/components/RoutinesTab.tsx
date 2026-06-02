@@ -57,19 +57,23 @@ export const RoutinesTab = ({ kid, theme, onToggleTask, onAllDone }: RoutinesTab
   const m = getMascot(kid.mascotId ?? kid.avatarAnimal);
   const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
+  const celebrate = kid.celebrateStreaks !== false;
+
   const handleTap = (taskId: string) => {
     const wasCompleted = tasks.find((t) => t.id === taskId)?.completed;
     onToggleTask(kid.id, isMorning ? 'morning' : 'evening', taskId);
     if (!wasCompleted) {
-      fireTaskConfetti(buttonRefs.current[taskId] ?? null);
+      if (celebrate) fireTaskConfetti(buttonRefs.current[taskId] ?? null);
       // Check all-done after state update
       const remaining = tasks.filter((t) => t.id !== taskId && !t.completed);
       if (remaining.length === 0) {
         setTimeout(() => {
-          fireRoutineConfetti();
-          void balloons();
+          if (celebrate) {
+            fireRoutineConfetti();
+            void balloons();
+          }
           // Return to home screen after the celebration finishes (~4.5 s)
-          if (onAllDone) setTimeout(onAllDone, 4500);
+          if (onAllDone) setTimeout(onAllDone, celebrate ? 4500 : 800);
         }, 120);
       }
     }

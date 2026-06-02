@@ -9,16 +9,19 @@ interface AdminAchievementsProps {
   kid: Child;
   onBack: () => void;
   onToggleBadge: (kidId: string, badgeId: string) => void;
+  onToggleCelebration?: (kidId: string) => void;
 }
 
 export const AdminAchievements = ({
   kid,
   onBack,
   onToggleBadge,
+  onToggleCelebration,
 }: AdminAchievementsProps) => {
   const badges = kid.badges ?? {};
   const earnedCount = Object.values(badges).filter(Boolean).length;
   const streak = kid.streak ?? 0;
+  const celebrateStreaks = kid.celebrateStreaks ?? true;
 
   return (
     <div
@@ -57,8 +60,10 @@ export const AdminAchievements = ({
 
       {/* Celebration toggle */}
       <div style={{ padding: '8px 14px 0' }}>
-        <div
+        <button
+          onClick={() => onToggleCelebration?.(kid.id)}
           style={{
+            width: '100%',
             background: '#fff',
             borderRadius: 16,
             padding: '11px 14px',
@@ -66,36 +71,43 @@ export const AdminAchievements = ({
             alignItems: 'center',
             gap: 12,
             border: '1.5px solid rgba(180,120,80,0.05)',
+            cursor: onToggleCelebration ? 'pointer' : 'default',
+            fontFamily: 'inherit',
+            textAlign: 'left',
+            WebkitTapHighlightColor: 'transparent',
           }}
         >
-          <div style={{ fontSize: 20 }}>🔔</div>
+          <div style={{ fontSize: 20 }}>🎉</div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 13, fontWeight: 600 }}>Celebrate streaks</div>
-            <div style={{ fontSize: 11, color: INK_MUTE }}>Confetti & balloons when earned</div>
+            <div style={{ fontSize: 11, color: INK_MUTE }}>Confetti & balloons when routine is done</div>
           </div>
           <div
             style={{
               width: 38,
               height: 22,
               borderRadius: 99,
-              background: '#f59e0b',
+              background: celebrateStreaks ? '#f59e0b' : '#e2e8f0',
               position: 'relative',
+              transition: 'background 0.18s',
+              flexShrink: 0,
             }}
           >
             <div
               style={{
                 position: 'absolute',
                 top: 2,
-                right: 2,
+                left: celebrateStreaks ? 18 : 2,
                 width: 18,
                 height: 18,
                 borderRadius: '50%',
                 background: '#fff',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+                transition: 'left 0.18s',
               }}
             />
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Badges */}
