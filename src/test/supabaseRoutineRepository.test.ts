@@ -128,6 +128,8 @@ describe('SupabaseRoutineRepository', () => {
 
   it('replaces routine tasks by clearing old rows and inserting the new set', async () => {
     const deleteEq = vi.fn().mockResolvedValue({ error: null });
+    const existingOrder = vi.fn().mockResolvedValue({ data: [], error: null });
+    const existingEq = vi.fn(() => ({ order: existingOrder }));
     const insertSelect = vi.fn().mockResolvedValue({
       data: [
         {
@@ -159,6 +161,7 @@ describe('SupabaseRoutineRepository', () => {
     const repository = new SupabaseRoutineRepository(
       createSupabaseClient({
         routine_tasks: {
+          select: vi.fn(() => ({ eq: existingEq })),
           delete: vi.fn(() => ({ eq: deleteEq })),
           insert,
         },

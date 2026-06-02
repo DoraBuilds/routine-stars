@@ -30,7 +30,7 @@ describe("task catalog defaults", () => {
     expect(ICON_OPTIONS).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ key: "bed", label: "Bed" }),
-        expect.objectContaining({ key: "brush", label: "Brush" }),
+        expect.objectContaining({ key: "brush", label: "Brush teeth" }),
         expect.objectContaining({ key: "moon-star", label: "Bedtime" }),
         expect.objectContaining({ key: "package-open", label: "Put away" }),
       ])
