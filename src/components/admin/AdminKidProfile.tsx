@@ -82,14 +82,14 @@ export const AdminKidProfile = ({
             <button
               onClick={() => setShowPicker(true)}
               style={{
-                width: 64,
-                height: 64,
+                width: 68,
+                height: 68,
                 borderRadius: 20,
                 background: `linear-gradient(135deg, ${m.light}, ${m.color}33)`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: 36,
+                fontSize: 38,
                 border: `2.5px solid ${m.color}44`,
                 position: 'relative',
                 cursor: 'pointer',
@@ -105,12 +105,12 @@ export const AdminKidProfile = ({
                   right: -4,
                   background: '#fff',
                   borderRadius: '50%',
-                  width: 22,
-                  height: 22,
+                  width: 24,
+                  height: 24,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 12,
+                  fontSize: 14,
                   border: '1.5px solid rgba(180,120,80,0.15)',
                 }}
               >
@@ -118,21 +118,21 @@ export const AdminKidProfile = ({
               </div>
             </button>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 17, fontWeight: 600 }}>{kid.name}</div>
-              <div style={{ fontSize: 12, color: INK_MUTE }}>
+              <div style={{ fontSize: 18, fontWeight: 600 }}>{kid.name}</div>
+              <div style={{ fontSize: 14, color: INK_MUTE }}>
                 {kid.age ? `age ${kid.age} · ` : ''}with {m.name}
               </div>
               <button
                 onClick={() => setShowPicker(true)}
                 style={{
                   marginTop: 6,
-                  fontSize: 11,
+                  fontSize: 13,
                   fontWeight: 700,
                   color: '#f97316',
                   background: '#f9731615',
                   border: 'none',
                   borderRadius: 10,
-                  padding: '3px 10px',
+                  padding: '4px 12px',
                   cursor: 'pointer',
                   fontFamily: 'inherit',
                 }}
@@ -168,24 +168,24 @@ export const AdminKidProfile = ({
           >
             <div
               style={{
-                width: 44,
-                height: 44,
+                width: 48,
+                height: 48,
                 borderRadius: 14,
                 background: `${s.tint}18`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: 22,
+                fontSize: 24,
                 flexShrink: 0,
               }}
             >
               {s.icon}
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>{s.label}</div>
-              <div style={{ fontSize: 11, color: INK_MUTE, marginTop: 2 }}>{s.desc}</div>
+              <div style={{ fontSize: 16, fontWeight: 600 }}>{s.label}</div>
+              <div style={{ fontSize: 14, color: INK_MUTE, marginTop: 2 }}>{s.desc}</div>
             </div>
-            <div style={{ fontSize: 18, color: INK_MUTE }}>›</div>
+            <div style={{ fontSize: 20, color: INK_MUTE }}>›</div>
           </button>
         ))}
       </div>
@@ -207,7 +207,7 @@ export const AdminKidProfile = ({
             style={{
               background: '#fff',
               borderRadius: '24px 24px 0 0',
-              padding: '20px 18px 28px',
+              padding: '20px 18px 32px',
               width: '100%',
               maxWidth: 480,
               margin: '0 auto',
@@ -220,13 +220,13 @@ export const AdminKidProfile = ({
                 height: 4,
                 background: 'rgba(0,0,0,0.15)',
                 borderRadius: 99,
-                margin: '0 auto 14px',
+                margin: '0 auto 16px',
               }}
             />
-            <div style={{ fontSize: 16, fontWeight: 700, textAlign: 'center', marginBottom: 4 }}>
+            <div style={{ fontSize: 18, fontWeight: 700, textAlign: 'center', marginBottom: 4 }}>
               Pick {kid.name}'s mascot
             </div>
-            <div style={{ fontSize: 12, color: INK_MUTE, textAlign: 'center', marginBottom: 18 }}>
+            <div style={{ fontSize: 14, color: INK_MUTE, textAlign: 'center', marginBottom: 20 }}>
               They'll see this everywhere ✨
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8 }}>
@@ -250,8 +250,8 @@ export const AdminKidProfile = ({
                       WebkitTapHighlightColor: 'transparent',
                     }}
                   >
-                    <div style={{ fontSize: 26 }}>{opt.emoji}</div>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: INK, marginTop: 2 }}>
+                    <div style={{ fontSize: 28 }}>{opt.emoji}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: INK, marginTop: 3 }}>
                       {opt.name}
                     </div>
                   </button>

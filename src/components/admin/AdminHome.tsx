@@ -49,8 +49,8 @@ export const AdminHome = ({
             color: '#fff',
             border: 'none',
             borderRadius: 12,
-            padding: '7px 14px',
-            fontSize: 12,
+            padding: '7px 16px',
+            fontSize: 14,
             fontWeight: 700,
             cursor: 'pointer',
             fontFamily: 'inherit',
@@ -114,31 +114,31 @@ export const AdminHome = ({
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
               <div
                 style={{
-                  width: 48,
-                  height: 48,
+                  width: 52,
+                  height: 52,
                   borderRadius: 16,
                   background: `linear-gradient(135deg, ${m.light}, ${m.color}33)`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 26,
+                  fontSize: 28,
                   flexShrink: 0,
                 }}
               >
                 {m.emoji}
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 600 }}>
+                <div style={{ fontSize: 17, fontWeight: 600 }}>
                   {k.name}{k.age ? `, age ${k.age}` : ''}
                 </div>
-                <div style={{ fontSize: 11, color: INK_MUTE }}>
-                  with {m.name}{streak > 0 ? ` · ${streak} day streak` : ''}
+                <div style={{ fontSize: 14, color: INK_MUTE }}>
+                  with {m.name}{streak > 0 ? ` · 🔥 ${streak} day streak` : ''}
                 </div>
               </div>
               <button
                 onClick={() => onPickKid(k.id, 'profile')}
                 style={{
-                  fontSize: 18,
+                  fontSize: 20,
                   color: INK_MUTE,
                   padding: 4,
                   background: 'none',
@@ -160,7 +160,7 @@ export const AdminHome = ({
                   style={{
                     background: '#fff9f0',
                     borderRadius: 12,
-                    padding: '9px 10px',
+                    padding: '10px 12px',
                     display: 'flex',
                     alignItems: 'center',
                     gap: 8,
@@ -172,12 +172,12 @@ export const AdminHome = ({
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
-                  <div style={{ fontSize: 16 }}>{s.icon}</div>
+                  <div style={{ fontSize: 18 }}>{s.icon}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700 }}>{s.label}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700 }}>{s.label}</div>
                     <div
                       style={{
-                        fontSize: 9,
+                        fontSize: 12,
                         color: INK_MUTE,
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
@@ -187,7 +187,7 @@ export const AdminHome = ({
                       {s.meta}
                     </div>
                   </div>
-                  <div style={{ fontSize: 12, color: INK_MUTE }}>›</div>
+                  <div style={{ fontSize: 14, color: INK_MUTE }}>›</div>
                 </button>
               ))}
             </div>
@@ -207,13 +207,13 @@ export const AdminHome = ({
           border: '1.5px solid rgba(180,120,80,0.04)',
         }}
       >
-        <div style={{ fontSize: 11, fontWeight: 700, color: INK_MUTE, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: INK_MUTE, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
           Account
         </div>
         {cloudSyncStatus && cloudSyncStatus !== 'idle' && (
           <div
             style={{
-              fontSize: 11,
+              fontSize: 13,
               fontWeight: 600,
               color: cloudSyncStatus === 'saved' ? '#16a34a' : cloudSyncStatus === 'error' ? '#dc2626' : '#2563eb',
               display: 'flex',
@@ -235,7 +235,7 @@ export const AdminHome = ({
               padding: '6px 0',
               textAlign: 'left',
               fontFamily: 'inherit',
-              fontSize: 13,
+              fontSize: 15,
               fontWeight: 500,
               color: INK,
               display: 'flex',
@@ -244,8 +244,8 @@ export const AdminHome = ({
               WebkitTapHighlightColor: 'transparent',
             }}
           >
-            <span style={{ fontSize: 16 }}>⚙️</span> Advanced settings
-            <span style={{ marginLeft: 'auto', fontSize: 14, color: INK_MUTE }}>›</span>
+            <span style={{ fontSize: 18 }}>⚙️</span> Advanced settings
+            <span style={{ marginLeft: 'auto', fontSize: 16, color: INK_MUTE }}>›</span>
           </button>
         )}
         {onRestartSetup && (
@@ -258,7 +258,7 @@ export const AdminHome = ({
               padding: '6px 0',
               textAlign: 'left',
               fontFamily: 'inherit',
-              fontSize: 12,
+              fontSize: 15,
               fontWeight: 500,
               color: INK_MUTE,
               width: '100%',
@@ -278,7 +278,7 @@ export const AdminHome = ({
               padding: '6px 0',
               textAlign: 'left',
               fontFamily: 'inherit',
-              fontSize: 12,
+              fontSize: 15,
               fontWeight: 500,
               color: '#dc2626',
               width: '100%',
@@ -296,9 +296,9 @@ export const AdminHome = ({
               border: '1px solid rgba(180,120,80,0.1)',
               borderRadius: 10,
               cursor: 'pointer',
-              padding: '8px 14px',
+              padding: '9px 14px',
               fontFamily: 'inherit',
-              fontSize: 12,
+              fontSize: 15,
               fontWeight: 700,
               color: '#dc2626',
               width: '100%',

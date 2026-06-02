@@ -55,38 +55,14 @@ export const AdminAffirmations = ({
             gap: 12,
           }}
         >
-          <div style={{ fontSize: 26 }}>💫</div>
+          <div style={{ fontSize: 28 }}>💫</div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#831843' }}>Daily affirmations</div>
-            <div style={{ fontSize: 11, color: '#be185d', marginTop: 1, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#831843' }}>Daily affirmations</div>
+            <div style={{ fontSize: 13, color: '#be185d', marginTop: 2, lineHeight: 1.5 }}>
               By default, {kid.name} sees affirmations from our built-in library.
               Add your own below and <em>only yours</em> will be shown — perfect
               if you have specific phrases you'd love {kid.name} to repeat every day.
             </div>
-          </div>
-          {/* Toggle (static on) */}
-          <div
-            style={{
-              width: 38,
-              height: 22,
-              borderRadius: 99,
-              background: '#ec4899',
-              position: 'relative',
-              cursor: 'pointer',
-            }}
-          >
-            <div
-              style={{
-                position: 'absolute',
-                top: 2,
-                right: 2,
-                width: 18,
-                height: 18,
-                borderRadius: '50%',
-                background: '#fff',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
-              }}
-            />
           </div>
         </div>
       </div>
@@ -95,7 +71,7 @@ export const AdminAffirmations = ({
       <div style={{ padding: '12px 14px 0' }}>
         <div
           style={{
-            fontSize: 11,
+            fontSize: 13,
             fontWeight: 700,
             color: INK_MUTE,
             letterSpacing: '0.08em',
@@ -129,7 +105,7 @@ export const AdminAffirmations = ({
               outline: 'none',
               background: 'transparent',
               fontFamily: 'inherit',
-              fontSize: 13,
+              fontSize: 15,
               color: INK,
               fontStyle: 'italic',
             }}
@@ -142,8 +118,8 @@ export const AdminAffirmations = ({
               color: draft.trim() ? '#fff' : INK_MUTE,
               border: 'none',
               borderRadius: 10,
-              padding: '6px 12px',
-              fontSize: 11,
+              padding: '7px 14px',
+              fontSize: 13,
               fontWeight: 700,
               cursor: draft.trim() ? 'pointer' : 'default',
               fontFamily: 'inherit',
@@ -159,7 +135,7 @@ export const AdminAffirmations = ({
       <div style={{ padding: '14px 14px 24px' }}>
         <div
           style={{
-            fontSize: 11,
+            fontSize: 13,
             fontWeight: 700,
             color: INK_MUTE,
             letterSpacing: '0.08em',
@@ -176,14 +152,14 @@ export const AdminAffirmations = ({
               style={{
                 background: FAVE_COLORS[i % FAVE_COLORS.length],
                 borderRadius: 14,
-                padding: '10px 14px',
+                padding: '11px 14px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 10,
               }}
             >
-              <div style={{ fontSize: 16 }}>{FAVE_ICONS[i % FAVE_ICONS.length]}</div>
-              <div style={{ flex: 1, fontSize: 13, fontWeight: 500, fontStyle: 'italic' }}>
+              <div style={{ fontSize: 18 }}>{FAVE_ICONS[i % FAVE_ICONS.length]}</div>
+              <div style={{ flex: 1, fontSize: 15, fontWeight: 500, fontStyle: 'italic' }}>
                 "{aff}"
               </div>
               <button
@@ -192,7 +168,7 @@ export const AdminAffirmations = ({
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  fontSize: 14,
+                  fontSize: 18,
                   color: INK_MUTE,
                   padding: 4,
                   fontFamily: 'inherit',
@@ -207,9 +183,9 @@ export const AdminAffirmations = ({
             <div
               style={{
                 textAlign: 'center',
-                padding: '20px 14px',
+                padding: '24px 14px',
                 color: INK_MUTE,
-                fontSize: 12,
+                fontSize: 14,
                 border: '1.5px dashed rgba(180,120,80,0.15)',
                 borderRadius: 14,
               }}

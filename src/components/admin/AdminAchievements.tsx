@@ -47,13 +47,13 @@ export const AdminAchievements = ({
             gap: 12,
           }}
         >
-          <div style={{ fontSize: 30 }}>🔥</div>
+          <div style={{ fontSize: 32 }}>🔥</div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 24, fontWeight: 700, color: '#7c2d12', lineHeight: 1 }}>
+            <div style={{ fontSize: 26, fontWeight: 700, color: '#7c2d12', lineHeight: 1 }}>
               {streak}
-              <span style={{ fontSize: 13, fontWeight: 600 }}> day streak</span>
+              <span style={{ fontSize: 15, fontWeight: 600 }}> day streak</span>
             </div>
-            <div style={{ fontSize: 11, color: '#9a3412', marginTop: 2 }}>Keep it up! 🌟</div>
+            <div style={{ fontSize: 13, color: '#9a3412', marginTop: 2 }}>Keep it up! 🌟</div>
           </div>
         </div>
       </div>
@@ -66,7 +66,7 @@ export const AdminAchievements = ({
             width: '100%',
             background: '#fff',
             borderRadius: 16,
-            padding: '11px 14px',
+            padding: '12px 14px',
             display: 'flex',
             alignItems: 'center',
             gap: 12,
@@ -77,15 +77,15 @@ export const AdminAchievements = ({
             WebkitTapHighlightColor: 'transparent',
           }}
         >
-          <div style={{ fontSize: 20 }}>🎉</div>
+          <div style={{ fontSize: 22 }}>🎉</div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 600 }}>Celebrate streaks</div>
-            <div style={{ fontSize: 11, color: INK_MUTE }}>Confetti & balloons when routine is done</div>
+            <div style={{ fontSize: 15, fontWeight: 600 }}>Celebrate streaks</div>
+            <div style={{ fontSize: 13, color: INK_MUTE }}>Confetti & balloons when routine is done</div>
           </div>
           <div
             style={{
-              width: 38,
-              height: 22,
+              width: 40,
+              height: 24,
               borderRadius: 99,
               background: celebrateStreaks ? '#f59e0b' : '#e2e8f0',
               position: 'relative',
@@ -96,8 +96,8 @@ export const AdminAchievements = ({
             <div
               style={{
                 position: 'absolute',
-                top: 2,
-                left: celebrateStreaks ? 18 : 2,
+                top: 3,
+                left: celebrateStreaks ? 19 : 3,
                 width: 18,
                 height: 18,
                 borderRadius: '50%',
@@ -114,7 +114,7 @@ export const AdminAchievements = ({
       <div style={{ padding: '14px 14px 24px' }}>
         <div
           style={{
-            fontSize: 11,
+            fontSize: 13,
             fontWeight: 700,
             color: INK_MUTE,
             letterSpacing: '0.08em',
@@ -133,7 +133,7 @@ export const AdminAchievements = ({
                 style={{
                   background: '#fff',
                   borderRadius: 14,
-                  padding: '10px 14px',
+                  padding: '11px 14px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 12,
@@ -142,14 +142,14 @@ export const AdminAchievements = ({
               >
                 <div
                   style={{
-                    width: 38,
-                    height: 38,
+                    width: 42,
+                    height: 42,
                     borderRadius: 12,
                     background: earned ? '#fef3c7' : '#fff9f0',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: 20,
+                    fontSize: 22,
                     filter: earned ? 'none' : 'grayscale(0.7)',
                     opacity: earned ? 1 : 0.5,
                     flexShrink: 0,
@@ -158,14 +158,14 @@ export const AdminAchievements = ({
                   {b.icon}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>{b.name}</div>
-                  <div style={{ fontSize: 10, color: INK_MUTE }}>{b.desc}</div>
+                  <div style={{ fontSize: 15, fontWeight: 600 }}>{b.name}</div>
+                  <div style={{ fontSize: 13, color: INK_MUTE }}>{b.desc}</div>
                 </div>
                 <button
                   onClick={() => onToggleBadge(kid.id, b.id)}
                   style={{
-                    width: 38,
-                    height: 22,
+                    width: 40,
+                    height: 24,
                     borderRadius: 99,
                     background: earned ? '#f59e0b' : '#e2e8f0',
                     position: 'relative',
@@ -174,13 +174,14 @@ export const AdminAchievements = ({
                     fontFamily: 'inherit',
                     WebkitTapHighlightColor: 'transparent',
                     transition: 'background 0.18s',
+                    flexShrink: 0,
                   }}
                 >
                   <div
                     style={{
                       position: 'absolute',
-                      top: 2,
-                      left: earned ? 18 : 2,
+                      top: 3,
+                      left: earned ? 19 : 3,
                       width: 18,
                       height: 18,
                       borderRadius: '50%',

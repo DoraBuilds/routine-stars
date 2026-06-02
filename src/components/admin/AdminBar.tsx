@@ -27,14 +27,14 @@ export const AdminBar = ({ title, sub, onBack, right }: AdminBarProps) => (
     <button
       onClick={onBack}
       style={{
-        width: 34,
-        height: 34,
+        width: 36,
+        height: 36,
         borderRadius: 12,
         background: '#fff',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: 16,
+        fontSize: 20,
         color: INK,
         border: 'none',
         cursor: 'pointer',
@@ -49,7 +49,7 @@ export const AdminBar = ({ title, sub, onBack, right }: AdminBarProps) => (
       {sub && (
         <div
           style={{
-            fontSize: 10,
+            fontSize: 12,
             fontWeight: 600,
             color: INK_MUTE,
             letterSpacing: '0.12em',
@@ -59,7 +59,7 @@ export const AdminBar = ({ title, sub, onBack, right }: AdminBarProps) => (
           {sub}
         </div>
       )}
-      <div style={{ fontSize: 17, fontWeight: 600, color: INK }}>{title}</div>
+      <div style={{ fontSize: 20, fontWeight: 600, color: INK }}>{title}</div>
     </div>
     {right}
   </div>

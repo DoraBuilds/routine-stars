@@ -65,12 +65,12 @@ export const AdminRoutines = ({
               style={{
                 flex: 1,
                 textAlign: 'center',
-                padding: '8px 0',
+                padding: '10px 0',
                 background: tab === o.id ? o.bg : 'transparent',
                 color: tab === o.id ? o.tx : INK_MUTE,
                 border: 'none',
                 borderRadius: 10,
-                fontSize: 12,
+                fontSize: 14,
                 fontWeight: 700,
                 cursor: 'pointer',
                 fontFamily: 'inherit',
@@ -94,7 +94,7 @@ export const AdminRoutines = ({
       >
         <div
           style={{
-            fontSize: 11,
+            fontSize: 13,
             fontWeight: 700,
             color: INK_MUTE,
             letterSpacing: '0.08em',
@@ -109,7 +109,7 @@ export const AdminRoutines = ({
             background: 'none',
             border: 'none',
             cursor: 'pointer',
-            fontSize: 11,
+            fontSize: 13,
             fontWeight: 700,
             color: '#f97316',
             fontFamily: 'inherit',
@@ -128,36 +128,36 @@ export const AdminRoutines = ({
             style={{
               background: '#fff',
               borderRadius: 14,
-              padding: '9px 12px',
+              padding: '11px 14px',
               display: 'flex',
               alignItems: 'center',
               gap: 10,
               border: '1.5px solid rgba(180,120,80,0.05)',
             }}
           >
-            <div style={{ fontSize: 14, color: INK_MUTE, cursor: 'grab' }}>≡</div>
+            <div style={{ fontSize: 16, color: INK_MUTE, cursor: 'grab' }}>≡</div>
             <div
               style={{
-                width: 32,
-                height: 32,
+                width: 36,
+                height: 36,
                 borderRadius: 10,
                 background: '#fff9f0',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: 17,
+                fontSize: 20,
               }}
             >
               {t.icon}
             </div>
-            <div style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>{t.title}</div>
+            <div style={{ flex: 1, fontSize: 15, fontWeight: 500 }}>{t.title}</div>
             <button
               onClick={() => onRemoveTask(kid.id, tab, t.id)}
               style={{
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                fontSize: 14,
+                fontSize: 18,
                 color: INK_MUTE,
                 padding: 4,
                 fontFamily: 'inherit',
@@ -174,7 +174,7 @@ export const AdminRoutines = ({
               textAlign: 'center',
               padding: '24px 14px',
               color: INK_MUTE,
-              fontSize: 12,
+              fontSize: 14,
               border: '1.5px dashed rgba(180,120,80,0.15)',
               borderRadius: 14,
             }}

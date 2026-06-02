@@ -25,15 +25,28 @@ function fireTaskConfetti(el: HTMLElement | null) {
   const r = el.getBoundingClientRect();
   const x = (r.left + r.width / 2) / window.innerWidth;
   const y = (r.top + r.height / 2) / window.innerHeight;
+  // Two quick bursts from the tapped card — left-leaning then right-leaning
   void confetti({
-    particleCount: 50,
-    spread: 80,
+    particleCount: 80,
+    spread: 100,
     origin: { x, y },
-    colors: ['#f97316', '#ec4899', '#a855f7', '#22c55e', '#f59e0b'],
-    startVelocity: 30,
-    gravity: 0.85,
-    scalar: 0.85,
-    ticks: 120,
+    colors: ['#f97316', '#ec4899', '#a855f7', '#22c55e', '#f59e0b', '#0ea5e9'],
+    startVelocity: 52,
+    gravity: 0.65,
+    scalar: 1.3,
+    ticks: 220,
+    angle: 100,
+  });
+  void confetti({
+    particleCount: 60,
+    spread: 90,
+    origin: { x, y },
+    colors: ['#f97316', '#ec4899', '#a855f7', '#22c55e', '#f59e0b', '#0ea5e9'],
+    startVelocity: 45,
+    gravity: 0.65,
+    scalar: 1.1,
+    ticks: 200,
+    angle: 80,
   });
 }
 
