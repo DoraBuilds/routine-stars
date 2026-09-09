@@ -214,8 +214,9 @@ const Index = () => {
           cloudState = await loadCloudHouseholdState(household);
         } catch (error) {
           console.warn('Could not load cloud household state.', error);
-          cloudLoadError =
-            error instanceof Error ? error.message : 'Could not load this household from the cloud right now.';
+          // Never show raw Supabase/Postgres error text to the user — it can leak
+          // internal table/column names. The raw error is still logged above.
+          cloudLoadError = 'Could not load this household from the cloud right now.';
         }
       }
 
@@ -484,9 +485,8 @@ const Index = () => {
         return true;
       } catch (error) {
         setCloudConfigSyncStatus('error');
-        setCloudConfigSyncError(
-          error instanceof Error ? error.message : 'Could not save this family setup to the cloud yet.'
-        );
+        // Never show raw Supabase/Postgres error text to the user — see cloudLoadError above.
+        setCloudConfigSyncError('Could not save this family setup to the cloud yet.');
         console.warn('Could not sync household configuration to cloud.', error);
         return false;
       } finally {
@@ -956,9 +956,9 @@ const Index = () => {
               shouldSyncFirstConfigRef.current = false;
             })
             .catch((error) => {
-              setImportError(
-                error instanceof Error ? error.message : 'Could not import this family setup right now.'
-              );
+              console.warn('Could not import local family setup to cloud.', error);
+              // Never show raw Supabase/Postgres error text to the user — see cloudLoadError above.
+              setImportError('Could not import this family setup right now.');
             })
             .finally(() => {
               setIsImporting(false);

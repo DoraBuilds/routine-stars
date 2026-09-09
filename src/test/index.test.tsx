@@ -711,7 +711,11 @@ describe("Index", () => {
     render(<Index />);
 
     expect(await screen.findByTestId("household-load-error-screen")).toBeInTheDocument();
-    expect(screen.getByTestId("household-load-error")).toHaveTextContent("Supabase timeout");
+    // The raw error ("Supabase timeout") must never reach the UI — only a generic message.
+    expect(screen.getByTestId("household-load-error")).toHaveTextContent(
+      "Could not load this household from the cloud right now.",
+    );
+    expect(screen.getByTestId("household-load-error")).not.toHaveTextContent("Supabase timeout");
 
     fireEvent.click(screen.getByRole("button", { name: "retry-household-load" }));
 

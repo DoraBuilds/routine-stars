@@ -10,7 +10,10 @@ import { cloneSchedules, createCroatiaSummerSchedule, SCHEDULE_DAYS, timeToMinut
 const ink='#3d2c1f', mute='#8a7866', blue='#0ea5e9', font="'Fredoka',system-ui,sans-serif";
 const input:CSSProperties={width:'100%',boxSizing:'border-box',border:'1.5px solid rgba(14,165,233,.18)',borderRadius:12,padding:'10px 12px',fontFamily:font,fontSize:15,fontWeight:600,color:ink,background:'#fff'};
 const button=(background:string,color='#fff'):CSSProperties=>({border:'none',borderRadius:12,padding:'10px 14px',background,color,fontFamily:font,fontSize:14,fontWeight:800,cursor:'pointer'});
-const errorMessage=(error:unknown)=>error instanceof Error?error.message:typeof error==='object'&&error!==null&&'message'in error?String(error.message):'Unknown Supabase error.';
+// Never show raw Supabase/Postgres error text to the user — it can leak
+// internal table/column names (e.g. an RLS or constraint violation message).
+// The real error is still console.error'd at each call site for debugging.
+const genericErrorMessage = () => 'Something went wrong talking to the server. Please try again in a moment.';
 
 interface DraggableTaskProps{entry:ScheduleItem;items:ScheduleItem[];selectedDay:ScheduleDay;taskTarget:ScheduleDay;onUpdateItems:(items:ScheduleItem[])=>void;onSetTaskTarget:(day:ScheduleDay)=>void;onCopyTask:(entry:ScheduleItem)=>void}
 function DraggableTask({entry,items,selectedDay,taskTarget,onUpdateItems,onSetTaskTarget,onCopyTask}:DraggableTaskProps){
@@ -52,8 +55,8 @@ export default function SchedulesPage(){
     if(!household||!supabase){setError('Your signed-in household could not be loaded. Please return to the app and sign in again.');setStatus('error');return;}
     let cancelled=false;setStatus('loading');setError(null);setChildWarning(null);
     const scheduleRepo=new SupabaseScheduleRepository(supabase),childRepo=new SupabaseChildProfileRepository(supabase);
-    void scheduleRepo.load(household.id).then(loaded=>{if(cancelled)return;setSchedules(loaded);setSelectedId(loaded[0]?.id??null);setStatus('idle');}).catch(loadError=>{if(cancelled)return;console.error('Could not load schedules',loadError);setError(errorMessage(loadError));setStatus('error');});
-    void childRepo.listByHousehold(household.id).then(profiles=>{if(cancelled)return;setChildren(profiles.map(child=>({id:child.id,name:child.name})));}).catch(childError=>{if(cancelled)return;console.error('Could not load child profiles for schedules',childError);setChildWarning(`Schedules loaded, but child assignments are temporarily unavailable: ${errorMessage(childError)}`);});
+    void scheduleRepo.load(household.id).then(loaded=>{if(cancelled)return;setSchedules(loaded);setSelectedId(loaded[0]?.id??null);setStatus('idle');}).catch(loadError=>{if(cancelled)return;console.error('Could not load schedules',loadError);setError(genericErrorMessage());setStatus('error');});
+    void childRepo.listByHousehold(household.id).then(profiles=>{if(cancelled)return;setChildren(profiles.map(child=>({id:child.id,name:child.name})));}).catch(childError=>{if(cancelled)return;console.error('Could not load child profiles for schedules',childError);setChildWarning('Schedules loaded, but child assignments are temporarily unavailable right now.');});
     return()=>{cancelled=true;};
   },[authStatus,household,householdStatus]);
 
@@ -65,7 +68,7 @@ export default function SchedulesPage(){
   const reorderItems=(reordered:ScheduleItem[])=>{const originalTimes=(selected?.days[selectedDay]??[]).map(item=>item.time).sort((a,b)=>timeToMinutes(a)-timeToMinutes(b));updateItems(reordered.map((item,index)=>({...item,time:originalTimes[index]??item.time})));};
   const copyDay=()=>{if(!selected||copyTarget===selectedDay)return;updatePlan({days:{...selected.days,[copyTarget]:(selected.days[selectedDay]??[]).map(item=>({...item,id:crypto.randomUUID()}))}});setSelectedDay(copyTarget);};
   const copyTask=(entry:ScheduleItem)=>{if(!selected)return;const target=taskCopyTargets[entry.id]??SCHEDULE_DAYS.find(day=>day!==selectedDay)??'Monday';if(target===selectedDay)return;const targetItems=[...(selected.days[target]??[]),{...entry,id:crypto.randomUUID()}].sort((a,b)=>timeToMinutes(a.time)-timeToMinutes(b.time));updatePlan({days:{...selected.days,[target]:targetItems}});};
-  const save=async()=>{const supabase=getSupabaseClient();if(!household||!supabase)return;setStatus('saving');setError(null);const cleaned=cloneSchedules(schedules).map(schedule=>({...schedule,days:Object.fromEntries(Object.entries(schedule.days).map(([day,items])=>[day,(items??[]).slice().sort((a,b)=>timeToMinutes(a.time)-timeToMinutes(b.time))]))}));try{await new SupabaseScheduleRepository(supabase).save(household.id,cleaned);setSchedules(cleaned);setStatus('saved');window.setTimeout(()=>setStatus('idle'),1500);}catch(saveError){console.error('Could not save schedules',saveError);setError(errorMessage(saveError));setStatus('error');}};
+  const save=async()=>{const supabase=getSupabaseClient();if(!household||!supabase)return;setStatus('saving');setError(null);const cleaned=cloneSchedules(schedules).map(schedule=>({...schedule,days:Object.fromEntries(Object.entries(schedule.days).map(([day,items])=>[day,(items??[]).slice().sort((a,b)=>timeToMinutes(a.time)-timeToMinutes(b.time))]))}));try{await new SupabaseScheduleRepository(supabase).save(household.id,cleaned);setSchedules(cleaned);setStatus('saved');window.setTimeout(()=>setStatus('idle'),1500);}catch(saveError){console.error('Could not save schedules',saveError);setError(genericErrorMessage());setStatus('error');}};
   const createDisabled=status==='loading'||status==='error',dayItems=selected?.days[selectedDay]??[];
 
   return <div style={{minHeight:'100vh',background:'#fff9f0',fontFamily:font,color:ink,padding:'22px 16px'}}><div style={{maxWidth:1100,margin:'0 auto'}}>
