@@ -1,15 +1,19 @@
--- Manual verification for supabase/migrations/20260729170000_household_owner_privilege_separation.sql
+-- Verification for supabase/migrations/20260729170000_household_owner_privilege_separation.sql
 --
--- This is NOT run automatically anywhere (no pgTAP/CI wiring exists in
--- this repo yet) and has NOT been executed against a live Supabase
--- instance — review it before trusting it. Run it by hand against a
--- local or staging Supabase project — never production — after applying
--- the migration:
+-- Runs automatically in CI (.github/workflows/rls-tests.yml) on any PR
+-- touching supabase/migrations/** or supabase/tests/**, against a fresh
+-- ephemeral `supabase start` instance with every migration applied. It has
+-- also been run by hand against production directly (self-rolling-back,
+-- no data touched) — see the APPLIED TO PRODUCTION notes in
+-- 20260729165000 and 20260729170000.
+--
+-- To run it by hand — against a local/staging project, never production —
+-- after applying the migration:
 --
 --   supabase start
 --   supabase db reset          # applies all migrations, including the draft one
 --   psql "$(supabase status -o env | grep DB_URL | cut -d= -f2)" \
---     -f supabase/tests/rls_owner_privilege_separation.sql
+--     -v ON_ERROR_STOP=1 -f supabase/tests/rls_owner_privilege_separation.sql
 --
 -- It creates two fake auth users (an owner and a parent) in one
 -- household, then impersonates each via `set_config('request.jwt.claims', ...)`
