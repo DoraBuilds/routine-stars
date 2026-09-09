@@ -1,0 +1,34 @@
+name: RLS Policy Tests
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/tests/**'
+      - '.github/workflows/rls-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rls-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@46f7f98c7f948ad727d22c1e67fab04c223a0520 # v3.0.0
+
+      - name: Start Supabase (applies all migrations)
+        run: supabase start
+
+      - name: Run RLS regression test
+        run: |
+          DB_URL=$(supabase status -o env | grep DB_URL | cut -d= -f2 | tr -d '"')
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/rls_owner_privilege_separation.sql
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop
