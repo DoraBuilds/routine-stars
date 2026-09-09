@@ -117,6 +117,7 @@ export const MoodTab = ({ kid, onSetMood, onSaveNote }: MoodTabProps) => {
             value={noteDraft}
             onChange={(e) => { setNoteDraft(e.target.value); setSaved(false); }}
             placeholder={todayNote ? 'Add another thought…' : 'I had a great morning!'}
+            maxLength={500}
             style={{
               width: '100%',
               border: 'none',

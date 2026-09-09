@@ -96,6 +96,7 @@ export const AdminAffirmations = ({
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder='"I am brave and kind."'
+            maxLength={200}
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleAdd();
             }}

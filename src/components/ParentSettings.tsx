@@ -138,6 +138,7 @@ const TaskModal = ({ initial, routine, mode, suggestions, onSave, onClose }: Tas
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             autoFocus
+            maxLength={80}
           />
         </div>
 
@@ -694,6 +695,7 @@ export const ParentSettings = ({
                                 value={editorChild.name}
                                 onChange={(e) => updateChild(editorChild.id, (c) => ({ ...c, name: e.target.value }))}
                                 placeholder="Child name"
+                                maxLength={60}
                               />
                               {children.length > 1 && (
                                 <button

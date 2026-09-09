@@ -654,6 +654,7 @@ export const InitialSetup = ({
                               }))
                             }
                             placeholder="Enter name"
+                            maxLength={60}
                             style={{
                               width: '100%',
                               padding: '12px 14px',

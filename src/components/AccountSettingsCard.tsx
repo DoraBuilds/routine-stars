@@ -298,6 +298,7 @@ export const AccountSettingsCard = () => {
                   onChange={(e) => setParentName(e.target.value)}
                   placeholder="e.g. Dora"
                   autoComplete="name"
+                  maxLength={60}
                   style={inputStyle}
                 />
               </label>
