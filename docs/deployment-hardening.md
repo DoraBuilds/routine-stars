@@ -23,6 +23,11 @@ set that way:
   larger change than this issue scoped
 - `font-src`, `img-src`, `connect-src` — scoped to `self` plus this app's
   actual Supabase project and Google Fonts, nothing else
+- `worker-src 'self' blob:` — without this, `worker-src` falls back to
+  `script-src 'self'`, which blocks `canvas-confetti`'s animation worker
+  (loaded from a `blob:` URL). That silently killed all confetti in the app
+  (fixed in #162) with no thrown error, just a console CSP violation —
+  easy to miss in manual testing since the rest of the page works fine.
 - `referrer` meta tag set to `strict-origin-when-cross-origin`
 
 Verified against a real production build (`vite preview` + headless
